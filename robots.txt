@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Заменить YOUR-DOMAIN на реальный домен после деплоя
+Sitemap: https://YOUR-DOMAIN/sitemap.xml

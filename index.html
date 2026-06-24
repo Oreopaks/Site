@@ -5,6 +5,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>РегионДорСтрой — строительство дорог и благоустройство в Орле</title>
 <meta name="description" content="ООО «РегионДорСтрой» — дорожное строительство, благоустройство территорий, аренда спецтехники и поставка материалов (щебень, песок, грунт) в Орле и Орловской области.">
+<!-- TODO: заменить YOUR-DOMAIN на реальный домен после деплоя -->
+<link rel="canonical" href="https://YOUR-DOMAIN/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="РегионДорСтрой — дороги и благоустройство в Орле">
+<meta property="og:description" content="Дорожное строительство, благоустройство, аренда спецтехники и поставка сыпучих материалов в Орле и области.">
+<meta property="og:image" content="https://YOUR-DOMAIN/assets/logo-opt.png">
+<meta property="og:url" content="https://YOUR-DOMAIN/">
+<meta property="og:locale" content="ru_RU">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HomeAndConstructionBusiness",
+  "name": "ООО «РегионДорСтрой»",
+  "image": "https://YOUR-DOMAIN/assets/logo-opt.png",
+  "url": "https://YOUR-DOMAIN/",
+  "telephone": "+79038826777",
+  "email": "Rdstroiy@yandex.ru",
+  "priceRange": "₽₽",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Орёл",
+    "addressRegion": "Орловская область",
+    "addressCountry": "RU"
+  },
+  "areaServed": "Орёл и Орловская область",
+  "openingHoursSpecification": {
+    "@type": "OpeningHoursSpecification",
+    "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+    "opens": "08:00",
+    "closes": "20:00"
+  }
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -299,7 +334,7 @@
           <h2 style="font-family:'Oswald';font-weight:700;font-size:44px;text-transform:uppercase;line-height:1.06;letter-spacing:.5px;margin-bottom:20px">Почему выбирают<br>«РегионДорСтрой»</h2>
           <p style="color:#5a5a5a;font-size:16px;line-height:1.65;margin-bottom:28px">У нас отличная репутация: мы выполняем все работы качественно и в срок. Большой опыт в строительстве и собственный парк техники позволяют справляться с большими объёмами. Весь рабочий состав — профессионалы своего дела.</p>
           <div style="background:#fff;border:1px solid #e6e6e2;padding:22px 24px;display:flex;align-items:center;gap:20px">
-            <img src="assets/logo-opt.png" alt="ООО РегионДорСтрой" width="84" height="84" style="width:84px;height:84px;object-fit:contain;flex-shrink:0">
+            <img src="assets/logo-opt.png" alt="ООО РегионДорСтрой" width="84" height="84" loading="lazy" style="width:84px;height:84px;object-fit:contain;flex-shrink:0">
             <div><div style="font-family:'Oswald';font-weight:700;font-size:19px">ООО «РегионДорСтрой»</div><div style="color:#6a6a6a;font-size:14px;margin-top:3px">г. Орёл · тел. 46-90-81 · Rdstroiy@yandex.ru</div></div>
           </div>
         </div>
@@ -357,26 +392,33 @@
             <h3 style="font-family:'Oswald';font-weight:600;font-size:26px;text-transform:uppercase">Заявка отправлена</h3>
             <p style="color:#a8a8a8;font-size:15px;max-width:300px;line-height:1.6">Спасибо! Мы свяжемся с вами в ближайшее время для уточнения деталей.</p>
           </div>
-          <form id="leadForm">
+          <form id="leadForm" novalidate>
             <h3 style="font-family:'Oswald';font-weight:600;font-size:24px;text-transform:uppercase;margin-bottom:8px">Расчёт стоимости</h3>
             <p style="color:#9a9a9a;font-size:14px;margin-bottom:24px">Опишите задачу — подготовим смету и сроки.</p>
-            <input class="fld" required placeholder="Ваше имя" aria-label="Ваше имя" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none">
-            <input class="fld" required placeholder="Телефон" aria-label="Телефон" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none">
-            <select class="fld" aria-label="Услуга" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#cfcfcf;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none">
+            <input class="fld" name="name" required placeholder="Ваше имя" aria-label="Ваше имя" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none">
+            <input class="fld" name="phone" required placeholder="Телефон" aria-label="Телефон" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none">
+            <select class="fld" name="service" aria-label="Услуга" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#cfcfcf;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none">
               <option>Строительство дорог</option>
               <option>Благоустройство территории</option>
               <option>Аренда спецтехники</option>
               <option>Грузоперевозки</option>
               <option>Поставка материалов</option>
             </select>
-            <textarea class="fld" placeholder="Комментарий (объём, адрес, сроки)" aria-label="Комментарий" rows="3" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none;resize:vertical"></textarea>
+            <textarea class="fld" name="comment" placeholder="Комментарий (объём, адрес, сроки)" aria-label="Комментарий" rows="3" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none;resize:vertical"></textarea>
+            <input type="text" name="_hp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
             <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;cursor:pointer">
               <input type="checkbox" required aria-label="Согласие на обработку персональных данных" style="margin-top:2px;width:16px;height:16px;accent-color:#FFC700;flex-shrink:0">
-              <span style="color:#8f8f8f;font-size:11.5px;line-height:1.45">Я согласен на обработку персональных данных и принимаю политику конфиденциальности</span>
+              <span style="color:#8f8f8f;font-size:11.5px;line-height:1.45">Я согласен на обработку персональных данных и принимаю <a href="privacy.html" target="_blank" style="color:#FFC700">политику конфиденциальности</a></span>
             </label>
             <button class="btn-y" type="submit" style="width:100%;background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope';font-weight:800;font-size:15px;padding:16px;cursor:pointer;text-transform:uppercase;letter-spacing:.4px">Отправить заявку</button>
           </form>
         </div>
+      </div>
+
+      <!-- map -->
+      <div data-anim="fade-up" style="margin-top:44px">
+        <iframe title="Карта — Орёл, Орловская область" src="https://yandex.ru/map-widget/v1/?ll=36.0697%2C52.9670&z=11" width="100%" height="360" frameborder="0" loading="lazy" style="border:1px solid #e6e6e2;display:block"></iframe>
+        <p style="color:#9a9a9a;font-size:12.5px;margin-top:8px">Работаем по Орлу и Орловской области. Точный адрес офиса уточняйте по телефону.</p>
       </div>
     </div>
   </section>
@@ -386,8 +428,9 @@
     <div style="max-width:1240px;margin:0 auto;padding:0 32px">
       <div data-r="foot" style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px;padding-bottom:36px;border-bottom:1px solid #1c1c1c">
         <div>
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><img src="assets/logo-opt.png" alt="" width="54" height="54" style="width:54px;height:54px;object-fit:contain"><div style="font-family:'Oswald';font-weight:700;font-size:20px;color:#fff;letter-spacing:.5px">РЕГИОНДОРСТРОЙ</div></div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><img src="assets/logo-opt.png" alt="" width="54" height="54" loading="lazy" style="width:54px;height:54px;object-fit:contain"><div style="font-family:'Oswald';font-weight:700;font-size:20px;color:#fff;letter-spacing:.5px">РЕГИОНДОРСТРОЙ</div></div>
           <p style="font-size:14px;line-height:1.65;max-width:340px">ООО «РегионДорСтрой» — дорожное строительство, благоустройство и аренда спецтехники в Орле и Орловской области.</p>
+          <p style="font-size:12.5px;line-height:1.6;max-width:340px;margin-top:12px;color:#6a6a6a">ИНН [УКАЗАТЬ] · ОГРН [УКАЗАТЬ]</p>
         </div>
         <div>
           <div style="font-family:'Oswald';font-weight:600;font-size:15px;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px">Услуги</div>
@@ -410,7 +453,7 @@
       </div>
       <div style="padding-top:22px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:12.5px;color:#6a6a6a">
         <span>© 2026 ООО «РегионДорСтрой». Все права защищены.</span>
-        <span>г. Орёл · Орловская область</span>
+        <span><a class="foot-a" href="privacy.html">Политика конфиденциальности</a> · г. Орёл</span>
       </div>
     </div>
   </footer>
@@ -430,12 +473,13 @@
           <h3 id="modalTitle" style="font-family:'Oswald';font-weight:600;font-size:26px;text-transform:uppercase;margin-bottom:6px">Заказать звонок</h3>
           <p id="modalDesc" style="color:#6a6a6a;font-size:14px;margin-bottom:18px">Оставьте номер — перезвоним в течение 15 минут.</p>
           <div id="modalMat" style="display:none;background:#f4f4f2;border-left:3px solid #FFC700;padding:11px 14px;margin-bottom:18px;font-size:14px;font-weight:700"></div>
-          <form onsubmit="submitModal(event)">
-            <input class="fld" required placeholder="Ваше имя" aria-label="Ваше имя" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none">
-            <input class="fld" required placeholder="Телефон" aria-label="Телефон" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none">
+          <form onsubmit="submitModal(event)" novalidate>
+            <input class="fld" name="name" required placeholder="Ваше имя" aria-label="Ваше имя" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none">
+            <input class="fld" name="phone" required placeholder="Телефон" aria-label="Телефон" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none">
+            <input type="text" name="_hp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
             <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;cursor:pointer">
               <input type="checkbox" required aria-label="Согласие на обработку персональных данных" style="margin-top:2px;width:16px;height:16px;accent-color:#FFC700;flex-shrink:0">
-              <span style="color:#888;font-size:11.5px;line-height:1.45">Я согласен на обработку персональных данных и принимаю политику конфиденциальности</span>
+              <span style="color:#888;font-size:11.5px;line-height:1.45">Я согласен на обработку персональных данных и принимаю <a href="privacy.html" target="_blank" style="color:#b59200">политику конфиденциальности</a></span>
             </label>
             <button id="modalBtn" class="btn-d" type="submit" style="width:100%;background:#0d0d0d;color:#fff;border:none;font-family:'Manrope';font-weight:800;font-size:15px;padding:16px;cursor:pointer;text-transform:uppercase;letter-spacing:.4px">Жду звонка</button>
           </form>
@@ -447,6 +491,39 @@
 </div>
 
 <script>
+// ============ CONFIG ============
+// После деплоя Cloudflare Worker (см. telegram-worker.js) вставь сюда его URL.
+// Пока пусто — формы отправляют заявку в WhatsApp (лиды не теряются).
+var CFG = { tgEndpoint: '', waPhone: '79038826777' };
+var currentMaterial = '';
+
+// ---- lead sending: Telegram worker -> WhatsApp fallback ----
+function buildText(d){
+  var L = ['🚧 Заявка с сайта', 'Тип: ' + d.type];
+  if (d.material) L.push('Материал: ' + d.material);
+  if (d.service)  L.push('Услуга: ' + d.service);
+  L.push('Имя: ' + (d.name || '—'), 'Телефон: ' + (d.phone || '—'));
+  if (d.comment) L.push('Комментарий: ' + d.comment);
+  return L.join('\n');
+}
+function waFallback(d){
+  window.open('https://wa.me/' + CFG.waPhone + '?text=' + encodeURIComponent(buildText(d)), '_blank');
+}
+function sendLead(d, done){
+  if (d._hp) { done(); return; } // honeypot -> молча игнорируем бота
+  if (CFG.tgEndpoint) {
+    fetch(CFG.tgEndpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(d) })
+      .then(function(r){ if(!r.ok) throw 0; done(); })
+      .catch(function(){ waFallback(d); done(); });
+  } else {
+    waFallback(d); done();
+  }
+}
+function formData(form){
+  var g = function(n){ var el = form.querySelector('[name="'+n+'"]'); return el ? el.value.trim() : ''; };
+  return { name:g('name'), phone:g('phone'), service:g('service'), comment:g('comment'), _hp:g('_hp') };
+}
+
 // ---- mobile menu ----
 function toggleMenu(){
   var m = document.getElementById('mobileMenu');
@@ -461,6 +538,7 @@ function showModalForm(){
   document.getElementById('modalSuccess').style.display = 'none';
 }
 function openModal(){
+  currentMaterial = '';
   document.getElementById('modalTitle').textContent = 'Заказать звонок';
   document.getElementById('modalDesc').textContent = 'Оставьте номер — перезвоним в течение 15 минут.';
   document.getElementById('modalBtn').textContent = 'Жду звонка';
@@ -468,6 +546,7 @@ function openModal(){
   showModalForm();
 }
 function openCalc(name){
+  currentMaterial = name;
   document.getElementById('modalTitle').textContent = 'Запросить расчёт';
   document.getElementById('modalDesc').textContent = 'Оставьте контакты — рассчитаем объём, стоимость и доставку.';
   document.getElementById('modalBtn').textContent = 'Получить расчёт';
@@ -479,16 +558,26 @@ function openCalc(name){
 function closeModal(e){ document.getElementById('modal').style.display = 'none'; }
 function submitModal(e){
   e.preventDefault();
-  document.getElementById('modalForm').style.display = 'none';
-  document.getElementById('modalSuccess').style.display = 'block';
+  var d = formData(e.target);
+  d.type = currentMaterial ? 'Запрос расчёта материала' : 'Заказ звонка';
+  if (currentMaterial) d.material = currentMaterial;
+  sendLead(d, function(){
+    document.getElementById('modalForm').style.display = 'none';
+    document.getElementById('modalSuccess').style.display = 'block';
+  });
 }
 document.querySelectorAll('[data-open-modal]').forEach(function(b){ b.addEventListener('click', openModal); });
 
 // ---- contact form ----
 document.getElementById('leadForm').addEventListener('submit', function(e){
   e.preventDefault();
-  this.style.display = 'none';
-  document.getElementById('formSuccess').style.display = 'flex';
+  var self = this;
+  var d = formData(self);
+  d.type = 'Заявка (форма на сайте)';
+  sendLead(d, function(){
+    self.style.display = 'none';
+    document.getElementById('formSuccess').style.display = 'flex';
+  });
 });
 
 // ---- scroll reveal (ported from the Claude Design source, plain DOM) ----
