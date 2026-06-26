@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
 
-# Заменить YOUR-DOMAIN на реальный домен после деплоя
-Sitemap: https://YOUR-DOMAIN/sitemap.xml
+Sitemap: https://oreopaks.github.io/Site/sitemap.xml
