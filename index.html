@@ -451,7 +451,7 @@
           <form id="leadForm" novalidate>
             <h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:24px;text-transform:uppercase;margin-bottom:8px">Расчёт стоимости</h3>
             <p style="color:#9a9a9a;font-size:14px;margin-bottom:24px">Опишите задачу — подготовим смету и сроки.</p>
-            <div class="form-err" role="alert">Не удалось отправить автоматически. Свяжитесь с нами напрямую: <a class="err-wa" target="_blank" rel="noopener">WhatsApp</a> или <a href="tel:+79807691111">позвонить</a>.</div>
+            <div class="form-err" role="alert">Отправьте заявку удобным способом: <a class="c-mail">на e-mail</a> · <a class="c-wa" target="_blank" rel="noopener">WhatsApp</a> · <a href="tel:+79807691111">позвонить</a>.</div>
             <input class="fld" name="name" required autocomplete="name" placeholder="Ваше имя" aria-label="Ваше имя" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope',sans-serif;margin-bottom:12px;outline:none">
             <input class="fld" name="phone" required type="tel" inputmode="tel" autocomplete="tel" pattern="[\d\s()+\-]{6,20}" title="Введите корректный номер телефона" placeholder="Телефон" aria-label="Телефон" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope',sans-serif;margin-bottom:12px;outline:none">
             <select class="fld" name="service" aria-label="Услуга" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#cfcfcf;padding:14px 16px;font-size:14.5px;font-family:'Manrope',sans-serif;margin-bottom:12px;outline:none">
@@ -535,7 +535,7 @@
           <p id="modalDesc" style="color:#5a5a5a;font-size:14px;margin-bottom:18px">Оставьте номер — перезвоним в течение 15 минут.</p>
           <div id="modalMat" style="display:none;background:#f4f4f2;border-left:3px solid #FFC700;padding:11px 14px;margin-bottom:18px;font-size:14px;font-weight:700"></div>
           <form onsubmit="submitModal(event)" novalidate>
-            <div class="form-err" role="alert">Не удалось отправить автоматически. Свяжитесь с нами напрямую: <a class="err-wa" target="_blank" rel="noopener">WhatsApp</a> или <a href="tel:+79807691111">позвонить</a>.</div>
+            <div class="form-err" role="alert">Отправьте заявку удобным способом: <a class="c-mail">на e-mail</a> · <a class="c-wa" target="_blank" rel="noopener">WhatsApp</a> · <a href="tel:+79807691111">позвонить</a>.</div>
             <input class="fld" name="name" required autocomplete="name" placeholder="Ваше имя" aria-label="Ваше имя" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope',sans-serif;margin-bottom:12px;outline:none">
             <input class="fld" name="phone" required type="tel" inputmode="tel" autocomplete="tel" pattern="[\d\s()+\-]{6,20}" title="Введите корректный номер телефона" placeholder="Телефон" aria-label="Телефон" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope',sans-serif;margin-bottom:16px;outline:none">
             <input type="text" name="_hp" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
@@ -560,10 +560,13 @@
 
 <script>
 // ============ CONFIG ============
-// После деплоя Cloudflare Worker (см. telegram-worker.js) вставь сюда его URL,
-// чтобы заявки уходили в Telegram. Пока пусто — форма предлагает связаться напрямую
-// (WhatsApp / звонок), лиды не теряются и НЕ показывается ложный экран успеха.
-var CFG = { tgEndpoint: '', waPhone: '79807691111' };
+// Доставка заявок без трансграничной передачи ПДн (всё в РФ):
+// по умолчанию форма открывает готовое письмо на e-mail (Яндекс, серверы РФ)
+// и показывает прямые контакты (e-mail / WhatsApp / звонок). Оператор данные
+// за границу не передаёт. Опционально: поднять РФ-эндпоинт (напр. Yandex Cloud
+// Function) и вписать его URL в mailEndpoint — тогда заявка уходит AJAX-ом
+// с экраном успеха, без открытия почтового клиента.
+var CFG = { mailEndpoint: '', email: 'Rdstroiy@yandex.ru', waPhone: '79807691111' };
 var currentMaterial = '';
 
 // ---- lead sending: Telegram worker -> direct-contact fallback ----
@@ -575,22 +578,28 @@ function buildText(d){
   if (d.comment) L.push('Комментарий: ' + d.comment);
   return L.join('\n');
 }
-function showErr(form, d){
+function mailtoLink(d){
+  return 'mailto:' + CFG.email +
+    '?subject=' + encodeURIComponent('Заявка с сайта — ' + (d.type || '')) +
+    '&body=' + encodeURIComponent(buildText(d));
+}
+function setContacts(form, d){
   var box = form.querySelector('.form-err');
   if (!box) return;
-  var wa = box.querySelector('.err-wa');
-  if (wa) wa.href = 'https://wa.me/' + CFG.waPhone + '?text=' + encodeURIComponent(buildText(d));
+  var mail = box.querySelector('.c-mail'); if (mail) mail.href = mailtoLink(d);
+  var wa = box.querySelector('.c-wa'); if (wa) wa.href = 'https://wa.me/' + CFG.waPhone + '?text=' + encodeURIComponent(buildText(d));
   box.style.display = 'block';
 }
 function sendLead(d, done, fail){
   fail = fail || function(){};
   if (d._hp) { done(); return; }            // honeypot -> молча игнорируем бота
-  if (CFG.tgEndpoint) {
-    fetch(CFG.tgEndpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(d) })
+  if (CFG.mailEndpoint) {
+    fetch(CFG.mailEndpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(d) })
       .then(function(r){ if(!r.ok) throw 0; done(); })
       .catch(function(){ fail(d); });
   } else {
-    fail(d);                                  // backend ещё не подключён -> прямой контакт
+    try { window.location.href = mailtoLink(d); } catch (e) {}  // открыть готовое письмо (РФ, без трансгран. передачи)
+    fail(d);                                                    // показать прямые контакты
   }
 }
 function formData(form){
@@ -672,7 +681,7 @@ function submitModal(e){
   if (currentMaterial) d.material = currentMaterial;
   sendLead(d,
     function(){ form.reset(); document.getElementById('modalForm').style.display = 'none'; document.getElementById('modalSuccess').style.display = 'block'; },
-    function(){ showErr(form, d); });
+    function(){ setContacts(form, d); });
 }
 document.querySelectorAll('[data-open-modal]').forEach(function(b){ b.addEventListener('click', openModal); });
 
@@ -685,7 +694,7 @@ document.getElementById('leadForm').addEventListener('submit', function(e){
   d.type = 'Заявка (форма на сайте)';
   sendLead(d,
     function(){ self.reset(); self.style.display = 'none'; document.getElementById('formSuccess').style.display = 'flex'; },
-    function(){ showErr(self, d); });
+    function(){ setContacts(self, d); });
 });
 
 // ---- map: click-to-load (keeps heavy third-party off the initial page load) ----
