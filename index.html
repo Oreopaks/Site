@@ -83,7 +83,10 @@
   [data-imgzoom]{overflow:hidden}
   [data-imgzoom] img{transition:transform .8s cubic-bezier(.22,.61,.36,1);display:block}
   [data-imgzoom]:hover img{transform:scale(1.08)}
-  @media (prefers-reduced-motion:reduce){[data-kenburns],[data-marquee],[data-marquee-fast]{animation:none!important}}
+  /* cinematic film grain — texture over the whole page, subtle flicker */
+  .grain{position:fixed;inset:-50%;width:200%;height:200%;pointer-events:none;z-index:190;opacity:.08;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");background-size:140px 140px;animation:grain .8s steps(6) infinite;will-change:transform}
+  @keyframes grain{0%,100%{transform:translate(0,0)}10%{transform:translate(-4%,-4%)}20%{transform:translate(-8%,3%)}30%{transform:translate(5%,-8%)}40%{transform:translate(-3%,9%)}50%{transform:translate(-8%,4%)}60%{transform:translate(6%,2%)}70%{transform:translate(-4%,-6%)}80%{transform:translate(9%,5%)}90%{transform:translate(-6%,-8%)}}
+  @media (prefers-reduced-motion:reduce){[data-kenburns],[data-marquee],[data-marquee-fast]{animation:none!important}.grain{animation:none!important}}
   @media (max-width:1024px){
     [data-r="g4"]{grid-template-columns:repeat(2,1fr)!important}
     [data-r="g5"]{grid-template-columns:repeat(3,1fr)!important}
@@ -119,6 +122,7 @@
 </head>
 <body>
 
+<div class="grain" aria-hidden="true"></div>
 
 <div style="overflow-x:hidden">
 
