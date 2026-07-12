@@ -83,9 +83,9 @@
   [data-imgzoom]{overflow:hidden}
   [data-imgzoom] img{transition:transform .8s cubic-bezier(.22,.61,.36,1);display:block}
   [data-imgzoom]:hover img{transform:scale(1.08)}
-  /* cinematic film grain — texture over the whole page, subtle flicker */
-  .grain{position:fixed;inset:-50%;width:200%;height:200%;pointer-events:none;z-index:190;opacity:.35;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");background-size:160px 160px;animation:grain .8s steps(6) infinite;will-change:transform}
-  @keyframes grain{0%,100%{transform:translate(0,0)}10%{transform:translate(-4%,-4%)}20%{transform:translate(-8%,3%)}30%{transform:translate(5%,-8%)}40%{transform:translate(-3%,9%)}50%{transform:translate(-8%,4%)}60%{transform:translate(6%,2%)}70%{transform:translate(-4%,-6%)}80%{transform:translate(9%,5%)}90%{transform:translate(-6%,-8%)}}
+  /* concrete texture — soft marble mottle over the whole page, slow drift */
+  .grain{position:fixed;inset:-8%;width:116%;height:116%;pointer-events:none;z-index:190;opacity:.8;mix-blend-mode:soft-light;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.014' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");background-size:520px 520px;animation:grain 42s ease-in-out infinite alternate;will-change:transform}
+  @keyframes grain{0%{transform:scale(1) translate(0,0)}100%{transform:scale(1.1) translate(-2%,-1.5%)}}
   @media (prefers-reduced-motion:reduce){[data-kenburns],[data-marquee],[data-marquee-fast]{animation:none!important}.grain{animation:none!important}}
   @media (max-width:1024px){
     [data-r="g4"]{grid-template-columns:repeat(2,1fr)!important}
