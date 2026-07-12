@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>РегионДорСтрой — строительство дорог и благоустройство в Орле</title>
 <meta name="description" content="ООО «РегионДорСтрой» — дорожное строительство, благоустройство, аренда спецтехники и поставка материалов (щебень, песок, грунт) в Орле и области.">
-<link rel="canonical" href="https://oreopaks.github.io/Site/">
 <meta name="theme-color" content="#0d0d0d">
+<link rel="canonical" href="https://oreopaks.github.io/Site/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="РегионДорСтрой">
@@ -53,100 +53,57 @@
   }
 }
 </script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="image" href="assets/hero-paving.webp" fetchpriority="high">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="image-slot.js"></script>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  @media (prefers-reduced-motion: no-preference){html{scroll-behavior:smooth}}
+  html{scroll-behavior:smooth}
   body{font-family:'Manrope',sans-serif;color:#111;background:#fff;-webkit-font-smoothing:antialiased}
   ::selection{background:#FFC700;color:#111}
   a{text-decoration:none;color:inherit}
-  a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid #FFC700;outline-offset:2px;box-shadow:0 0 0 5px rgba(13,13,13,.85)}
-  h1,h2,h3{overflow-wrap:break-word;word-break:break-word}
-  section[id]{scroll-margin-top:90px}
-
-  /* skip link */
-  .skip{position:absolute;left:-9999px;top:0;z-index:200;background:#FFC700;color:#0d0d0d;font-weight:800;padding:12px 18px}
-  .skip:focus{left:0}
-
-  /* service-card hover (text stays readable on dark) */
+  a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid #FFC700;outline-offset:2px}
+  [data-svc]{transition:background-color .2s ease}
+  [data-svc] h3,[data-svc] p,[data-svc-num]{transition:color .2s ease}
   [data-svc]:hover{background:#0d0d0d!important}
   [data-svc]:hover h3{color:#fff!important}
-  [data-svc]:hover p{color:#cfcfcf!important}
-
-  /* hover/focus equivalents of the design's style-hover / style-focus attrs */
-  .nav-a:hover,.mlink:hover,.foot-a:hover{color:#FFC700}
-  .btn-y:hover{background:#ffd633}
-  .btn-d:hover{background:#FFC700;color:#0d0d0d}
-  .fleet-card:hover,.mat-card:hover{border-color:#FFC700}
-  .soc:hover{background:#FFC700;color:#0d0d0d}
-  .burger:hover{border-color:#FFC700}
-  .fld:focus{border-color:#FFC700}
-
-  /* image placeholders (replace Claude Design <image-slot>) */
-  .slot{display:flex;align-items:center;justify-content:center;text-align:center;
-    background:#161616;color:rgba(255,255,255,.45);font-size:13px;font-weight:500;
-    padding:12px;line-height:1.35;letter-spacing:.01em}
-
-  /* hero Ken Burns slideshow */
-  .kb{position:absolute;inset:0;background-size:cover;background-position:center;
-    opacity:0;transform-origin:center;will-change:transform,opacity;
-    animation:kbA 24s linear infinite}
-  .kb--2{animation-name:kbB;animation-delay:12s}
-  @keyframes kbA{
-    0%{opacity:0;transform:scale(1.02)}
-    7%{opacity:1}
-    50%{opacity:1;transform:scale(1.14) translate(-1.5%,1%)}
-    57%{opacity:0}
-    100%{opacity:0;transform:scale(1.02)}
-  }
-  @keyframes kbB{
-    0%{opacity:0;transform:scale(1.14) translate(1.5%,-1%)}
-    7%{opacity:1}
-    50%{opacity:1;transform:scale(1.02)}
-    57%{opacity:0}
-    100%{opacity:0;transform:scale(1.14) translate(1.5%,-1%)}
-  }
-  .kb-shade{position:absolute;inset:0;z-index:2;pointer-events:none;
-    background:linear-gradient(to top,rgba(13,13,13,.55) 0%,rgba(13,13,13,0) 38%)}
-  @media (prefers-reduced-motion: reduce){
-    .kb{animation:none!important;opacity:0}
-    .kb--1{opacity:1}
-  }
-
-  /* map facade (click-to-load, avoids loading heavy third-party on page load) */
-  .map-facade{position:relative;height:360px;border:1px solid #e6e6e2;background:#eceae5;
-    display:flex;align-items:center;justify-content:center;cursor:pointer;text-align:center;
-    background-image:repeating-linear-gradient(45deg,#e6e3dc 0 16px,#eceae5 16px 32px)}
-  .map-facade span{background:#0d0d0d;color:#FFC700;font-weight:700;font-size:14px;padding:14px 22px;letter-spacing:.3px}
-
-  /* cookie bar */
-  #cookieBar{position:fixed;left:0;right:0;bottom:0;z-index:150;background:#0d0d0d;color:#cfcfcf;
-    font-size:13px;line-height:1.5;padding:14px 18px;display:flex;gap:14px;align-items:center;
-    justify-content:center;flex-wrap:wrap;border-top:3px solid #FFC700}
-  #cookieBar a{color:#FFC700;font-weight:600}
-  #cookieBar button{background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope',sans-serif;
-    font-weight:800;font-size:13px;padding:9px 18px;cursor:pointer;text-transform:uppercase}
-
-  /* form error / direct-contact fallback */
-  .form-err{display:none;background:rgba(255,199,0,.12);border:1px solid #FFC700;color:inherit;
-    font-size:13px;line-height:1.5;padding:12px 14px;margin-bottom:14px}
-  .form-err a{color:#8a6d00;font-weight:700;text-decoration:underline}
-
-  /* responsive */
+  [data-svc]:hover p{color:#d0d0d0!important}
   [data-burger]{display:none}
+  @keyframes kenburns{0%{transform:scale(1.03) translate(0,0)}100%{transform:scale(1.13) translate(-2%,-1.5%)}}
+  [data-kenburns]{animation:kenburns 24s ease-in-out infinite alternate;transform-origin:center}
+  @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+  [data-marquee]{animation:marquee 32s linear infinite;will-change:transform}
+  [data-marquee-fast]{animation:marquee 22s linear infinite;will-change:transform}
+  [data-progress]{position:fixed;top:0;left:0;height:3px;width:100%;background:#FFC700;z-index:200;transform:scaleX(0);transform-origin:0 50%;box-shadow:0 0 12px rgba(255,199,0,.6);will-change:transform}
+  [data-svc]:hover [data-svc-num]{color:#FFC700!important}
+  [data-lift]{transition:transform .35s cubic-bezier(.22,.61,.36,1),border-color .25s ease,box-shadow .35s ease}
+  [data-lift]:hover{transform:translateY(-8px);box-shadow:0 24px 50px -20px rgba(0,0,0,.55)}
+  [data-imgzoom]{overflow:hidden}
+  [data-imgzoom] image-slot{transition:transform .8s cubic-bezier(.22,.61,.36,1);display:block}
+  [data-imgzoom]:hover image-slot{transform:scale(1.08)}
+  @media (prefers-reduced-motion:reduce){[data-kenburns],[data-marquee],[data-marquee-fast]{animation:none!important}}
   @media (max-width:1024px){
     [data-r="g4"]{grid-template-columns:repeat(2,1fr)!important}
     [data-r="g5"]{grid-template-columns:repeat(3,1fr)!important}
   }
-  @media (max-width:900px){
-    [data-r="hero"],[data-r="two"]{grid-template-columns:1fr!important;gap:36px!important}
-    [data-r="hero"]{padding-top:48px!important;padding-bottom:56px!important}
-    [data-desknav]{display:none!important}
+  @media (max-width:1120px){
     [data-hphone]{display:none!important}
+  }
+  @media (max-width:1024px){
+    [data-desknav]{display:none!important}
     [data-burger]{display:inline-flex!important}
+    [data-tbhours]{display:none!important}
+  }
+  @media (max-width:900px){
+    [data-r="two"]{grid-template-columns:1fr!important;gap:36px!important}
+    [data-herowrap]{min-height:auto!important}
+    [data-hero-content]{padding-top:92px!important;padding-bottom:52px!important}
     h1{font-size:44px!important}
   }
   @media (max-width:768px){
@@ -161,39 +118,24 @@
     div[style*="80px 32px 90px"]{padding-left:18px!important;padding-right:18px!important}
     div[style*="padding:9px 32px"]{padding-left:18px!important;padding-right:18px!important}
   }
-  @media (max-width:400px){
-    h1{font-size:27px!important}
-    h2{font-size:26px!important}
-    [data-r="hero"]{padding-top:36px!important}
-  }
-
-  /* print: dark sections become legible on paper */
-  @media print{
-    *{background:#fff!important;color:#000!important;box-shadow:none!important}
-    header,.burger,[data-burger],#mobileMenu,#modal,#cookieBar,.map-facade,iframe,
-    form,.btn-y,.btn-d,.soc{display:none!important}
-    a{color:#000!important;text-decoration:underline}
-    .slot{display:none!important}
-    section{padding:18px 0!important}
-  }
 </style>
-</head>
-<body>
-<a class="skip" href="#main">Перейти к содержанию</a>
+</helmet>
 
 <div style="overflow-x:hidden">
+
+  <div data-progress aria-hidden="true"></div>
 
   <!-- ================= TOP BAR ================= -->
   <div style="background:#0a0a0a;color:#b8b8b8;font-size:13px;border-bottom:1px solid #1c1c1c">
     <div style="max-width:1240px;margin:0 auto;padding:9px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-      <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
-        <span style="display:flex;align-items:center;gap:7px"><span aria-hidden="true">📍</span> г. Орёл, Орловская область</span>
-        <span style="display:flex;align-items:center;gap:7px"><span aria-hidden="true">🕓</span> Пн–Сб, 8:00–20:00</span>
+      <div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap">
+        <span style="display:flex;align-items:center;gap:8px;white-space:nowrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>г. Орёл, Орловская область</span>
+        <span data-tbhours style="display:flex;align-items:center;gap:8px;white-space:nowrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>Пн–Сб, 8:00–20:00</span>
       </div>
       <div style="display:flex;gap:20px;align-items:center">
         <a href="mailto:Rdstroiy@yandex.ru" style="color:#cfcfcf">Rdstroiy@yandex.ru</a>
-        <a href="https://wa.me/79807691111" target="_blank" rel="noopener" style="color:#FFC700;font-weight:600">WhatsApp</a>
-        <a href="https://t.me/regiondorstroy" target="_blank" rel="noopener" style="color:#FFC700;font-weight:600">Telegram</a>
+        <a href="https://wa.me/79807691111" style="color:#FFC700;font-weight:600">WhatsApp</a>
+        <a href="https://t.me/regiondorstroy" style="color:#FFC700;font-weight:600">Telegram</a>
       </div>
     </div>
   </div>
@@ -202,621 +144,560 @@
   <header style="position:sticky;top:0;z-index:50;background:#0d0d0d;border-bottom:3px solid #FFC700">
     <div style="max-width:1240px;margin:0 auto;padding:0 32px;height:78px;display:flex;align-items:center;justify-content:space-between;gap:24px">
       <a href="#top" style="display:flex;align-items:center;gap:13px;flex-shrink:0">
-        <img src="assets/logo-rds.webp" alt="" width="48" height="48" style="width:48px;height:48px;object-fit:contain;flex-shrink:0">
+        <img src="assets/logo-rds.webp" alt="" style="width:48px;height:48px;object-fit:contain;flex-shrink:0">
+
         <div style="line-height:1.05">
-          <div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:20px;letter-spacing:.5px;color:#fff">РЕГИОНДОРСТРОЙ</div>
+          <div style="font-family:'Oswald';font-weight:700;font-size:20px;letter-spacing:.5px;color:#fff">РЕГИОНДОРСТРОЙ</div>
           <div style="font-size:10.5px;letter-spacing:3px;color:#FFC700;font-weight:600">ДОРОГИ · БЛАГОУСТРОЙСТВО</div>
         </div>
       </a>
 
-      <nav data-desknav aria-label="Основная навигация" style="display:flex;gap:28px;align-items:center;font-size:14.5px;font-weight:600;color:#d8d8d8">
-        <a class="nav-a" href="#services">Услуги</a>
-        <a class="nav-a" href="#fleet">Спецтехника</a>
-        <a class="nav-a" href="#materials">Материалы</a>
-        <a class="nav-a" href="#why">О компании</a>
-        <a class="nav-a" href="#contacts">Контакты</a>
+      <nav data-desknav style="display:flex;gap:28px;align-items:center;font-size:14.5px;font-weight:600;color:#d8d8d8">
+        <a href="#services" style="" style-hover="color:#FFC700">Услуги</a>
+        <a href="#fleet" style="" style-hover="color:#FFC700">Спецтехника</a>
+        <a href="#materials" style="" style-hover="color:#FFC700">Материалы</a>
+        <a href="#why" style="" style-hover="color:#FFC700">О компании</a>
+        <a href="#contacts" style="" style-hover="color:#FFC700">Контакты</a>
       </nav>
 
       <div style="display:flex;align-items:center;gap:18px;flex-shrink:0">
-        <a href="tel:+79807691111" data-hphone style="font-family:'Oswald',sans-serif;font-weight:600;font-size:18px;color:#fff;letter-spacing:.3px">8 980 769-11-11</a>
-        <button class="btn-y" data-open-modal data-desknav style="background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope',sans-serif;font-weight:800;font-size:13.5px;padding:13px 22px;cursor:pointer;letter-spacing:.3px;text-transform:uppercase">Заказать звонок</button>
-        <button class="burger" data-burger aria-label="Открыть меню" aria-expanded="false" aria-controls="mobileMenu" onclick="toggleMenu()" style="background:none;border:1.5px solid #3a3a3a;color:#fff;width:48px;height:42px;cursor:pointer;align-items:center;justify-content:center;flex-direction:column;gap:5px">
+        <a href="tel:+79807691111" data-hphone style="font-family:'Oswald';font-weight:600;font-size:18px;color:#fff;letter-spacing:.3px">8 980 769-11-11</a>
+        <button onClick="{{ openModal }}" data-desknav style="background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope';font-weight:800;font-size:13.5px;padding:13px 22px;cursor:pointer;letter-spacing:.3px;text-transform:uppercase" style-hover="background:#ffd633">Заказать звонок</button>
+        <button onClick="{{ toggleMenu }}" data-burger aria-label="Открыть меню" style="background:none;border:1.5px solid #3a3a3a;color:#fff;width:48px;height:42px;cursor:pointer;align-items:center;justify-content:center;flex-direction:column;gap:5px" style-hover="border-color:#FFC700">
           <span aria-hidden="true" style="display:block;width:20px;height:2px;background:#FFC700"></span>
           <span aria-hidden="true" style="display:block;width:20px;height:2px;background:#FFC700"></span>
           <span aria-hidden="true" style="display:block;width:20px;height:2px;background:#FFC700"></span>
         </button>
       </div>
     </div>
-    <div id="mobileMenu" style="display:none;position:absolute;top:100%;left:0;right:0;background:#0d0d0d;border-bottom:3px solid #FFC700;padding:10px 24px 20px;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,.4)">
-      <a class="mlink" onclick="closeMenu()" href="#services" style="color:#fff;font-weight:600;font-size:16px;padding:14px 4px;border-bottom:1px solid #1c1c1c">Услуги</a>
-      <a class="mlink" onclick="closeMenu()" href="#fleet" style="color:#fff;font-weight:600;font-size:16px;padding:14px 4px;border-bottom:1px solid #1c1c1c">Спецтехника</a>
-      <a class="mlink" onclick="closeMenu()" href="#materials" style="color:#fff;font-weight:600;font-size:16px;padding:14px 4px;border-bottom:1px solid #1c1c1c">Материалы</a>
-      <a class="mlink" onclick="closeMenu()" href="#why" style="color:#fff;font-weight:600;font-size:16px;padding:14px 4px;border-bottom:1px solid #1c1c1c">О компании</a>
-      <a class="mlink" onclick="closeMenu()" href="#contacts" style="color:#fff;font-weight:600;font-size:16px;padding:14px 4px;border-bottom:1px solid #1c1c1c">Контакты</a>
-      <a href="tel:+79807691111" style="color:#FFC700;font-family:'Oswald',sans-serif;font-weight:600;font-size:22px;padding:16px 4px 6px">8 980 769-11-11</a>
-      <button class="btn-y" onclick="closeMenu();openModal()" style="margin-top:10px;background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope',sans-serif;font-weight:800;font-size:15px;padding:15px;cursor:pointer;text-transform:uppercase;letter-spacing:.3px">Заказать звонок</button>
-    </div>
+      <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;top:100%;left:0;right:0;background:#0d0d0d;border-bottom:3px solid #FFC700;padding:10px 24px 20px;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,.4)">
+          <a onClick="{{ closeMenu }}" href="#services" style="color:#fff;font-weight:600;font-size:16px;padding:14px 4px;border-bottom:1px solid #1c1c1c" style-hover="color:#FFC700">Услуги</a>
+          <a onClick="{{ closeMenu }}" href="#fleet" style="color:#fff;font-weight:600;font-size:16px;padding:14px 4px;border-bottom:1px solid #1c1c1c" style-hover="color:#FFC700">Спецтехника</a>
+          <a onClick="{{ closeMenu }}" href="#materials" style="color:#fff;font-weight:600;font-size:16px;padding:14px 4px;border-bottom:1px solid #1c1c1c" style-hover="color:#FFC700">Материалы</a>
+          <a onClick="{{ closeMenu }}" href="#why" style="color:#fff;font-weight:600;font-size:16px;padding:14px 4px;border-bottom:1px solid #1c1c1c" style-hover="color:#FFC700">О компании</a>
+          <a onClick="{{ closeMenu }}" href="#contacts" style="color:#fff;font-weight:600;font-size:16px;padding:14px 4px;border-bottom:1px solid #1c1c1c" style-hover="color:#FFC700">Контакты</a>
+          <a href="tel:+79807691111" style="color:#FFC700;font-family:'Oswald';font-weight:600;font-size:22px;padding:16px 4px 6px">8 980 769-11-11</a>
+          <button onClick="{{ openModalMobile }}" style="margin-top:10px;background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope';font-weight:800;font-size:15px;padding:15px;cursor:pointer;text-transform:uppercase;letter-spacing:.3px">Заказать звонок</button>
+        </div>
+      </sc-if>
   </header>
 
-  <main id="main">
+  <!-- ================= HERO (cinematic full-bleed) ================= -->
+  <section id="top" data-herowrap style="background:#0d0d0d;position:relative;color:#fff;overflow:hidden;min-height:90vh;display:flex;align-items:flex-end">
+    <!-- image layer with slow ken-burns drift -->
+    <div data-kenburns style="position:absolute;inset:0;z-index:0">
+      <image-slot id="rds-hero" shape="rect" src="assets/hero-paving.webp" fit="cover" position="50% 42%" placeholder="Перетащите фото: ночная укладка асфальта / техника в работе" style="position:absolute;inset:0;width:100%;height:100%"></image-slot>
+    </div>
+    <!-- cinematic scrims -->
+    <div style="position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(13,13,13,.72) 0%,rgba(13,13,13,.28) 34%,rgba(13,13,13,.5) 62%,rgba(13,13,13,.95) 100%)"></div>
+    <div style="position:absolute;inset:0;z-index:1;background:linear-gradient(95deg,rgba(13,13,13,.9) 0%,rgba(13,13,13,.35) 52%,transparent 100%)"></div>
 
-  <!-- ================= HERO ================= -->
-  <section id="top" style="background:#0d0d0d;position:relative;color:#fff;overflow:hidden">
-    <div style="position:absolute;inset:0;background-image:repeating-linear-gradient(135deg,rgba(255,199,0,.04) 0 2px,transparent 2px 60px);pointer-events:none"></div>
-    <div data-r="hero" style="max-width:1240px;margin:0 auto;padding:80px 32px 90px;display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center;position:relative">
-      <div data-anim="fade-up">
-        <div style="display:inline-flex;align-items:center;gap:9px;background:rgba(255,199,0,.12);border:1px solid rgba(255,199,0,.35);color:#FFC700;font-weight:700;font-size:13px;padding:8px 15px;letter-spacing:.5px;margin-bottom:26px"><span aria-hidden="true">⚙</span> ДОРОЖНО-СТРОИТЕЛЬНАЯ КОМПАНИЯ · ОРЁЛ</div>
-        <h1 style="font-family:'Oswald',sans-serif;font-weight:700;font-size:62px;line-height:1.03;letter-spacing:.5px;text-transform:uppercase;margin-bottom:22px">Строим дороги.<br>Благоустраиваем <span style="color:#FFC700">территории.</span></h1>
-        <p style="font-size:18px;line-height:1.6;color:#bfbfbf;max-width:540px;margin-bottom:34px">Полный цикл дорожного строительства, благоустройство дворов и частных территорий, аренда спецтехники и поставка материалов в Орле и области.</p>
-        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:42px">
-          <button class="btn-y" data-open-modal style="background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope',sans-serif;font-weight:800;font-size:15px;padding:17px 30px;cursor:pointer;text-transform:uppercase;letter-spacing:.3px">Оставить заявку</button>
-          <a href="#services" style="background:transparent;color:#fff;border:1.5px solid #3a3a3a;font-weight:700;font-size:15px;padding:16px 30px;text-transform:uppercase;letter-spacing:.3px;display:inline-flex;align-items:center">Наши услуги</a>
-        </div>
-        <div style="display:flex;gap:40px;flex-wrap:wrap;border-top:1px solid #222;padding-top:26px">
-          <div><div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:38px;color:#FFC700;line-height:1">15+</div><div style="font-size:13px;color:#9a9a9a;margin-top:2px">единиц спецтехники</div></div>
-          <div><div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:38px;color:#FFC700;line-height:1">Под ключ</div><div style="font-size:13px;color:#9a9a9a;margin-top:2px">полный цикл работ</div></div>
-          <div><div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:38px;color:#FFC700;line-height:1">Орёл</div><div style="font-size:13px;color:#9a9a9a;margin-top:2px">город и область</div></div>
-        </div>
+    <div style="position:relative;z-index:2;max-width:1240px;margin:0 auto;padding:128px 32px 62px;width:100%" data-hero-content>
+      <div data-anim="fade-up" style="display:inline-flex;align-items:center;gap:9px;background:rgba(255,199,0,.14);border:1px solid rgba(255,199,0,.4);color:#FFC700;font-weight:700;font-size:13px;padding:8px 15px;letter-spacing:.5px;margin-bottom:26px"><span aria-hidden="true" style="width:7px;height:7px;background:#FFC700;flex-shrink:0"></span>ДОРОЖНО-СТРОИТЕЛЬНАЯ КОМПАНИЯ · ОРЁЛ</div>
+      <h1 data-anim="fade-up" style="font-family:'Oswald';font-weight:700;font-size:80px;line-height:.97;letter-spacing:.5px;text-transform:uppercase;margin-bottom:24px;max-width:920px;text-shadow:0 6px 44px rgba(0,0,0,.55)">Строим дороги.<br>Благоустраиваем <span style="color:#FFC700">территории.</span></h1>
+      <p data-anim="fade-up" style="font-size:19px;line-height:1.6;color:#dcdcdc;max-width:560px;margin-bottom:38px;text-shadow:0 2px 20px rgba(0,0,0,.5)">Полный цикл дорожного строительства, благоустройство дворов и частных территорий, аренда спецтехники и поставка материалов в Орле и области.</p>
+      <div data-anim="fade-up" style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:54px">
+        <button onClick="{{ openModal }}" style="background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope';font-weight:800;font-size:15px;padding:17px 30px;cursor:pointer;text-transform:uppercase;letter-spacing:.3px" style-hover="background:#ffd633">Оставить заявку</button>
+        <a href="#services" style="background:rgba(255,255,255,.06);color:#fff;border:1.5px solid rgba(255,255,255,.28);font-weight:700;font-size:15px;padding:16px 30px;text-transform:uppercase;letter-spacing:.3px;display:inline-flex;align-items:center" style-hover="border-color:#FFC700">Наши услуги</a>
       </div>
-
-      <div data-anim="clip-left" role="img" aria-label="Укладка асфальта — спецтехника РегионДорСтрой в работе" style="position:relative;height:480px;background:#161616 url('assets/hero-paving.webp') center/cover;border:1px solid #262626;overflow:hidden">
-        <div class="kb kb--1" style="background-image:url('assets/hero-paving.webp')" aria-hidden="true"></div>
-        <div class="kb kb--2" style="background-image:url('assets/hero-paving.webp')" aria-hidden="true"></div>
-        <div class="kb-shade" aria-hidden="true"></div>
-        <div style="position:absolute;left:0;right:0;bottom:0;height:12px;background-image:repeating-linear-gradient(45deg,#FFC700 0 14px,#0d0d0d 14px 28px);z-index:3;pointer-events:none"></div>
+      <div data-anim="fade-up" style="display:flex;gap:clamp(28px,5vw,56px);flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.2);padding-top:26px;max-width:680px">
+        <div><div style="font-family:'Oswald';font-weight:700;font-size:40px;color:#FFC700;line-height:1"><span data-count data-to="15" data-suffix="+">15+</span></div><div style="font-size:13px;color:#c7c7c7;margin-top:2px">единиц спецтехники</div></div>
+        <div><div style="font-family:'Oswald';font-weight:700;font-size:40px;color:#FFC700;line-height:1">Под ключ</div><div style="font-size:13px;color:#c7c7c7;margin-top:2px">полный цикл работ</div></div>
+        <div><div style="font-family:'Oswald';font-weight:700;font-size:40px;color:#FFC700;line-height:1">Орёл</div><div style="font-size:13px;color:#c7c7c7;margin-top:2px">город и область</div></div>
       </div>
     </div>
+
+    <div style="position:absolute;left:0;right:0;bottom:0;height:10px;z-index:3;background-image:repeating-linear-gradient(45deg,#FFC700 0 18px,#0d0d0d 18px 36px);pointer-events:none"></div>
   </section>
 
-  <!-- caution strip -->
-  <div style="height:10px;background-image:repeating-linear-gradient(45deg,#FFC700 0 18px,#0d0d0d 18px 36px)"></div>
+  <!-- ================= MARQUEE TICKER ================= -->
+  <div style="background:#0d0d0d;overflow:hidden;padding:16px 0;border-top:1px solid #242424;border-bottom:1px solid #242424">
+    <div data-marquee style="display:flex;align-items:center;white-space:nowrap;font-family:'Oswald';font-weight:700;font-size:19px;letter-spacing:1.5px;text-transform:uppercase;color:#efefef">
+      <span style="display:flex;align-items:center;gap:20px;padding-right:20px" aria-hidden="false">Строительство дорог <span style="color:#FFC700">◆</span> Благоустройство территорий <span style="color:#FFC700">◆</span> Аренда спецтехники <span style="color:#FFC700">◆</span> Грузоперевозки <span style="color:#FFC700">◆</span> Поставка материалов <span style="color:#FFC700">◆</span> Асфальтирование <span style="color:#FFC700">◆</span> Планировка участков <span style="color:#FFC700">◆</span> </span>
+      <span style="display:flex;align-items:center;gap:20px;padding-right:20px" aria-hidden="true">Строительство дорог <span style="color:#FFC700">◆</span> Благоустройство территорий <span style="color:#FFC700">◆</span> Аренда спецтехники <span style="color:#FFC700">◆</span> Грузоперевозки <span style="color:#FFC700">◆</span> Поставка материалов <span style="color:#FFC700">◆</span> Асфальтирование <span style="color:#FFC700">◆</span> Планировка участков <span style="color:#FFC700">◆</span> </span>
+    </div>
+  </div>
 
   <!-- ================= SERVICES ================= -->
-  <section id="services" style="background:#f5f5f3;padding:90px 0">
+  <section id="services" data-cine style="background:#f5f5f3;padding:90px 0">
     <div style="max-width:1240px;margin:0 auto;padding:0 32px">
       <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:48px;flex-wrap:wrap">
         <div data-anim="slide-left">
-          <div style="font-family:'Oswald',sans-serif;font-weight:600;font-size:14px;letter-spacing:3px;color:#8a6d00;margin-bottom:10px">— ЧЕМ МЫ ЗАНИМАЕМСЯ</div>
-          <h2 style="font-family:'Oswald',sans-serif;font-weight:700;font-size:46px;text-transform:uppercase;line-height:1.05;letter-spacing:.5px">Услуги компании</h2>
+          <div style="font-family:'Oswald';font-weight:600;font-size:14px;letter-spacing:3px;color:#8a6d00;margin-bottom:10px">— ЧЕМ МЫ ЗАНИМАЕМСЯ</div>
+          <h2 style="font-family:'Oswald';font-weight:700;font-size:46px;text-transform:uppercase;line-height:1.05;letter-spacing:.5px">Услуги компании</h2>
         </div>
         <p data-anim="slide-right" style="max-width:380px;color:#5a5a5a;font-size:15.5px;line-height:1.6">Выполняем работы любого объёма собственной техникой и бригадами профессионалов.</p>
       </div>
 
       <div data-r="g3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:#e2e2de;border:1px solid #e2e2de">
-        <div data-svc data-anim="rise" style="background:#fff;padding:38px 32px;transition:all .2s">
-          <div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:15px;color:#8a6d00;letter-spacing:1px;margin-bottom:18px">01 /</div>
-          <h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:23px;text-transform:uppercase;margin-bottom:12px;line-height:1.15;color:inherit">Строительство дорог</h3>
-          <p style="color:#6a6a6a;font-size:14.5px;line-height:1.6">Устройство и ремонт асфальтобетонного покрытия, дворовых проездов и подъездных путей любой сложности.</p>
-        </div>
-        <div data-svc data-anim="rise" style="background:#fff;padding:38px 32px;transition:all .2s">
-          <div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:15px;color:#8a6d00;letter-spacing:1px;margin-bottom:18px">02 /</div>
-          <h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:23px;text-transform:uppercase;margin-bottom:12px;line-height:1.15;color:inherit">Благоустройство</h3>
-          <p style="color:#6a6a6a;font-size:14.5px;line-height:1.6">Дворы, частные территории, площадки и общественные пространства — выполняем под ключ.</p>
-        </div>
-        <div data-svc data-anim="rise" style="background:#fff;padding:38px 32px;transition:all .2s">
-          <div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:15px;color:#8a6d00;letter-spacing:1px;margin-bottom:18px">03 /</div>
-          <h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:23px;text-transform:uppercase;margin-bottom:12px;line-height:1.15;color:inherit">Аренда спецтехники</h3>
-          <p style="color:#6a6a6a;font-size:14.5px;line-height:1.6">Более 15 единиц техники в аренду с опытным экипажем. Почасовая и сменная оплата.</p>
-        </div>
-        <div data-svc data-anim="rise" style="background:#fff;padding:38px 32px;transition:all .2s">
-          <div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:15px;color:#8a6d00;letter-spacing:1px;margin-bottom:18px">04 /</div>
-          <h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:23px;text-transform:uppercase;margin-bottom:12px;line-height:1.15;color:inherit">Грузоперевозки</h3>
-          <p style="color:#6a6a6a;font-size:14.5px;line-height:1.6">Доставка сыпучих и строительных грузов самосвалами по Орлу и области.</p>
-        </div>
-        <div data-svc data-anim="rise" style="background:#fff;padding:38px 32px;transition:all .2s">
-          <div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:15px;color:#8a6d00;letter-spacing:1px;margin-bottom:18px">05 /</div>
-          <h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:23px;text-transform:uppercase;margin-bottom:12px;line-height:1.15;color:inherit">Поставка материалов</h3>
-          <p style="color:#6a6a6a;font-size:14.5px;line-height:1.6">Грунт, щебень и песок всех фракций с доставкой прямо на объект.</p>
-        </div>
-        <div data-svc data-anim="rise" style="background:#fff;padding:38px 32px;transition:all .2s">
-          <div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:15px;color:#8a6d00;letter-spacing:1px;margin-bottom:18px">06 /</div>
-          <h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:23px;text-transform:uppercase;margin-bottom:12px;line-height:1.15;color:inherit">Планировка участков</h3>
-          <p style="color:#6a6a6a;font-size:14.5px;line-height:1.6">Подготовка, выравнивание и планировка территорий под застройку и благоустройство.</p>
-        </div>
+        <sc-for list="{{ services }}" as="s" hint-placeholder-count="6">
+          <div data-anim="rise" data-svc style="background:#fff;padding:38px 32px">
+            <div data-svc-num style="font-family:'Oswald';font-weight:700;font-size:15px;color:#8a6d00;letter-spacing:1px;margin-bottom:18px;transition:color .3s ease">{{ s.n }} /</div>
+            <h3 style="font-family:'Oswald';font-weight:600;font-size:23px;text-transform:uppercase;margin-bottom:12px;line-height:1.15;color:inherit">{{ s.t }}</h3>
+            <p style="color:#6a6a6a;font-size:14.5px;line-height:1.6">{{ s.d }}</p>
+          </div>
+        </sc-for>
       </div>
     </div>
   </section>
 
   <!-- ================= FLEET ================= -->
-  <section id="fleet" style="background:#0d0d0d;color:#fff;padding:90px 0;position:relative">
+  <section id="fleet" data-cine style="background:#0d0d0d;color:#fff;padding:90px 0;position:relative">
     <div style="max-width:1240px;margin:0 auto;padding:0 32px">
       <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:48px;flex-wrap:wrap">
         <div data-anim="fade-up">
-          <div style="font-family:'Oswald',sans-serif;font-weight:600;font-size:14px;letter-spacing:3px;color:#FFC700;margin-bottom:10px">— СОБСТВЕННЫЙ ПАРК</div>
-          <h2 style="font-family:'Oswald',sans-serif;font-weight:700;font-size:46px;text-transform:uppercase;line-height:1.05;letter-spacing:.5px">Спецтехника в аренду</h2>
+          <div style="font-family:'Oswald';font-weight:600;font-size:14px;letter-spacing:3px;color:#FFC700;margin-bottom:10px">— СОБСТВЕННЫЙ ПАРК</div>
+          <h2 style="font-family:'Oswald';font-weight:700;font-size:46px;text-transform:uppercase;line-height:1.05;letter-spacing:.5px">Спецтехника в аренду</h2>
         </div>
         <p data-anim="fade-up" style="max-width:400px;color:#a8a8a8;font-size:15.5px;line-height:1.6">Более 15 единиц техники с опытными операторами. Почасовая и сменная аренда по Орлу и области.</p>
       </div>
 
       <div data-r="g4" style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px">
-        <div class="fleet-card" data-anim="tilt" style="background:#161616;border:1px solid #262626"><div style="height:150px;background:#161616 url('assets/fleet-roller.webp') center/cover"></div><div style="padding:18px 18px 20px"><h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:18px;text-transform:uppercase;letter-spacing:.3px">Дорожные катки</h3><div style="margin-top:6px;font-size:12.5px;color:#FFC700;font-weight:700;letter-spacing:.5px">В АРЕНДУ →</div></div></div>
-        <div class="fleet-card" data-anim="tilt" style="background:#161616;border:1px solid #262626"><div style="height:150px;background:#161616 url('assets/fleet-paver.webp') center/cover"></div><div style="padding:18px 18px 20px"><h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:18px;text-transform:uppercase;letter-spacing:.3px">Асфальтоукладчики</h3><div style="margin-top:6px;font-size:12.5px;color:#FFC700;font-weight:700;letter-spacing:.5px">В АРЕНДУ →</div></div></div>
-        <div class="fleet-card" data-anim="tilt" style="background:#161616;border:1px solid #262626"><div style="height:150px;background:#161616 url('assets/fleet-excavator.webp') center/cover"></div><div style="padding:18px 18px 20px"><h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:18px;text-transform:uppercase;letter-spacing:.3px">Экскаваторы</h3><div style="margin-top:6px;font-size:12.5px;color:#FFC700;font-weight:700;letter-spacing:.5px">В АРЕНДУ →</div></div></div>
-        <div class="fleet-card" data-anim="tilt" style="background:#161616;border:1px solid #262626"><div style="height:150px;background:#161616 url('assets/fleet-dump.webp') center/cover"></div><div style="padding:18px 18px 20px"><h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:18px;text-transform:uppercase;letter-spacing:.3px">Самосвалы</h3><div style="margin-top:6px;font-size:12.5px;color:#FFC700;font-weight:700;letter-spacing:.5px">В АРЕНДУ →</div></div></div>
-        <div class="fleet-card" data-anim="tilt" style="background:#161616;border:1px solid #262626"><div style="height:150px;background:#161616 url('assets/fleet-loader.webp') center/cover"></div><div style="padding:18px 18px 20px"><h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:18px;text-transform:uppercase;letter-spacing:.3px">Погрузчики</h3><div style="margin-top:6px;font-size:12.5px;color:#FFC700;font-weight:700;letter-spacing:.5px">В АРЕНДУ →</div></div></div>
-        <div class="fleet-card" data-anim="tilt" style="background:#161616;border:1px solid #262626"><div style="height:150px;background:#161616 url('assets/fleet-grader.webp') center/cover"></div><div style="padding:18px 18px 20px"><h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:18px;text-transform:uppercase;letter-spacing:.3px">Автогрейдеры</h3><div style="margin-top:6px;font-size:12.5px;color:#FFC700;font-weight:700;letter-spacing:.5px">В АРЕНДУ →</div></div></div>
-        <div class="fleet-card" data-anim="tilt" style="background:#161616;border:1px solid #262626"><div style="height:150px;background:#161616 url('assets/fleet-dozer.webp') center/cover"></div><div style="padding:18px 18px 20px"><h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:18px;text-transform:uppercase;letter-spacing:.3px">Бульдозеры</h3><div style="margin-top:6px;font-size:12.5px;color:#FFC700;font-weight:700;letter-spacing:.5px">В АРЕНДУ →</div></div></div>
-        <div class="fleet-card" data-anim="tilt" style="background:#161616;border:1px solid #262626"><div style="height:150px;background:#161616 url('assets/fleet-crane.webp') center/cover"></div><div style="padding:18px 18px 20px"><h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:18px;text-transform:uppercase;letter-spacing:.3px">Автокраны</h3><div style="margin-top:6px;font-size:12.5px;color:#FFC700;font-weight:700;letter-spacing:.5px">В АРЕНДУ →</div></div></div>
+        <sc-for list="{{ fleet }}" as="f" hint-placeholder-count="8">
+          <div data-anim="tilt" data-lift data-imgzoom style="background:#161616;border:1px solid #262626" style-hover="border-color:#FFC700">
+            <image-slot id="rds-fleet-{{ f.k }}" shape="rect" src="{{ f.src }}" fit="cover" placeholder="{{ f.ph }}" style="display:block;width:100%;height:150px"></image-slot>
+            <div style="padding:18px 18px 20px">
+              <h3 style="font-family:'Oswald';font-weight:600;font-size:18px;text-transform:uppercase;letter-spacing:.3px">{{ f.t }}</h3>
+              <div style="margin-top:6px;font-size:12.5px;color:#FFC700;font-weight:700;letter-spacing:.5px">В АРЕНДУ →</div>
+            </div>
+          </div>
+        </sc-for>
       </div>
 
       <div style="margin-top:36px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap">
         <span style="color:#bfbfbf;font-size:15px">Нужна техника на объект?</span>
-        <button class="btn-y" data-open-modal style="background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope',sans-serif;font-weight:800;font-size:14px;padding:14px 26px;cursor:pointer;text-transform:uppercase;letter-spacing:.3px">Узнать стоимость аренды</button>
+        <button onClick="{{ openModal }}" style="background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope';font-weight:800;font-size:14px;padding:14px 26px;cursor:pointer;text-transform:uppercase;letter-spacing:.3px" style-hover="background:#ffd633">Узнать стоимость аренды</button>
       </div>
     </div>
   </section>
 
   <!-- ================= MATERIALS / CATALOG ================= -->
-  <section id="materials" style="background:#fff;padding:90px 0">
+  <section id="materials" data-cine style="background:#fff;padding:90px 0">
     <div style="max-width:1240px;margin:0 auto;padding:0 32px">
       <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:48px;flex-wrap:wrap">
         <div data-anim="slide-left">
-          <div style="font-family:'Oswald',sans-serif;font-weight:600;font-size:14px;letter-spacing:3px;color:#8a6d00;margin-bottom:10px">— КАТАЛОГ ТОВАРОВ</div>
-          <h2 style="font-family:'Oswald',sans-serif;font-weight:700;font-size:46px;text-transform:uppercase;line-height:1.05;letter-spacing:.5px">Сыпучие материалы</h2>
+          <div style="font-family:'Oswald';font-weight:600;font-size:14px;letter-spacing:3px;color:#8a6d00;margin-bottom:10px">— КАТАЛОГ ТОВАРОВ</div>
+          <h2 style="font-family:'Oswald';font-weight:700;font-size:46px;text-transform:uppercase;line-height:1.05;letter-spacing:.5px">Сыпучие материалы</h2>
         </div>
         <p data-anim="slide-right" style="max-width:400px;color:#5a5a5a;font-size:15.5px;line-height:1.6">Грунт, щебень и песок всех фракций. Доставка самосвалами на объект в день заказа.</p>
       </div>
 
       <div data-r="g4" style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px">
-        <div class="mat-card" data-anim="rotate-rise" style="border:1px solid #e6e6e2;display:flex;flex-direction:column">
-          <div style="height:160px;background:#e6e3dc url('assets/mat-shcheben.webp') center/cover"></div>
-          <div style="padding:20px;display:flex;flex-direction:column;flex:1">
-            <h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:21px;text-transform:uppercase;margin-bottom:8px">Щебень</h3>
-            <p style="color:#6a6a6a;font-size:13.5px;line-height:1.55;flex:1">Фракции 5–20, 20–40, 40–70 мм. Гранитный и известняковый.</p>
-            <div style="display:flex;align-items:baseline;gap:5px;margin:16px 0 14px"><span style="font-family:'Oswald',sans-serif;font-weight:700;font-size:26px;color:#0d0d0d">от 1 200 ₽</span><span style="font-size:13px;color:#5f5f5f">/ тонна</span></div>
-            <button class="btn-d" onclick="openCalc('Щебень')" style="background:#0d0d0d;color:#fff;border:none;font-family:'Manrope',sans-serif;font-weight:700;font-size:13.5px;padding:13px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;width:100%">Запросить расчёт</button>
+        <sc-for list="{{ materials }}" as="m" hint-placeholder-count="4">
+          <div data-anim="rotate-rise" data-lift style="border:1px solid #e6e6e2;display:flex;flex-direction:column;background:#fff" style-hover="border-color:#FFC700">
+            <div data-imgzoom style="position:relative">
+              <image-slot id="rds-mat-{{ m.k }}" shape="rect" src="{{ m.src }}" fit="cover" placeholder="{{ m.ph }}" style="display:block;width:100%;height:160px"></image-slot>
+              <sc-if value="{{ m.badge }}" hint-placeholder-val="{{ false }}">
+                <span style="position:absolute;top:12px;left:12px;background:#FFC700;color:#0d0d0d;font-family:'Oswald';font-weight:700;font-size:11.5px;letter-spacing:1px;text-transform:uppercase;padding:6px 11px">{{ m.badge }}</span>
+              </sc-if>
+            </div>
+            <div style="padding:20px;display:flex;flex-direction:column;flex:1">
+              <h3 style="font-family:'Oswald';font-weight:600;font-size:21px;text-transform:uppercase;margin-bottom:8px">{{ m.t }}</h3>
+              <p style="color:#6a6a6a;font-size:13.5px;line-height:1.55;flex:1">{{ m.d }}</p>
+              <div style="display:flex;align-items:baseline;gap:5px;margin:16px 0 14px">
+                <span style="font-family:'Oswald';font-weight:700;font-size:26px;color:#0d0d0d">{{ m.price }}</span>
+                <span style="font-size:13px;color:#5f5f5f">{{ m.unit }}</span>
+              </div>
+              <button onClick="{{ m.onRequest }}" style="background:#0d0d0d;color:#fff;border:none;font-family:'Manrope';font-weight:700;font-size:13.5px;padding:13px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;width:100%" style-hover="background:#FFC700;color:#0d0d0d">Запросить расчёт</button>
+            </div>
           </div>
-        </div>
-        <div class="mat-card" data-anim="rotate-rise" style="border:1px solid #e6e6e2;display:flex;flex-direction:column">
-          <div style="position:relative">
-            <div style="height:160px;background:#e6e3dc url('assets/mat-pesok.webp') center/cover"></div>
-            <span style="position:absolute;top:12px;left:12px;background:#FFC700;color:#0d0d0d;font-family:'Oswald',sans-serif;font-weight:700;font-size:11.5px;letter-spacing:1px;text-transform:uppercase;padding:6px 11px">Свой карьер</span>
-          </div>
-          <div style="padding:20px;display:flex;flex-direction:column;flex:1">
-            <h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:21px;text-transform:uppercase;margin-bottom:8px">Песок</h3>
-            <p style="color:#6a6a6a;font-size:13.5px;line-height:1.55;flex:1">Карьерный и намывной — красный, белый, любой. Свой песчаный карьер. Для строительства и благоустройства.</p>
-            <div style="display:flex;align-items:baseline;gap:5px;margin:16px 0 14px"><span style="font-family:'Oswald',sans-serif;font-weight:700;font-size:26px;color:#0d0d0d">от 600 ₽</span><span style="font-size:13px;color:#5f5f5f">/ м³</span></div>
-            <button class="btn-d" onclick="openCalc('Песок')" style="background:#0d0d0d;color:#fff;border:none;font-family:'Manrope',sans-serif;font-weight:700;font-size:13.5px;padding:13px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;width:100%">Запросить расчёт</button>
-          </div>
-        </div>
-        <div class="mat-card" data-anim="rotate-rise" style="border:1px solid #e6e6e2;display:flex;flex-direction:column">
-          <div style="height:160px;background:#e6e3dc url('assets/mat-grunt.webp') center/cover"></div>
-          <div style="padding:20px;display:flex;flex-direction:column;flex:1">
-            <h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:21px;text-transform:uppercase;margin-bottom:8px">Грунт</h3>
-            <p style="color:#6a6a6a;font-size:13.5px;line-height:1.55;flex:1">Плодородный и растительный грунт для участков и газонов.</p>
-            <div style="display:flex;align-items:baseline;gap:5px;margin:16px 0 14px"><span style="font-family:'Oswald',sans-serif;font-weight:700;font-size:26px;color:#0d0d0d">от 450 ₽</span><span style="font-size:13px;color:#5f5f5f">/ м³</span></div>
-            <button class="btn-d" onclick="openCalc('Грунт')" style="background:#0d0d0d;color:#fff;border:none;font-family:'Manrope',sans-serif;font-weight:700;font-size:13.5px;padding:13px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;width:100%">Запросить расчёт</button>
-          </div>
-        </div>
-        <div class="mat-card" data-anim="rotate-rise" style="border:1px solid #e6e6e2;display:flex;flex-direction:column">
-          <div style="height:160px;background:#e6e3dc url('assets/mat-pgs.webp') center/cover"></div>
-          <div style="padding:20px;display:flex;flex-direction:column;flex:1">
-            <h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:21px;text-transform:uppercase;margin-bottom:8px">ПГС и отсев</h3>
-            <p style="color:#6a6a6a;font-size:13.5px;line-height:1.55;flex:1">Песчано-гравийная смесь и отсев дробления любых объёмов.</p>
-            <div style="display:flex;align-items:baseline;gap:5px;margin:16px 0 14px"><span style="font-family:'Oswald',sans-serif;font-weight:700;font-size:26px;color:#0d0d0d">от 750 ₽</span><span style="font-size:13px;color:#5f5f5f">/ м³</span></div>
-            <button class="btn-d" onclick="openCalc('ПГС и отсев')" style="background:#0d0d0d;color:#fff;border:none;font-family:'Manrope',sans-serif;font-weight:700;font-size:13.5px;padding:13px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;width:100%">Запросить расчёт</button>
-          </div>
-        </div>
+        </sc-for>
       </div>
     </div>
   </section>
 
   <!-- ================= STATS BAND ================= -->
-  <section style="background:#FFC700;padding:54px 0">
+  <section data-cine style="background:#FFC700;padding:54px 0">
     <div data-r="stats" style="max-width:1240px;margin:0 auto;padding:0 32px;display:grid;grid-template-columns:repeat(4,1fr);gap:24px">
-      <div data-anim="pop" style="text-align:center;border-right:1px solid rgba(0,0,0,.12)"><div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:46px;color:#0d0d0d;line-height:1">15+</div><div style="font-weight:600;font-size:14px;color:#3a3000;margin-top:4px">единиц техники</div></div>
-      <div data-anim="pop" style="text-align:center;border-right:1px solid rgba(0,0,0,.12)"><div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:46px;color:#0d0d0d;line-height:1">5–10</div><div style="font-weight:600;font-size:14px;color:#3a3000;margin-top:4px">заказов в неделю</div></div>
-      <div data-anim="pop" style="text-align:center;border-right:1px solid rgba(0,0,0,.12)"><div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:46px;color:#0d0d0d;line-height:1">100%</div><div style="font-weight:600;font-size:14px;color:#3a3000;margin-top:4px">качество работ</div></div>
-      <div data-anim="pop" style="text-align:center"><div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:46px;color:#0d0d0d;line-height:1">Орёл</div><div style="font-weight:600;font-size:14px;color:#3a3000;margin-top:4px">город и область</div></div>
+      <div data-anim="pop" style="text-align:center;border-right:1px solid rgba(0,0,0,.12)">
+        <div style="font-family:'Oswald';font-weight:700;font-size:46px;color:#0d0d0d;line-height:1"><span data-count data-to="15" data-suffix="+">15+</span></div>
+        <div style="font-weight:600;font-size:14px;color:#3a3000;margin-top:4px">единиц техники</div>
+      </div>
+      <div data-anim="pop" style="text-align:center;border-right:1px solid rgba(0,0,0,.12)">
+        <div style="font-family:'Oswald';font-weight:700;font-size:46px;color:#0d0d0d;line-height:1">5–10</div>
+        <div style="font-weight:600;font-size:14px;color:#3a3000;margin-top:4px">заказов в неделю</div>
+      </div>
+      <div data-anim="pop" style="text-align:center;border-right:1px solid rgba(0,0,0,.12)">
+        <div style="font-family:'Oswald';font-weight:700;font-size:46px;color:#0d0d0d;line-height:1"><span data-count data-to="100" data-suffix="%">100%</span></div>
+        <div style="font-weight:600;font-size:14px;color:#3a3000;margin-top:4px">качество работ</div>
+      </div>
+      <div data-anim="pop" style="text-align:center">
+        <div style="font-family:'Oswald';font-weight:700;font-size:46px;color:#0d0d0d;line-height:1">Орёл</div>
+        <div style="font-weight:600;font-size:14px;color:#3a3000;margin-top:4px">город и область</div>
+      </div>
     </div>
   </section>
 
   <!-- ================= WHY US ================= -->
-  <section id="why" style="background:#f5f5f3;padding:90px 0">
+  <section id="why" data-cine style="background:#f5f5f3;padding:90px 0">
     <div style="max-width:1240px;margin:0 auto;padding:0 32px">
       <div data-r="two" style="display:grid;grid-template-columns:.9fr 1.1fr;gap:56px;align-items:center">
         <div data-anim="slide-left">
-          <div style="font-family:'Oswald',sans-serif;font-weight:600;font-size:14px;letter-spacing:3px;color:#8a6d00;margin-bottom:10px">— О КОМПАНИИ</div>
-          <h2 style="font-family:'Oswald',sans-serif;font-weight:700;font-size:44px;text-transform:uppercase;line-height:1.06;letter-spacing:.5px;margin-bottom:20px">Почему выбирают<br>«РегионДорСтрой»</h2>
+          <div style="font-family:'Oswald';font-weight:600;font-size:14px;letter-spacing:3px;color:#8a6d00;margin-bottom:10px">— О КОМПАНИИ</div>
+          <h2 style="font-family:'Oswald';font-weight:700;font-size:44px;text-transform:uppercase;line-height:1.06;letter-spacing:.5px;margin-bottom:20px">Почему выбирают<br>«РегионДорСтрой»</h2>
           <p style="color:#5a5a5a;font-size:16px;line-height:1.65;margin-bottom:28px">У нас отличная репутация: мы выполняем все работы качественно и в срок. Большой опыт в строительстве и собственный парк техники позволяют справляться с большими объёмами. Весь рабочий состав — профессионалы своего дела.</p>
           <div style="background:#fff;border:1px solid #e6e6e2;padding:22px 24px;display:flex;align-items:center;gap:20px">
-            <img src="assets/logo-rds.webp" alt="ООО РегионДорСтрой" width="84" height="84" loading="lazy" style="width:84px;height:84px;object-fit:contain;flex-shrink:0">
-            <div><div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:19px">ООО «РегионДорСтрой»</div><div style="color:#555;font-size:14px;margin-top:3px">г. Орёл · <a href="tel:+79807691111" style="color:inherit">8 980 769-11-11</a> · Rdstroiy@yandex.ru</div></div>
+            <img src="assets/logo-rds.webp" alt="ООО РегионДорСтрой" style="width:84px;height:84px;object-fit:contain;flex-shrink:0">
+            <div>
+              <div style="font-family:'Oswald';font-weight:700;font-size:19px">ООО «РегионДорСтрой»</div>
+              <div style="color:#6a6a6a;font-size:14px;margin-top:3px">г. Орёл · 8 980 769-11-11 · Rdstroiy@yandex.ru</div>
+            </div>
           </div>
         </div>
 
         <div data-r="g2" style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
-          <div data-anim="slide-right" style="background:#fff;border:1px solid #e6e6e2;border-top:3px solid #FFC700;padding:28px 24px"><h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:21px;text-transform:uppercase;margin-bottom:10px;line-height:1.1">Отличная репутация</h3><p style="color:#6a6a6a;font-size:14px;line-height:1.6">Нам доверяют компании и частные заказчики — работаем на результат и держим слово.</p></div>
-          <div data-anim="slide-right" style="background:#fff;border:1px solid #e6e6e2;border-top:3px solid #FFC700;padding:28px 24px"><h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:21px;text-transform:uppercase;margin-bottom:10px;line-height:1.1">Высокое качество</h3><p style="color:#6a6a6a;font-size:14px;line-height:1.6">Выполняем все работы качественно и в срок, сдаём объекты без замечаний.</p></div>
-          <div data-anim="slide-right" style="background:#fff;border:1px solid #e6e6e2;border-top:3px solid #FFC700;padding:28px 24px"><h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:21px;text-transform:uppercase;margin-bottom:10px;line-height:1.1">Большой опыт</h3><p style="color:#6a6a6a;font-size:14px;line-height:1.6">Многолетний опыт в дорожном строительстве и благоустройстве территорий.</p></div>
-          <div data-anim="slide-right" style="background:#fff;border:1px solid #e6e6e2;border-top:3px solid #FFC700;padding:28px 24px"><h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:21px;text-transform:uppercase;margin-bottom:10px;line-height:1.1">Большие объёмы</h3><p style="color:#6a6a6a;font-size:14px;line-height:1.6">Собственный парк техники позволяет браться за крупные объекты.</p></div>
+          <sc-for list="{{ why }}" as="w" hint-placeholder-count="4">
+            <div data-anim="slide-right" style="background:#fff;border:1px solid #e6e6e2;border-top:3px solid #FFC700;padding:28px 24px">
+              <h3 style="font-family:'Oswald';font-weight:600;font-size:21px;text-transform:uppercase;margin-bottom:10px;line-height:1.1">{{ w.t }}</h3>
+              <p style="color:#6a6a6a;font-size:14px;line-height:1.6">{{ w.d }}</p>
+            </div>
+          </sc-for>
         </div>
       </div>
     </div>
   </section>
 
   <!-- ================= PROCESS ================= -->
-  <section style="background:#0d0d0d;color:#fff;padding:84px 0">
+  <section data-cine style="background:#0d0d0d;color:#fff;padding:84px 0">
     <div style="max-width:1240px;margin:0 auto;padding:0 32px">
       <div data-anim="fade-down" style="text-align:center;margin-bottom:50px">
-        <div style="font-family:'Oswald',sans-serif;font-weight:600;font-size:14px;letter-spacing:3px;color:#FFC700;margin-bottom:10px">— КАК МЫ РАБОТАЕМ</div>
-        <h2 style="font-family:'Oswald',sans-serif;font-weight:700;font-size:44px;text-transform:uppercase;letter-spacing:.5px">Этапы работы</h2>
+        <div style="font-family:'Oswald';font-weight:600;font-size:14px;letter-spacing:3px;color:#FFC700;margin-bottom:10px">— КАК МЫ РАБОТАЕМ</div>
+        <h2 style="font-family:'Oswald';font-weight:700;font-size:44px;text-transform:uppercase;letter-spacing:.5px">Этапы работы</h2>
       </div>
       <div data-r="g5" style="display:grid;grid-template-columns:repeat(5,1fr);gap:18px">
-        <div data-anim="fade-up" style="border-top:1px solid #2a2a2a;padding-top:22px"><div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:40px;color:#FFC700;line-height:1;margin-bottom:14px">01</div><h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:19px;text-transform:uppercase;margin-bottom:9px">Заявка</h3><p style="color:#9a9a9a;font-size:13.5px;line-height:1.55">Оставляете заявку по телефону, в WhatsApp или через форму на сайте.</p></div>
-        <div data-anim="fade-up" style="border-top:1px solid #2a2a2a;padding-top:22px"><div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:40px;color:#FFC700;line-height:1;margin-bottom:14px">02</div><h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:19px;text-transform:uppercase;margin-bottom:9px">Выезд и расчёт</h3><p style="color:#9a9a9a;font-size:13.5px;line-height:1.55">Выезжаем на объект, оцениваем работы и готовим смету.</p></div>
-        <div data-anim="fade-up" style="border-top:1px solid #2a2a2a;padding-top:22px"><div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:40px;color:#FFC700;line-height:1;margin-bottom:14px">03</div><h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:19px;text-transform:uppercase;margin-bottom:9px">Договор</h3><p style="color:#9a9a9a;font-size:13.5px;line-height:1.55">Согласуем условия, сроки и фиксируем стоимость в договоре.</p></div>
-        <div data-anim="fade-up" style="border-top:1px solid #2a2a2a;padding-top:22px"><div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:40px;color:#FFC700;line-height:1;margin-bottom:14px">04</div><h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:19px;text-transform:uppercase;margin-bottom:9px">Выполнение</h3><p style="color:#9a9a9a;font-size:13.5px;line-height:1.55">Выполняем работы силами собственной техники и бригад.</p></div>
-        <div data-anim="fade-up" style="border-top:1px solid #2a2a2a;padding-top:22px"><div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:40px;color:#FFC700;line-height:1;margin-bottom:14px">05</div><h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:19px;text-transform:uppercase;margin-bottom:9px">Сдача</h3><p style="color:#9a9a9a;font-size:13.5px;line-height:1.55">Сдаём готовый объект и гарантируем качество результата.</p></div>
+        <sc-for list="{{ steps }}" as="st" hint-placeholder-count="5">
+          <div data-anim="fade-up" style="border-top:1px solid #2a2a2a;padding-top:22px">
+            <div style="font-family:'Oswald';font-weight:700;font-size:40px;color:#FFC700;line-height:1;margin-bottom:14px">0{{ st.n }}</div>
+            <h3 style="font-family:'Oswald';font-weight:600;font-size:19px;text-transform:uppercase;margin-bottom:9px">{{ st.t }}</h3>
+            <p style="color:#9a9a9a;font-size:13.5px;line-height:1.55">{{ st.d }}</p>
+          </div>
+        </sc-for>
       </div>
     </div>
   </section>
 
   <!-- ================= CONTACTS ================= -->
-  <section id="contacts" style="background:#fff;padding:90px 0">
+  <section id="contacts" data-cine style="background:#fff;padding:90px 0">
     <div style="max-width:1240px;margin:0 auto;padding:0 32px">
       <div data-r="two" style="display:grid;grid-template-columns:1fr 1fr;gap:48px">
         <div data-anim="slide-left">
-          <div style="font-family:'Oswald',sans-serif;font-weight:600;font-size:14px;letter-spacing:3px;color:#8a6d00;margin-bottom:10px">— СВЯЗАТЬСЯ С НАМИ</div>
-          <h2 style="font-family:'Oswald',sans-serif;font-weight:700;font-size:44px;text-transform:uppercase;line-height:1.05;letter-spacing:.5px;margin-bottom:28px">Оставьте заявку</h2>
+          <div style="font-family:'Oswald';font-weight:600;font-size:14px;letter-spacing:3px;color:#8a6d00;margin-bottom:10px">— СВЯЗАТЬСЯ С НАМИ</div>
+          <h2 style="font-family:'Oswald';font-weight:700;font-size:44px;text-transform:uppercase;line-height:1.05;letter-spacing:.5px;margin-bottom:28px">Оставьте заявку</h2>
 
           <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:30px">
-            <a href="tel:+79807691111" style="display:flex;align-items:center;gap:14px"><span aria-hidden="true" style="width:46px;height:46px;background:#0d0d0d;color:#FFC700;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📞</span><span><span style="display:block;font-family:'Oswald',sans-serif;font-weight:600;font-size:21px">8 980 769-11-11</span><span style="font-size:13px;color:#5f5f5f">городской: 49-11-11</span></span></a>
-            <a href="mailto:Rdstroiy@yandex.ru" style="display:flex;align-items:center;gap:14px"><span aria-hidden="true" style="width:46px;height:46px;background:#0d0d0d;color:#FFC700;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">✉</span><span><span style="display:block;font-family:'Oswald',sans-serif;font-weight:600;font-size:18px">Rdstroiy@yandex.ru</span><span style="font-size:13px;color:#5f5f5f">ответим в течение дня</span></span></a>
-            <div style="display:flex;align-items:center;gap:14px"><span aria-hidden="true" style="width:46px;height:46px;background:#0d0d0d;color:#FFC700;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📍</span><span><span style="display:block;font-family:'Oswald',sans-serif;font-weight:600;font-size:18px">г. Орёл, Орловская область</span><span style="font-size:13px;color:#5f5f5f">Пн–Сб, 8:00–20:00</span></span></div>
+            <a href="tel:+79807691111" style="display:flex;align-items:center;gap:14px">
+              <span style="width:46px;height:46px;background:#0d0d0d;color:#FFC700;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h3l2 5-2.2 1.3a12 12 0 0 0 5.7 5.7L16 15l5 2v3a2 2 0 0 1-2 2A17 17 0 0 1 4 5a2 2 0 0 1 2-2Z"/></svg></span>
+              <span><span style="display:block;font-family:'Oswald';font-weight:600;font-size:21px">8 980 769-11-11</span><span style="font-size:13px;color:#5f5f5f">городской: 49-11-11</span></span>
+            </a>
+            <a href="mailto:Rdstroiy@yandex.ru" style="display:flex;align-items:center;gap:14px">
+              <span style="width:46px;height:46px;background:#0d0d0d;color:#FFC700;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="m3.5 7 8.5 6 8.5-6"/></svg></span>
+              <span><span style="display:block;font-family:'Oswald';font-weight:600;font-size:18px">Rdstroiy@yandex.ru</span><span style="font-size:13px;color:#5f5f5f">ответим в течение дня</span></span>
+            </a>
+            <div style="display:flex;align-items:center;gap:14px">
+              <span style="width:46px;height:46px;background:#0d0d0d;color:#FFC700;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg></span>
+              <span><span style="display:block;font-family:'Oswald';font-weight:600;font-size:18px">г. Орёл, Орловская область</span><span style="font-size:13px;color:#5f5f5f">Пн–Сб, 8:00–20:00</span></span>
+            </div>
           </div>
 
           <div style="display:flex;gap:12px;flex-wrap:wrap">
-            <a class="soc" href="https://wa.me/79807691111" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#1f1f1f;color:#fff;padding:13px 20px;font-weight:700;font-size:14px">WhatsApp</a>
-            <a class="soc" href="https://t.me/regiondorstroy" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#1f1f1f;color:#fff;padding:13px 20px;font-weight:700;font-size:14px">Telegram</a>
+            <a href="https://wa.me/79807691111" style="display:inline-flex;align-items:center;gap:8px;background:#1f1f1f;color:#fff;padding:13px 20px;font-weight:700;font-size:14px" style-hover="background:#FFC700;color:#0d0d0d">WhatsApp</a>
+            <a href="https://t.me/regiondorstroy" style="display:inline-flex;align-items:center;gap:8px;background:#1f1f1f;color:#fff;padding:13px 20px;font-weight:700;font-size:14px" style-hover="background:#FFC700;color:#0d0d0d">Telegram</a>
           </div>
         </div>
 
         <div data-anim="slide-right" style="background:#0d0d0d;padding:40px;color:#fff">
-          <div id="formSuccess" role="status" aria-live="polite" style="display:none;height:100%;min-height:360px;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px">
-            <div aria-hidden="true" style="width:64px;height:64px;background:#FFC700;color:#0d0d0d;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px">✓</div>
-            <h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:26px;text-transform:uppercase">Заявка отправлена</h3>
-            <p style="color:#a8a8a8;font-size:15px;max-width:300px;line-height:1.6">Спасибо! Мы свяжемся с вами в ближайшее время для уточнения деталей.</p>
-          </div>
-          <form id="leadForm" novalidate>
-            <h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:24px;text-transform:uppercase;margin-bottom:8px">Расчёт стоимости</h3>
-            <p style="color:#9a9a9a;font-size:14px;margin-bottom:24px">Опишите задачу — подготовим смету и сроки.</p>
-            <div class="form-err" role="alert">Отправьте заявку удобным способом: <a class="c-mail">на e-mail</a> · <a class="c-wa" target="_blank" rel="noopener">WhatsApp</a> · <a href="tel:+79807691111">позвонить</a>.</div>
-            <input class="fld" name="name" required autocomplete="name" placeholder="Ваше имя" aria-label="Ваше имя" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope',sans-serif;margin-bottom:12px;outline:none">
-            <input class="fld" name="phone" required type="tel" inputmode="tel" autocomplete="tel" pattern="[\d\s()+\-]{6,20}" title="Введите корректный номер телефона" placeholder="Телефон" aria-label="Телефон" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope',sans-serif;margin-bottom:12px;outline:none">
-            <select class="fld" name="service" aria-label="Услуга" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#cfcfcf;padding:14px 16px;font-size:14.5px;font-family:'Manrope',sans-serif;margin-bottom:12px;outline:none">
-              <option>Строительство дорог</option>
-              <option>Благоустройство территории</option>
-              <option>Аренда спецтехники</option>
-              <option>Грузоперевозки</option>
-              <option>Поставка материалов</option>
-            </select>
-            <textarea class="fld" name="comment" placeholder="Комментарий (объём, адрес, сроки)" aria-label="Комментарий" rows="3" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope',sans-serif;margin-bottom:16px;outline:none;resize:vertical"></textarea>
-            <input type="text" name="_hp" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
-            <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;cursor:pointer">
-              <input type="checkbox" name="consent" required aria-label="Согласие на обработку персональных данных" style="margin-top:2px;width:16px;height:16px;accent-color:#FFC700;flex-shrink:0">
-              <span style="color:#b0b0b0;font-size:11.5px;line-height:1.45">Я согласен на обработку персональных данных и принимаю <a href="privacy.html" target="_blank" rel="noopener" style="color:#FFC700">политику конфиденциальности</a> <span style="color:#7a7a7a">(откроется в новой вкладке)</span></span>
-            </label>
-            <button class="btn-y" type="submit" style="width:100%;background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope',sans-serif;font-weight:800;font-size:15px;padding:16px;cursor:pointer;text-transform:uppercase;letter-spacing:.4px">Отправить заявку</button>
-          </form>
+          <sc-if value="{{ formSent }}" hint-placeholder-val="{{ false }}">
+            <div style="height:100%;min-height:360px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px">
+              <div style="width:64px;height:64px;background:#FFC700;color:#0d0d0d;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px">✓</div>
+              <h3 style="font-family:'Oswald';font-weight:600;font-size:26px;text-transform:uppercase">Заявка отправлена</h3>
+              <p style="color:#a8a8a8;font-size:15px;max-width:300px;line-height:1.6">Спасибо! Мы свяжемся с вами в ближайшее время для уточнения деталей.</p>
+            </div>
+          </sc-if>
+          <sc-if value="{{ formNotSent }}" hint-placeholder-val="{{ true }}">
+            <form onSubmit="{{ submitForm }}">
+              <h3 style="font-family:'Oswald';font-weight:600;font-size:24px;text-transform:uppercase;margin-bottom:8px">Расчёт стоимости</h3>
+              <p style="color:#9a9a9a;font-size:14px;margin-bottom:24px">Опишите задачу — подготовим смету и сроки.</p>
+              <input required placeholder="Ваше имя" aria-label="Ваше имя" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
+              <input required placeholder="Телефон" aria-label="Телефон" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
+              <select aria-label="Услуга" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#cfcfcf;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
+                <option>Строительство дорог</option>
+                <option>Благоустройство территории</option>
+                <option>Аренда спецтехники</option>
+                <option>Грузоперевозки</option>
+                <option>Поставка материалов</option>
+              </select>
+              <textarea placeholder="Комментарий (объём, адрес, сроки)" aria-label="Комментарий" rows="3" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none;resize:vertical" style-focus="border-color:#FFC700"></textarea>
+              <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;cursor:pointer">
+                <input type="checkbox" required aria-label="Согласие на обработку персональных данных" style="margin-top:2px;width:16px;height:16px;accent-color:#FFC700;flex-shrink:0">
+                <span style="color:#8f8f8f;font-size:11.5px;line-height:1.45">Я согласен на обработку персональных данных и принимаю политику конфиденциальности</span>
+              </label>
+              <button type="submit" style="width:100%;background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope';font-weight:800;font-size:15px;padding:16px;cursor:pointer;text-transform:uppercase;letter-spacing:.4px" style-hover="background:#ffd633">Отправить заявку</button>
+            </form>
+          </sc-if>
         </div>
-      </div>
-
-      <!-- map (click-to-load facade) -->
-      <div data-anim="fade-up" style="margin-top:44px">
-        <div id="mapFacade" class="map-facade" role="button" tabindex="0" aria-label="Показать карту — Орёл, Орловская область" onclick="loadMap()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();loadMap();}">
-          <span>🗺 Показать карту — Орёл и область</span>
-        </div>
-        <p style="color:#5f5f5f;font-size:12.5px;margin-top:8px">Работаем по Орлу и Орловской области. Точный адрес офиса уточняйте по телефону.</p>
       </div>
     </div>
   </section>
 
-  </main>
-
   <!-- ================= FOOTER ================= -->
-  <footer style="background:#0a0a0a;color:#a6a6a6;padding:54px 0 28px;border-top:3px solid #FFC700">
+  <footer style="background:#0a0a0a;color:#9a9a9a;padding:54px 0 28px;border-top:3px solid #FFC700">
     <div style="max-width:1240px;margin:0 auto;padding:0 32px">
       <div data-r="foot" style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px;padding-bottom:36px;border-bottom:1px solid #1c1c1c">
         <div>
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><img src="assets/logo-rds.webp" alt="" width="54" height="54" loading="lazy" style="width:54px;height:54px;object-fit:contain"><div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:20px;color:#fff;letter-spacing:.5px">РЕГИОНДОРСТРОЙ</div></div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+            <img src="assets/logo-rds.webp" alt="" style="width:54px;height:54px;object-fit:contain">
+            <div style="font-family:'Oswald';font-weight:700;font-size:20px;color:#fff;letter-spacing:.5px">РЕГИОНДОРСТРОЙ</div>
+          </div>
           <p style="font-size:14px;line-height:1.65;max-width:340px">ООО «РегионДорСтрой» — дорожное строительство, благоустройство и аренда спецтехники в Орле и Орловской области.</p>
-          <p style="font-size:12.5px;line-height:1.6;max-width:340px;margin-top:12px;color:#949494">ИНН [УКАЗАТЬ] · ОГРН [УКАЗАТЬ]</p>
         </div>
         <div>
-          <div style="font-family:'Oswald',sans-serif;font-weight:600;font-size:15px;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px">Услуги</div>
+          <div style="font-family:'Oswald';font-weight:600;font-size:15px;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px">Услуги</div>
           <div style="display:flex;flex-direction:column;gap:10px;font-size:14px">
-            <a class="foot-a" href="#services">Строительство дорог</a>
-            <a class="foot-a" href="#services">Благоустройство</a>
-            <a class="foot-a" href="#fleet">Аренда спецтехники</a>
-            <a class="foot-a" href="#materials">Поставка материалов</a>
+            <a href="#services" style-hover="color:#FFC700">Строительство дорог</a>
+            <a href="#services" style-hover="color:#FFC700">Благоустройство</a>
+            <a href="#fleet" style-hover="color:#FFC700">Аренда спецтехники</a>
+            <a href="#materials" style-hover="color:#FFC700">Поставка материалов</a>
           </div>
         </div>
         <div>
-          <div style="font-family:'Oswald',sans-serif;font-weight:600;font-size:15px;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px">Контакты</div>
+          <div style="font-family:'Oswald';font-weight:600;font-size:15px;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px">Контакты</div>
           <div style="display:flex;flex-direction:column;gap:10px;font-size:14px">
-            <a class="foot-a" href="tel:+79807691111">8 980 769-11-11</a>
-            <a class="foot-a" href="tel:+74862491111">49-11-11 (город)</a>
-            <a class="foot-a" href="mailto:Rdstroiy@yandex.ru">Rdstroiy@yandex.ru</a>
+            <a href="tel:+79807691111" style-hover="color:#FFC700">8 980 769-11-11</a>
+            <a href="tel:+74862491111" style-hover="color:#FFC700">49-11-11 (город)</a>
+            <a href="mailto:Rdstroiy@yandex.ru" style-hover="color:#FFC700">Rdstroiy@yandex.ru</a>
             <span>г. Орёл, Орловская область</span>
           </div>
         </div>
       </div>
-      <div style="padding-top:22px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:12.5px;color:#949494">
-        <span>© <span id="year">2026</span> ООО «РегионДорСтрой». Все права защищены.</span>
-        <span><a class="foot-a" href="privacy.html">Политика конфиденциальности</a> · г. Орёл</span>
+      <div style="padding-top:22px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:12.5px;color:#6a6a6a">
+        <span>© 2026 ООО «РегионДорСтрой». Все права защищены.</span>
+        <span>г. Орёл · Орловская область</span>
       </div>
     </div>
   </footer>
 
-  <!-- ================= MODAL (call / material calc) ================= -->
-  <div id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" onclick="closeModal(event)" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:24px">
-    <div onclick="event.stopPropagation()" style="background:#fff;max-width:440px;width:100%;padding:0;position:relative">
-      <div style="height:10px;background-image:repeating-linear-gradient(45deg,#FFC700 0 16px,#0d0d0d 16px 32px)"></div>
-      <button onclick="closeModal()" aria-label="Закрыть" style="position:absolute;top:20px;right:18px;background:none;border:none;font-size:24px;cursor:pointer;color:#5f5f5f;line-height:1">×</button>
-      <div style="padding:36px 36px 40px">
-        <div id="modalSuccess" role="status" aria-live="polite" style="display:none;text-align:center;padding:20px 0">
-          <div aria-hidden="true" style="width:60px;height:60px;background:#FFC700;color:#0d0d0d;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 16px">✓</div>
-          <h3 style="font-family:'Oswald',sans-serif;font-weight:600;font-size:24px;text-transform:uppercase;margin-bottom:8px">Спасибо!</h3>
-          <p style="color:#5a5a5a;font-size:15px;line-height:1.55">Мы перезвоним вам в ближайшее время.</p>
-        </div>
-        <div id="modalForm">
-          <h3 id="modalTitle" style="font-family:'Oswald',sans-serif;font-weight:600;font-size:26px;text-transform:uppercase;margin-bottom:6px">Заказать звонок</h3>
-          <p id="modalDesc" style="color:#5a5a5a;font-size:14px;margin-bottom:18px">Оставьте номер — перезвоним в течение 15 минут.</p>
-          <div id="modalMat" style="display:none;background:#f4f4f2;border-left:3px solid #FFC700;padding:11px 14px;margin-bottom:18px;font-size:14px;font-weight:700"></div>
-          <form onsubmit="submitModal(event)" novalidate>
-            <div class="form-err" role="alert">Отправьте заявку удобным способом: <a class="c-mail">на e-mail</a> · <a class="c-wa" target="_blank" rel="noopener">WhatsApp</a> · <a href="tel:+79807691111">позвонить</a>.</div>
-            <input class="fld" name="name" required autocomplete="name" placeholder="Ваше имя" aria-label="Ваше имя" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope',sans-serif;margin-bottom:12px;outline:none">
-            <input class="fld" name="phone" required type="tel" inputmode="tel" autocomplete="tel" pattern="[\d\s()+\-]{6,20}" title="Введите корректный номер телефона" placeholder="Телефон" aria-label="Телефон" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope',sans-serif;margin-bottom:16px;outline:none">
-            <input type="text" name="_hp" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
-            <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;cursor:pointer">
-              <input type="checkbox" name="consent" required aria-label="Согласие на обработку персональных данных" style="margin-top:2px;width:16px;height:16px;accent-color:#FFC700;flex-shrink:0">
-              <span style="color:#5f5f5f;font-size:11.5px;line-height:1.45">Я согласен на обработку персональных данных и принимаю <a href="privacy.html" target="_blank" rel="noopener" style="color:#8a6d00">политику конфиденциальности</a> <span style="color:#888">(откроется в новой вкладке)</span></span>
-            </label>
-            <button id="modalBtn" class="btn-d" type="submit" style="width:100%;background:#0d0d0d;color:#fff;border:none;font-family:'Manrope',sans-serif;font-weight:800;font-size:15px;padding:16px;cursor:pointer;text-transform:uppercase;letter-spacing:.4px">Жду звонка</button>
-          </form>
+  <!-- ================= CALL MODAL ================= -->
+  <sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeModal }}" style="position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:24px">
+      <div onClick="{{ stop }}" style="background:#fff;max-width:440px;width:100%;padding:0;position:relative">
+        <div style="height:10px;background-image:repeating-linear-gradient(45deg,#FFC700 0 16px,#0d0d0d 16px 32px)"></div>
+        <button onClick="{{ closeModal }}" style="position:absolute;top:20px;right:18px;background:none;border:none;font-size:24px;cursor:pointer;color:#888;line-height:1">×</button>
+        <div style="padding:36px 36px 40px">
+          <sc-if value="{{ sent }}" hint-placeholder-val="{{ false }}">
+            <div style="text-align:center;padding:20px 0">
+              <div style="width:60px;height:60px;background:#FFC700;color:#0d0d0d;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 16px">✓</div>
+              <h3 style="font-family:'Oswald';font-weight:600;font-size:24px;text-transform:uppercase;margin-bottom:8px">Спасибо!</h3>
+              <p style="color:#6a6a6a;font-size:15px;line-height:1.55">Мы перезвоним вам в ближайшее время.</p>
+            </div>
+          </sc-if>
+          <sc-if value="{{ notSent }}" hint-placeholder-val="{{ true }}">
+            <h3 style="font-family:'Oswald';font-weight:600;font-size:26px;text-transform:uppercase;margin-bottom:6px">{{ modalTitle }}</h3>
+            <p style="color:#6a6a6a;font-size:14px;margin-bottom:18px">{{ modalDesc }}</p>
+            <sc-if value="{{ modalHasMat }}" hint-placeholder-val="{{ false }}">
+              <div style="background:#f4f4f2;border-left:3px solid #FFC700;padding:11px 14px;margin-bottom:18px;font-size:14px;font-weight:700">Материал: {{ modalMat }}</div>
+            </sc-if>
+            <form onSubmit="{{ submitModal }}">
+              <input required placeholder="Ваше имя" aria-label="Ваше имя" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
+              <input required placeholder="Телефон" aria-label="Телефон" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none" style-focus="border-color:#FFC700">
+              <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;cursor:pointer">
+                <input type="checkbox" required aria-label="Согласие на обработку персональных данных" style="margin-top:2px;width:16px;height:16px;accent-color:#FFC700;flex-shrink:0">
+                <span style="color:#888;font-size:11.5px;line-height:1.45">Я согласен на обработку персональных данных и принимаю политику конфиденциальности</span>
+              </label>
+              <button type="submit" style="width:100%;background:#0d0d0d;color:#fff;border:none;font-family:'Manrope';font-weight:800;font-size:15px;padding:16px;cursor:pointer;text-transform:uppercase;letter-spacing:.4px" style-hover="background:#FFC700;color:#0d0d0d">{{ modalBtn }}</button>
+            </form>
+          </sc-if>
         </div>
       </div>
     </div>
+  </sc-if>
+
   </div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { menu: false, modal: false, sent: false, formSent: false, calcMat: '' };
 
-</div>
+  openCalc(name) { this.setState({ modal: true, sent: false, calcMat: name }); }
 
-<!-- cookie / third-party notice -->
-<div id="cookieBar">
-  <span>Сайт использует cookie и сторонние сервисы (Яндекс.Карты, Яндекс.Метрика, Google Fonts). Продолжая, вы соглашаетесь. <a href="privacy.html" target="_blank" rel="noopener">Подробнее</a></span>
-  <button type="button" onclick="acceptCookies()">Принять</button>
-</div>
-
-<script>
-// ============ CONFIG ============
-// Доставка заявок без трансграничной передачи ПДн (всё в РФ):
-// по умолчанию форма открывает готовое письмо на e-mail (Яндекс, серверы РФ)
-// и показывает прямые контакты (e-mail / WhatsApp / звонок). Оператор данные
-// за границу не передаёт. Опционально: поднять РФ-эндпоинт (напр. Yandex Cloud
-// Function) и вписать его URL в mailEndpoint — тогда заявка уходит AJAX-ом
-// с экраном успеха, без открытия почтового клиента.
-var CFG = { mailEndpoint: '', email: 'Rdstroiy@yandex.ru', waPhone: '79807691111' };
-var currentMaterial = '';
-
-// ---- lead sending: Telegram worker -> direct-contact fallback ----
-function buildText(d){
-  var L = ['🚧 Заявка с сайта', 'Тип: ' + d.type];
-  if (d.material) L.push('Материал: ' + d.material);
-  if (d.service)  L.push('Услуга: ' + d.service);
-  L.push('Имя: ' + (d.name || '—'), 'Телефон: ' + (d.phone || '—'));
-  if (d.comment) L.push('Комментарий: ' + d.comment);
-  return L.join('\n');
-}
-function mailtoLink(d){
-  return 'mailto:' + CFG.email +
-    '?subject=' + encodeURIComponent('Заявка с сайта — ' + (d.type || '')) +
-    '&body=' + encodeURIComponent(buildText(d));
-}
-function setContacts(form, d){
-  var box = form.querySelector('.form-err');
-  if (!box) return;
-  var mail = box.querySelector('.c-mail'); if (mail) mail.href = mailtoLink(d);
-  var wa = box.querySelector('.c-wa'); if (wa) wa.href = 'https://wa.me/' + CFG.waPhone + '?text=' + encodeURIComponent(buildText(d));
-  box.style.display = 'block';
-}
-function sendLead(d, done, fail){
-  fail = fail || function(){};
-  if (d._hp) { done(); return; }            // honeypot -> молча игнорируем бота
-  if (CFG.mailEndpoint) {
-    fetch(CFG.mailEndpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(d) })
-      .then(function(r){ if(!r.ok) throw 0; done(); })
-      .catch(function(){ fail(d); });
-  } else {
-    try { window.location.href = mailtoLink(d); } catch (e) {}  // открыть готовое письмо (РФ, без трансгран. передачи)
-    fail(d);                                                    // показать прямые контакты
-  }
-}
-function formData(form){
-  var g = function(n){ var el = form.querySelector('[name="'+n+'"]'); return el ? el.value.trim() : ''; };
-  return { name:g('name'), phone:g('phone'), service:g('service'), comment:g('comment'), _hp:g('_hp') };
-}
-
-// ---- mobile menu ----
-function toggleMenu(){
-  var m = document.getElementById('mobileMenu');
-  var open = m.style.display !== 'flex';
-  m.style.display = open ? 'flex' : 'none';
-  var b = document.querySelector('[data-burger]');
-  if (b){ b.setAttribute('aria-expanded', open ? 'true' : 'false'); b.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню'); }
-}
-function closeMenu(){
-  document.getElementById('mobileMenu').style.display = 'none';
-  var b = document.querySelector('[data-burger]');
-  if (b){ b.setAttribute('aria-expanded', 'false'); b.setAttribute('aria-label', 'Открыть меню'); }
-}
-window.addEventListener('resize', function(){ if (window.innerWidth > 900) closeMenu(); });
-
-// ---- modal (call + material calc) with focus trap + scroll lock ----
-var lastFocused = null;
-function trapModal(e){
-  if (e.key === 'Escape'){ closeModal(); return; }
-  if (e.key !== 'Tab') return;
-  var modal = document.getElementById('modal');
-  var f = Array.prototype.filter.call(
-    modal.querySelectorAll('a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"])'),
-    function(el){ return el.offsetParent !== null; });
-  if (!f.length) return;
-  var first = f[0], last = f[f.length - 1];
-  if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
-  else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
-}
-function showModalForm(){
-  lastFocused = document.activeElement;
-  var modal = document.getElementById('modal');
-  modal.style.display = 'flex';
-  document.getElementById('modalForm').style.display = 'block';
-  document.getElementById('modalSuccess').style.display = 'none';
-  var err = modal.querySelector('.form-err'); if (err) err.style.display = 'none';
-  document.body.style.overflow = 'hidden';
-  document.addEventListener('keydown', trapModal);
-  var first = modal.querySelector('input[name="name"]');
-  if (first) setTimeout(function(){ first.focus(); }, 30);
-}
-function openModal(){
-  currentMaterial = '';
-  document.getElementById('modalTitle').textContent = 'Заказать звонок';
-  document.getElementById('modalDesc').textContent = 'Оставьте номер — перезвоним в течение 15 минут.';
-  document.getElementById('modalBtn').textContent = 'Жду звонка';
-  document.getElementById('modalMat').style.display = 'none';
-  showModalForm();
-}
-function openCalc(name){
-  currentMaterial = name;
-  document.getElementById('modalTitle').textContent = 'Запросить расчёт';
-  document.getElementById('modalDesc').textContent = 'Оставьте контакты — рассчитаем объём, стоимость и доставку.';
-  document.getElementById('modalBtn').textContent = 'Получить расчёт';
-  var mat = document.getElementById('modalMat');
-  mat.textContent = 'Материал: ' + name;
-  mat.style.display = 'block';
-  showModalForm();
-}
-function closeModal(e){
-  document.getElementById('modal').style.display = 'none';
-  document.body.style.overflow = '';
-  document.removeEventListener('keydown', trapModal);
-  if (lastFocused && lastFocused.focus){ lastFocused.focus(); lastFocused = null; }
-}
-function submitModal(e){
-  e.preventDefault();
-  var form = e.target;
-  if (!form.checkValidity()){ form.reportValidity(); return; }
-  var d = formData(form);
-  d.type = currentMaterial ? 'Запрос расчёта материала' : 'Заказ звонка';
-  if (currentMaterial) d.material = currentMaterial;
-  sendLead(d,
-    function(){ form.reset(); document.getElementById('modalForm').style.display = 'none'; document.getElementById('modalSuccess').style.display = 'block'; },
-    function(){ setContacts(form, d); });
-}
-document.querySelectorAll('[data-open-modal]').forEach(function(b){ b.addEventListener('click', openModal); });
-
-// ---- contact form ----
-document.getElementById('leadForm').addEventListener('submit', function(e){
-  e.preventDefault();
-  var self = this;
-  if (!self.checkValidity()){ self.reportValidity(); return; }
-  var d = formData(self);
-  d.type = 'Заявка (форма на сайте)';
-  sendLead(d,
-    function(){ self.reset(); self.style.display = 'none'; document.getElementById('formSuccess').style.display = 'flex'; },
-    function(){ setContacts(self, d); });
-});
-
-// ---- map: click-to-load (keeps heavy third-party off the initial page load) ----
-function loadMap(){
-  var f = document.getElementById('mapFacade');
-  if (!f) return;
-  var ifr = document.createElement('iframe');
-  ifr.title = 'Карта — Орёл, Орловская область';
-  ifr.src = 'https://yandex.ru/map-widget/v1/?ll=36.0697%2C52.9670&z=11';
-  ifr.width = '100%'; ifr.height = '360'; ifr.loading = 'lazy';
-  ifr.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
-  ifr.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups');
-  ifr.style.cssText = 'border:1px solid #e6e6e2;display:block';
-  f.replaceWith(ifr);
-}
-
-// ---- cookie notice ----
-function acceptCookies(){ try{ localStorage.setItem('rds_ck','1'); }catch(e){} document.getElementById('cookieBar').style.display = 'none'; }
-(function(){
-  var ok = false; try{ ok = localStorage.getItem('rds_ck') === '1'; }catch(e){}
-  document.getElementById('cookieBar').style.display = ok ? 'none' : 'flex';
-})();
-
-// ---- footer year ----
-document.getElementById('year').textContent = new Date().getFullYear();
-
-// ---- scroll reveal (fail-open: content never stays hidden) ----
-(function(){
-  try {
-    var els = Array.prototype.slice.call(document.querySelectorAll('[data-anim]'));
+  componentDidMount() {
+    const els = Array.from(document.querySelectorAll('[data-anim]'));
     if (!els.length) return;
-    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    function revealAll(){ els.forEach(function(el){ el.style.opacity = '1'; el.style.clipPath = 'none'; el.style.transform = 'none'; }); }
-    if (reduce || !('IntersectionObserver' in window)) { revealAll(); return; }
 
-    var FROM = {
-      'fade-up':'translateY(46px)','fade-down':'translateY(-46px)',
-      'slide-left':'translateX(-72px)','slide-right':'translateX(72px)',
-      'zoom-in':'scale(.82)','pop':'scale(.55)',
-      'tilt':'perspective(1000px) rotateX(22deg) translateY(48px)',
-      'rotate-rise':'translateY(48px) rotate(-4deg)','rise':'translateY(40px) scale(.95)','clip-left':'none'
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) { els.forEach((el) => { el.style.opacity = '1'; el.style.clipPath = 'none'; }); return; }
+
+    // distinct "from" state + easing per animation type
+    const FROM = {
+      'fade-up':     'translateY(46px)',
+      'fade-down':   'translateY(-46px)',
+      'slide-left':  'translateX(-72px)',
+      'slide-right': 'translateX(72px)',
+      'zoom-in':     'scale(.82)',
+      'pop':         'scale(.55)',
+      'tilt':        'perspective(1000px) rotateX(22deg) translateY(48px)',
+      'rotate-rise': 'translateY(48px) rotate(-4deg)',
+      'rise':        'translateY(40px) scale(.95)',
+      'clip-left':   'none',
     };
-    var SOFT = 'cubic-bezier(.22,.61,.36,1)';
-    var EASE = { 'pop':'cubic-bezier(.34,1.56,.64,1)','rotate-rise':'cubic-bezier(.34,1.4,.64,1)' };
+    const SOFT = 'cubic-bezier(.22,.61,.36,1)';
+    const EASE = { 'pop': 'cubic-bezier(.34,1.56,.64,1)', 'rotate-rise': 'cubic-bezier(.34,1.4,.64,1)' };
 
-    function hide(el){
-      var t = el.getAttribute('data-anim');
+    const hoverTrans = 'background-color .25s ease, border-color .25s ease, color .25s ease';
+
+    const hide = (el) => {
+      const t = el.getAttribute('data-anim');
       el.style.transitionDelay = '0ms';
       if (t === 'clip-left') {
         el.style.clipPath = 'inset(0 100% 0 0)';
         el.style.transition = 'clip-path .9s cubic-bezier(.76,0,.24,1)';
       } else {
-        var ease = EASE[t] || SOFT;
+        const ease = EASE[t] || SOFT;
         el.style.opacity = '0';
         el.style.transform = FROM[t] || 'translateY(40px)';
-        el.style.transition = 'opacity .7s ' + ease + ', transform .8s ' + ease;
+        el.style.transition = 'opacity .7s ' + ease + ', transform .8s ' + ease + ', ' + hoverTrans;
       }
       el.style.willChange = 'opacity, transform, clip-path';
-    }
-    function show(el, delay){
-      var t = el.getAttribute('data-anim');
-      el.style.transitionDelay = (delay || 0) + 'ms';
-      if (t === 'clip-left') el.style.clipPath = 'inset(0 0 0 0)';
-      else { el.style.opacity = '1'; el.style.transform = 'none'; }
-      setTimeout(function(){ el.style.willChange = 'auto'; }, 1100);
-    }
-    function groupIndex(el){
-      var sibs = Array.prototype.slice.call(el.parentElement.children).filter(function(c){ return c.hasAttribute('data-anim'); });
-      return Math.max(0, sibs.indexOf(el));
-    }
-    els.forEach(hide);
-    var io = new IntersectionObserver(function(entries){
-      entries.forEach(function(e){
-        if (e.isIntersecting){ var el = e.target; show(el, Math.min(groupIndex(el), 8) * 90); io.unobserve(el); }
-      });
-    }, { threshold: 0.18, rootMargin: '0px 0px -8% 0px' });
-    els.forEach(function(el){ io.observe(el); });
-  } catch (err) {
-    Array.prototype.forEach.call(document.querySelectorAll('[data-anim]'), function(el){ el.style.opacity = '1'; el.style.clipPath = 'none'; el.style.transform = 'none'; });
-  }
-})();
+    };
 
-// ---- Yandex.Metrika (активируется после установки номера счётчика) ----
-(function(){
-  var METRIKA_ID = 0; // TODO: вставь номер счётчика Яндекс.Метрики (https://metrika.yandex.ru)
-  if (!METRIKA_ID) return;
-  (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();
-  for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}
-  k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
-  (window,document,'script','https://mc.yandex.ru/metrika/tag.js','ym');
-  ym(METRIKA_ID,'init',{clickmap:true,trackLinks:true,accurateTrackBounce:true});
-})();
+    const runCount = (span) => {
+      if (span.__counted) return;
+      span.__counted = true;
+      const to = parseInt(span.getAttribute('data-to'), 10) || 0;
+      const suffix = span.getAttribute('data-suffix') || '';
+      const dur = 1100;
+      const t0 = performance.now();
+      const tick = (now) => {
+        const p = Math.min(1, (now - t0) / dur);
+        const eased = 1 - Math.pow(1 - p, 3);
+        span.textContent = Math.round(eased * to) + suffix;
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    };
+
+    const show = (el, delay) => {
+      const t = el.getAttribute('data-anim');
+      el.style.transitionDelay = (delay || 0) + 'ms';
+      if (t === 'clip-left') { el.style.clipPath = 'inset(0 0 0 0)'; }
+      else { el.style.opacity = '1'; el.style.transform = 'none'; }
+      const counters = el.matches('[data-count]') ? [el] : Array.from(el.querySelectorAll('[data-count]'));
+      counters.forEach((c) => setTimeout(() => runCount(c), (delay || 0) + 220));
+      // clear reveal transition + stagger delay once done, so hover reacts instantly
+      setTimeout(() => {
+        el.style.transitionDelay = '0ms';
+        el.style.transition = '';
+        el.style.willChange = 'auto';
+      }, (delay || 0) + 950);
+    };
+
+    // scroll progress bar
+    const bar = document.querySelector('[data-progress]');
+    if (bar) {
+      let maxH = 0, ticking = false;
+      const measure = () => { maxH = document.documentElement.scrollHeight - window.innerHeight; };
+      const paint = () => {
+        ticking = false;
+        bar.style.transform = 'scaleX(' + (maxH > 0 ? Math.min(1, window.scrollY / maxH) : 0) + ')';
+      };
+      const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(paint); } };
+      measure(); paint();
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', () => { measure(); paint(); }, { passive: true });
+    }
+
+    const groupIndex = (el) => {
+      const sibs = Array.from(el.parentElement.children).filter((c) => c.hasAttribute('data-anim'));
+      return Math.max(0, sibs.indexOf(el));
+    };
+
+    els.forEach(hide);
+
+    // Hysteresis: SHOW when the element is comfortably in view, HIDE only once it
+    // has fully left the viewport. The two separate thresholds prevent the
+    // feedback loop where the reveal transform nudges the element back across a
+    // single boundary and causes endless flicker.
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        const el = e.target;
+        const r = e.intersectionRatio;
+        if (!el.__shown && (e.isIntersecting && r >= 0.15)) {
+          el.__shown = true;
+          show(el, Math.min(groupIndex(el), 8) * 90);
+        } else if (el.__shown && r === 0) {
+          el.__shown = false;
+          hide(el);
+        }
+      });
+    }, { threshold: [0, 0.15], rootMargin: '0px 0px -6% 0px' });
+    els.forEach((el) => io.observe(el));
+  }
+
+  renderVals() {
+    const services = [
+      { n: '01', t: 'Строительство дорог', d: 'Устройство и ремонт асфальтобетонного покрытия, дворовых проездов и подъездных путей любой сложности.' },
+      { n: '02', t: 'Благоустройство', d: 'Дворы, частные территории, площадки и общественные пространства — выполняем под ключ.' },
+      { n: '03', t: 'Аренда спецтехники', d: 'Более 15 единиц техники в аренду с опытным экипажем. Почасовая и сменная оплата.' },
+      { n: '04', t: 'Грузоперевозки', d: 'Доставка сыпучих и строительных грузов самосвалами по Орлу и области.' },
+      { n: '05', t: 'Поставка материалов', d: 'Грунт, щебень и песок всех фракций с доставкой прямо на объект.' },
+      { n: '06', t: 'Планировка участков', d: 'Подготовка, выравнивание и планировка территорий под застройку и благоустройство.' },
+    ];
+    const fleet = [
+      { t: 'Дорожные катки', k: 'katok', ph: 'Фото: дорожный каток', src: 'assets/fleet-roller.webp' },
+      { t: 'Асфальтоукладчики', k: 'asfalt', ph: 'Фото: асфальтоукладчик', src: 'assets/fleet-paver.webp' },
+      { t: 'Экскаваторы', k: 'eksk', ph: 'Фото: экскаватор', src: 'assets/fleet-excavator.webp' },
+      { t: 'Самосвалы', k: 'samosval', ph: 'Фото: самосвал', src: 'assets/fleet-dump.webp' },
+      { t: 'Погрузчики', k: 'pogruzchik', ph: 'Фото: фронтальный погрузчик', src: 'assets/fleet-loader.webp' },
+      { t: 'Автогрейдеры', k: 'greider', ph: 'Фото: автогрейдер', src: 'assets/fleet-grader.webp' },
+      { t: 'Бульдозеры', k: 'buldozer', ph: 'Фото: бульдозер', src: 'assets/fleet-dozer.webp' },
+      { t: 'Автокраны', k: 'avtokran', ph: 'Фото: автокран', src: 'assets/fleet-crane.webp' },
+    ];
+    const materials = [
+      { t: 'Щебень', k: 'shcheben', ph: 'Фото: щебень', d: 'Фракции 5–20, 20–40, 40–70 мм. Гранитный и известняковый.', price: 'от 1 200 ₽', unit: '/ тонна', src: 'assets/mat-shcheben.webp' },
+      { t: 'Песок', k: 'pesok', ph: 'Фото: песок', badge: 'Свой карьер', d: 'Карьерный и намывной — красный, белый, любой фракции.', price: 'от 600 ₽', unit: '/ м³', src: 'assets/mat-pesok.webp' },
+      { t: 'Грунт', k: 'grunt', ph: 'Фото: грунт', d: 'Плодородный и растительный грунт для участков и газонов.', price: 'от 450 ₽', unit: '/ м³', src: 'assets/mat-grunt.webp' },
+      { t: 'ПГС и отсев', k: 'pgs', ph: 'Фото: ПГС и отсев', d: 'Песчано-гравийная смесь и отсев дробления любых объёмов.', price: 'от 750 ₽', unit: '/ м³', src: 'assets/mat-pgs.webp' },
+    ];
+    materials.forEach((m) => { m.onRequest = () => this.openCalc(m.t); });
+    const why = [
+      { t: 'Отличная репутация', d: 'Нам доверяют компании и частные заказчики — работаем на результат и держим слово.' },
+      { t: 'Высокое качество', d: 'Выполняем все работы качественно и в срок, сдаём объекты без замечаний.' },
+      { t: 'Большой опыт', d: 'Многолетний опыт в дорожном строительстве и благоустройстве территорий.' },
+      { t: 'Большие объёмы', d: 'Собственный парк техники позволяет браться за крупные объекты.' },
+    ];
+    const steps = [
+      { n: '1', t: 'Заявка', d: 'Оставляете заявку по телефону, в WhatsApp или через форму на сайте.' },
+      { n: '2', t: 'Выезд и расчёт', d: 'Выезжаем на объект, оцениваем работы и готовим смету.' },
+      { n: '3', t: 'Договор', d: 'Согласуем условия, сроки и фиксируем стоимость в договоре.' },
+      { n: '4', t: 'Выполнение', d: 'Выполняем работы силами собственной техники и бригад.' },
+      { n: '5', t: 'Сдача', d: 'Сдаём готовый объект и гарантируем качество результата.' },
+    ];
+
+    const mat = this.state.calcMat;
+    return {
+      services, fleet, materials, why, steps,
+      menuOpen: this.state.menu,
+      modalOpen: this.state.modal,
+      sent: this.state.sent,
+      notSent: !this.state.sent,
+      formSent: this.state.formSent,
+      formNotSent: !this.state.formSent,
+      modalHasMat: !!mat,
+      modalMat: mat,
+      modalTitle: mat ? 'Запросить расчёт' : 'Заказать звонок',
+      modalDesc: mat ? 'Оставьте контакты — рассчитаем объём, стоимость и доставку.' : 'Оставьте номер — перезвоним в течение 15 минут.',
+      modalBtn: mat ? 'Получить расчёт' : 'Жду звонка',
+      stop: (e) => { e.stopPropagation(); },
+      toggleMenu: () => this.setState((s) => ({ menu: !s.menu })),
+      closeMenu: () => this.setState({ menu: false }),
+      openModal: () => this.setState({ modal: true, sent: false, calcMat: '' }),
+      openModalMobile: () => this.setState({ menu: false, modal: true, sent: false, calcMat: '' }),
+      closeModal: () => this.setState({ modal: false }),
+      submitModal: (e) => { e.preventDefault(); this.setState({ sent: true }); },
+      submitForm: (e) => { e.preventDefault(); this.setState({ formSent: true }); },
+    };
+  }
+}
 </script>
 </body>
 </html>
