@@ -83,10 +83,7 @@
   [data-imgzoom]{overflow:hidden}
   [data-imgzoom] img{transition:transform .8s cubic-bezier(.22,.61,.36,1);display:block}
   [data-imgzoom]:hover img{transform:scale(1.08)}
-  /* concrete texture — soft marble mottle over the whole page, slow drift */
-  .grain{position:fixed;inset:-8%;width:116%;height:116%;pointer-events:none;z-index:190;opacity:.8;mix-blend-mode:soft-light;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.014' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");background-size:520px 520px;animation:grain 42s ease-in-out infinite alternate;will-change:transform}
-  @keyframes grain{0%{transform:scale(1) translate(0,0)}100%{transform:scale(1.1) translate(-2%,-1.5%)}}
-  @media (prefers-reduced-motion:reduce){[data-kenburns],[data-marquee],[data-marquee-fast]{animation:none!important}.grain{animation:none!important}}
+  @media (prefers-reduced-motion:reduce){[data-kenburns],[data-marquee],[data-marquee-fast]{animation:none!important}}
   @media (max-width:1024px){
     [data-r="g4"]{grid-template-columns:repeat(2,1fr)!important}
     [data-r="g5"]{grid-template-columns:repeat(3,1fr)!important}
@@ -122,7 +119,6 @@
 </head>
 <body>
 
-<div class="grain" aria-hidden="true"></div>
 
 <div style="overflow-x:hidden">
 
