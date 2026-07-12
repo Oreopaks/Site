@@ -717,8 +717,33 @@
   window.openModalMobile=function(){ closeMenu(); window.openModal(); };
   window.openCalc=function(name){ setModal('Запросить расчёт','Оставьте контакты — рассчитаем объём, стоимость и доставку.','Получить расчёт',name); show(); };
   window.closeModal=function(){ if(overlay)overlay.style.display='none'; document.body.style.overflow=''; };
-  window.submitModal=function(e){ e.preventDefault(); if(mForm)mForm.style.display='none'; if(mOk)mOk.style.display=''; };
-  window.submitForm=function(e){ e.preventDefault(); var box=document.getElementById('formBox'),ok=document.getElementById('formSuccess'); if(box)box.style.display='none'; if(ok)ok.style.display=''; };
+  var TG_TOKEN='8691629015:AAFLxTsD2P7_m2XTjH1-bf-0ul9fYu3Lb04', TG_CHAT='845565486';
+  function esc(s){ return String(s==null?'':s).replace(/[<>&]/g,function(c){ return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c]; }); }
+  function tgSend(text, form, onOk){
+    var btn=form.querySelector('button[type=submit]'), old=btn?btn.innerHTML:'';
+    function reset(){ if(btn){ btn.disabled=false; btn.style.opacity=''; btn.innerHTML=old; } }
+    if(btn){ btn.disabled=true; btn.style.opacity='.6'; btn.textContent='Отправляем…'; }
+    fetch('https://api.telegram.org/bot'+TG_TOKEN+'/sendMessage',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({chat_id:TG_CHAT, text:text, parse_mode:'HTML', disable_web_page_preview:true})
+    }).then(function(r){ return r.json(); }).then(function(d){
+      reset();
+      if(d&&d.ok){ try{ form.reset(); }catch(_){} onOk(); }
+      else { alert('Не удалось отправить заявку. Позвоните: 8 980 769-11-11 или напишите в WhatsApp / Telegram.'); }
+    }).catch(function(){ reset(); alert('Нет связи. Позвоните: 8 980 769-11-11 или напишите в WhatsApp / Telegram.'); });
+  }
+  window.submitModal=function(e){ e.preventDefault(); var f=e.target;
+    var ins=f.querySelectorAll('input:not([type=checkbox])');
+    var title=((document.getElementById('modalTitle')||{}).textContent)||'Заявка';
+    var mEl=document.getElementById('modalMat'), mat=(mEl&&mEl.style.display!=='none')?(((document.getElementById('modalMatName')||{}).textContent)||''):'';
+    var txt='🚧 <b>Новая заявка</b> — сайт РегионДорСтрой\n<b>Форма:</b> '+esc(title)+(mat?'\n<b>Материал:</b> '+esc(mat):'')+'\n<b>Имя:</b> '+esc(ins[0]&&ins[0].value)+'\n<b>Телефон:</b> '+esc(ins[1]&&ins[1].value);
+    tgSend(txt, f, function(){ if(mForm)mForm.style.display='none'; if(mOk)mOk.style.display=''; });
+  };
+  window.submitForm=function(e){ e.preventDefault(); var f=e.target;
+    var ins=f.querySelectorAll('input:not([type=checkbox])'), sel=f.querySelector('select'), ta=f.querySelector('textarea');
+    var txt='🚧 <b>Новая заявка</b> — сайт РегионДорСтрой\n<b>Форма:</b> расчёт стоимости\n<b>Имя:</b> '+esc(ins[0]&&ins[0].value)+'\n<b>Телефон:</b> '+esc(ins[1]&&ins[1].value)+'\n<b>Услуга:</b> '+esc(sel&&sel.value)+((ta&&ta.value.trim())?'\n<b>Комментарий:</b> '+esc(ta.value.trim()):'');
+    tgSend(txt, f, function(){ var box=document.getElementById('formBox'),ok=document.getElementById('formSuccess'); if(box)box.style.display='none'; if(ok)ok.style.display=''; });
+  };
   document.addEventListener('keydown', function(e){ if(e.key==='Escape') window.closeModal(); });
 
   // scroll-reveal + count-up + scroll-progress (ported from the design)
