@@ -53,11 +53,34 @@
   }
 }
 </script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="image" href="assets/hero-paving.webp" fetchpriority="high">
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/oswald-700-cyrillic.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/manrope-400-cyrillic.woff2" crossorigin>
 <style>
+@font-face{font-family:'Manrope';font-style:normal;font-weight:400;font-display:swap;src:url(assets/fonts/manrope-400-cyrillic-ext.woff2) format('woff2');unicode-range:U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:400;font-display:swap;src:url(assets/fonts/manrope-400-cyrillic.woff2) format('woff2');unicode-range:U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:400;font-display:swap;src:url(assets/fonts/manrope-400-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:400;font-display:swap;src:url(assets/fonts/manrope-400-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:600;font-display:swap;src:url(assets/fonts/manrope-600-cyrillic-ext.woff2) format('woff2');unicode-range:U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:600;font-display:swap;src:url(assets/fonts/manrope-600-cyrillic.woff2) format('woff2');unicode-range:U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:600;font-display:swap;src:url(assets/fonts/manrope-600-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:600;font-display:swap;src:url(assets/fonts/manrope-600-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:700;font-display:swap;src:url(assets/fonts/manrope-700-cyrillic-ext.woff2) format('woff2');unicode-range:U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:700;font-display:swap;src:url(assets/fonts/manrope-700-cyrillic.woff2) format('woff2');unicode-range:U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:700;font-display:swap;src:url(assets/fonts/manrope-700-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:700;font-display:swap;src:url(assets/fonts/manrope-700-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:800;font-display:swap;src:url(assets/fonts/manrope-800-cyrillic-ext.woff2) format('woff2');unicode-range:U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:800;font-display:swap;src:url(assets/fonts/manrope-800-cyrillic.woff2) format('woff2');unicode-range:U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:800;font-display:swap;src:url(assets/fonts/manrope-800-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:800;font-display:swap;src:url(assets/fonts/manrope-800-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Oswald';font-style:normal;font-weight:600;font-display:swap;src:url(assets/fonts/oswald-600-cyrillic-ext.woff2) format('woff2');unicode-range:U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F}
+@font-face{font-family:'Oswald';font-style:normal;font-weight:600;font-display:swap;src:url(assets/fonts/oswald-600-cyrillic.woff2) format('woff2');unicode-range:U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116}
+@font-face{font-family:'Oswald';font-style:normal;font-weight:600;font-display:swap;src:url(assets/fonts/oswald-600-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Oswald';font-style:normal;font-weight:600;font-display:swap;src:url(assets/fonts/oswald-600-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Oswald';font-style:normal;font-weight:700;font-display:swap;src:url(assets/fonts/oswald-700-cyrillic-ext.woff2) format('woff2');unicode-range:U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F}
+@font-face{font-family:'Oswald';font-style:normal;font-weight:700;font-display:swap;src:url(assets/fonts/oswald-700-cyrillic.woff2) format('woff2');unicode-range:U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116}
+@font-face{font-family:'Oswald';font-style:normal;font-weight:700;font-display:swap;src:url(assets/fonts/oswald-700-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Oswald';font-style:normal;font-weight:700;font-display:swap;src:url(assets/fonts/oswald-700-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
 
   *{margin:0;padding:0;box-sizing:border-box}
   html{scroll-behavior:smooth}
@@ -143,7 +166,7 @@
   <header style="position:sticky;top:0;z-index:50;background:#0d0d0d;border-bottom:3px solid #FFC700">
     <div style="max-width:1240px;margin:0 auto;padding:0 32px;height:78px;display:flex;align-items:center;justify-content:space-between;gap:24px">
       <a href="#top" style="display:flex;align-items:center;gap:13px;flex-shrink:0">
-        <img src="assets/logo-rds.webp" alt="" style="width:48px;height:48px;object-fit:contain;flex-shrink:0">
+        <img src="assets/logo-rds.webp" alt="Логотип ООО «РегионДорСтрой»" style="width:48px;height:48px;object-fit:contain;flex-shrink:0">
 
         <div style="line-height:1.05">
           <div style="font-family:'Oswald';font-weight:700;font-size:20px;letter-spacing:.5px;color:#fff">РЕГИОНДОРСТРОЙ</div>
@@ -182,11 +205,12 @@
       </div>
   </header>
 
+  <main>
   <!-- ================= HERO (cinematic full-bleed) ================= -->
   <section id="top" data-herowrap style="background:#0d0d0d;position:relative;color:#fff;overflow:hidden;min-height:90vh;display:flex;align-items:flex-end">
     <!-- image layer with slow ken-burns drift -->
     <div data-kenburns style="position:absolute;inset:0;z-index:0">
-      <img src="assets/hero-paving.webp" alt="" loading="eager" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 42%">
+      <img src="assets/hero-paving.webp" alt="Укладка асфальта дорожной техникой РегионДорСтрой в Орле" loading="eager" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 42%">
     </div>
     <!-- cinematic scrims -->
     <div style="position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(13,13,13,.72) 0%,rgba(13,13,13,.28) 34%,rgba(13,13,13,.5) 62%,rgba(13,13,13,.95) 100%)"></div>
@@ -285,7 +309,7 @@
       <div data-r="g4" style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px">
         
           <div data-anim="tilt" data-lift data-imgzoom style="background:#161616;border:1px solid #262626" style-hover="border-color:#FFC700">
-            <img src="assets/fleet-roller.webp" alt="" loading="lazy" style="display:block;width:100%;height:150px;object-fit:cover;object-position:50% 50%">
+            <img src="assets/fleet-roller.webp" alt="Дорожный каток в аренду" loading="lazy" style="display:block;width:100%;height:150px;object-fit:cover;object-position:50% 50%">
             <div style="padding:18px 18px 20px">
               <h3 style="font-family:'Oswald';font-weight:600;font-size:18px;text-transform:uppercase;letter-spacing:.3px">Дорожные катки</h3>
               <div style="margin-top:6px;font-size:12.5px;color:#FFC700;font-weight:700;letter-spacing:.5px">В АРЕНДУ →</div>
@@ -293,7 +317,7 @@
           </div>
         
           <div data-anim="tilt" data-lift data-imgzoom style="background:#161616;border:1px solid #262626" style-hover="border-color:#FFC700">
-            <img src="assets/fleet-paver.webp" alt="" loading="lazy" style="display:block;width:100%;height:150px;object-fit:cover;object-position:50% 50%">
+            <img src="assets/fleet-paver.webp" alt="Асфальтоукладчик в аренду" loading="lazy" style="display:block;width:100%;height:150px;object-fit:cover;object-position:50% 50%">
             <div style="padding:18px 18px 20px">
               <h3 style="font-family:'Oswald';font-weight:600;font-size:18px;text-transform:uppercase;letter-spacing:.3px">Асфальтоукладчики</h3>
               <div style="margin-top:6px;font-size:12.5px;color:#FFC700;font-weight:700;letter-spacing:.5px">В АРЕНДУ →</div>
@@ -301,7 +325,7 @@
           </div>
         
           <div data-anim="tilt" data-lift data-imgzoom style="background:#161616;border:1px solid #262626" style-hover="border-color:#FFC700">
-            <img src="assets/fleet-excavator.webp" alt="" loading="lazy" style="display:block;width:100%;height:150px;object-fit:cover;object-position:50% 50%">
+            <img src="assets/fleet-excavator.webp" alt="Экскаватор в аренду" loading="lazy" style="display:block;width:100%;height:150px;object-fit:cover;object-position:50% 50%">
             <div style="padding:18px 18px 20px">
               <h3 style="font-family:'Oswald';font-weight:600;font-size:18px;text-transform:uppercase;letter-spacing:.3px">Экскаваторы</h3>
               <div style="margin-top:6px;font-size:12.5px;color:#FFC700;font-weight:700;letter-spacing:.5px">В АРЕНДУ →</div>
@@ -309,7 +333,7 @@
           </div>
         
           <div data-anim="tilt" data-lift data-imgzoom style="background:#161616;border:1px solid #262626" style-hover="border-color:#FFC700">
-            <img src="assets/fleet-dump.webp" alt="" loading="lazy" style="display:block;width:100%;height:150px;object-fit:cover;object-position:50% 50%">
+            <img src="assets/fleet-dump.webp" alt="Самосвал в аренду" loading="lazy" style="display:block;width:100%;height:150px;object-fit:cover;object-position:50% 50%">
             <div style="padding:18px 18px 20px">
               <h3 style="font-family:'Oswald';font-weight:600;font-size:18px;text-transform:uppercase;letter-spacing:.3px">Самосвалы</h3>
               <div style="margin-top:6px;font-size:12.5px;color:#FFC700;font-weight:700;letter-spacing:.5px">В АРЕНДУ →</div>
@@ -317,7 +341,7 @@
           </div>
         
           <div data-anim="tilt" data-lift data-imgzoom style="background:#161616;border:1px solid #262626" style-hover="border-color:#FFC700">
-            <img src="assets/fleet-loader.webp" alt="" loading="lazy" style="display:block;width:100%;height:150px;object-fit:cover;object-position:50% 50%">
+            <img src="assets/fleet-loader.webp" alt="Фронтальный погрузчик в аренду" loading="lazy" style="display:block;width:100%;height:150px;object-fit:cover;object-position:50% 50%">
             <div style="padding:18px 18px 20px">
               <h3 style="font-family:'Oswald';font-weight:600;font-size:18px;text-transform:uppercase;letter-spacing:.3px">Погрузчики</h3>
               <div style="margin-top:6px;font-size:12.5px;color:#FFC700;font-weight:700;letter-spacing:.5px">В АРЕНДУ →</div>
@@ -325,7 +349,7 @@
           </div>
         
           <div data-anim="tilt" data-lift data-imgzoom style="background:#161616;border:1px solid #262626" style-hover="border-color:#FFC700">
-            <img src="assets/fleet-grader.webp" alt="" loading="lazy" style="display:block;width:100%;height:150px;object-fit:cover;object-position:50% 50%">
+            <img src="assets/fleet-grader.webp" alt="Автогрейдер в аренду" loading="lazy" style="display:block;width:100%;height:150px;object-fit:cover;object-position:50% 50%">
             <div style="padding:18px 18px 20px">
               <h3 style="font-family:'Oswald';font-weight:600;font-size:18px;text-transform:uppercase;letter-spacing:.3px">Автогрейдеры</h3>
               <div style="margin-top:6px;font-size:12.5px;color:#FFC700;font-weight:700;letter-spacing:.5px">В АРЕНДУ →</div>
@@ -333,7 +357,7 @@
           </div>
         
           <div data-anim="tilt" data-lift data-imgzoom style="background:#161616;border:1px solid #262626" style-hover="border-color:#FFC700">
-            <img src="assets/fleet-dozer.webp" alt="" loading="lazy" style="display:block;width:100%;height:150px;object-fit:cover;object-position:50% 50%">
+            <img src="assets/fleet-dozer.webp" alt="Бульдозер в аренду" loading="lazy" style="display:block;width:100%;height:150px;object-fit:cover;object-position:50% 50%">
             <div style="padding:18px 18px 20px">
               <h3 style="font-family:'Oswald';font-weight:600;font-size:18px;text-transform:uppercase;letter-spacing:.3px">Бульдозеры</h3>
               <div style="margin-top:6px;font-size:12.5px;color:#FFC700;font-weight:700;letter-spacing:.5px">В АРЕНДУ →</div>
@@ -341,7 +365,7 @@
           </div>
         
           <div data-anim="tilt" data-lift data-imgzoom style="background:#161616;border:1px solid #262626" style-hover="border-color:#FFC700">
-            <img src="assets/fleet-crane.webp" alt="" loading="lazy" style="display:block;width:100%;height:150px;object-fit:cover;object-position:50% 50%">
+            <img src="assets/fleet-crane.webp" alt="Автокран в аренду" loading="lazy" style="display:block;width:100%;height:150px;object-fit:cover;object-position:50% 50%">
             <div style="padding:18px 18px 20px">
               <h3 style="font-family:'Oswald';font-weight:600;font-size:18px;text-transform:uppercase;letter-spacing:.3px">Автокраны</h3>
               <div style="margin-top:6px;font-size:12.5px;color:#FFC700;font-weight:700;letter-spacing:.5px">В АРЕНДУ →</div>
@@ -372,7 +396,7 @@
         
           <div data-anim="rotate-rise" data-lift style="border:1px solid #e6e6e2;display:flex;flex-direction:column;background:#fff" style-hover="border-color:#FFC700">
             <div data-imgzoom style="position:relative">
-              <img src="assets/mat-shcheben.webp" alt="" loading="lazy" style="display:block;width:100%;height:160px;object-fit:cover;object-position:50% 50%">
+              <img src="assets/mat-shcheben.webp" alt="Щебень с доставкой в Орле" loading="lazy" style="display:block;width:100%;height:160px;object-fit:cover;object-position:50% 50%">
               
             </div>
             <div style="padding:20px;display:flex;flex-direction:column;flex:1">
@@ -388,7 +412,7 @@
         
           <div data-anim="rotate-rise" data-lift style="border:1px solid #e6e6e2;display:flex;flex-direction:column;background:#fff" style-hover="border-color:#FFC700">
             <div data-imgzoom style="position:relative">
-              <img src="assets/mat-pesok.webp" alt="" loading="lazy" style="display:block;width:100%;height:160px;object-fit:cover;object-position:50% 50%">
+              <img src="assets/mat-pesok.webp" alt="Песок с доставкой в Орле" loading="lazy" style="display:block;width:100%;height:160px;object-fit:cover;object-position:50% 50%">
               
                 <span style="position:absolute;top:12px;left:12px;background:#FFC700;color:#0d0d0d;font-family:'Oswald';font-weight:700;font-size:11.5px;letter-spacing:1px;text-transform:uppercase;padding:6px 11px">Свой карьер</span>
               
@@ -406,7 +430,7 @@
         
           <div data-anim="rotate-rise" data-lift style="border:1px solid #e6e6e2;display:flex;flex-direction:column;background:#fff" style-hover="border-color:#FFC700">
             <div data-imgzoom style="position:relative">
-              <img src="assets/mat-grunt.webp" alt="" loading="lazy" style="display:block;width:100%;height:160px;object-fit:cover;object-position:50% 50%">
+              <img src="assets/mat-grunt.webp" alt="Плодородный грунт с доставкой" loading="lazy" style="display:block;width:100%;height:160px;object-fit:cover;object-position:50% 50%">
               
             </div>
             <div style="padding:20px;display:flex;flex-direction:column;flex:1">
@@ -422,7 +446,7 @@
         
           <div data-anim="rotate-rise" data-lift style="border:1px solid #e6e6e2;display:flex;flex-direction:column;background:#fff" style-hover="border-color:#FFC700">
             <div data-imgzoom style="position:relative">
-              <img src="assets/mat-pgs.webp" alt="" loading="lazy" style="display:block;width:100%;height:160px;object-fit:cover;object-position:50% 50%">
+              <img src="assets/mat-pgs.webp" alt="ПГС и отсев с доставкой" loading="lazy" style="display:block;width:100%;height:160px;object-fit:cover;object-position:50% 50%">
               
             </div>
             <div style="padding:20px;display:flex;flex-direction:column;flex:1">
@@ -590,8 +614,8 @@
             <form onsubmit="submitForm(event)">
               <h3 style="font-family:'Oswald';font-weight:600;font-size:24px;text-transform:uppercase;margin-bottom:8px">Расчёт стоимости</h3>
               <p style="color:#9a9a9a;font-size:14px;margin-bottom:24px">Опишите задачу — подготовим смету и сроки.</p>
-              <input required placeholder="Ваше имя" aria-label="Ваше имя" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
-              <input required placeholder="Телефон" aria-label="Телефон" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
+              <input required placeholder="Ваше имя" aria-label="Ваше имя" autocomplete="name" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
+              <input required placeholder="Телефон" aria-label="Телефон" autocomplete="tel" inputmode="tel" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
               <select aria-label="Услуга" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#cfcfcf;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
                 <option>Строительство дорог</option>
                 <option>Благоустройство территории</option>
@@ -611,6 +635,7 @@
       </div>
     </div>
   </section>
+  </main>
 
   <!-- ================= FOOTER ================= -->
   <footer style="background:#0a0a0a;color:#9a9a9a;padding:54px 0 28px;border-top:3px solid #FFC700">
@@ -670,8 +695,8 @@
               <div style="background:#f4f4f2;border-left:3px solid #FFC700;padding:11px 14px;margin-bottom:18px;font-size:14px;font-weight:700">Материал: <span id="modalMatName"></span></div>
             </div>
             <form onsubmit="submitModal(event)">
-              <input required placeholder="Ваше имя" aria-label="Ваше имя" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
-              <input required placeholder="Телефон" aria-label="Телефон" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none" style-focus="border-color:#FFC700">
+              <input required placeholder="Ваше имя" aria-label="Ваше имя" autocomplete="name" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
+              <input required placeholder="Телефон" aria-label="Телефон" autocomplete="tel" inputmode="tel" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none" style-focus="border-color:#FFC700">
               <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;cursor:pointer">
                 <input type="checkbox" required aria-label="Согласие на обработку персональных данных" style="margin-top:2px;width:16px;height:16px;accent-color:#FFC700;flex-shrink:0">
                 <span style="color:#888;font-size:11.5px;line-height:1.45">Я согласен на обработку персональных данных и принимаю политику конфиденциальности</span>
