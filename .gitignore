@@ -2,3 +2,6 @@
 /Assesct/
 /assets/backhoe_loader/
 /*.zip
+
+# Локальные роли субагентов
+/.claude/agents/
