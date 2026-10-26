@@ -149,4 +149,59 @@ $cli(['bin/unlock.php', 'victim']);
 check('unlock.php → login OK', $code === 302
     && db()->query("SELECT COUNT(*) FROM login_attempts WHERE login = 'victim'")->fetchColumn() == 0, (string)$code);
 
+// --- M4: CRUD, права по группам, аудит
+[, $boss] = $login('boss', $pw);
+[, $ed] = $login('redactor', $pw);
+[, $mgr] = $login('victim', $pw);
+$audits = fn() => (int)db()->query('SELECT COUNT(*) FROM audit_log')->fetchColumn();
+$val = fn(string $k) => db()->query('SELECT value FROM settings WHERE key = ' . db()->quote($k))->fetchColumn();
+
+[$code] = req("$base/admin/?p=settings&g=requisites&a=save", ['_csrf' => $csrfOf($ed), 'org_inn' => '1234567890'], $ed);
+check('editor POST requisites → 403', $code === 403 && $val('org_inn') === '', (string)$code);
+[$code] = req("$base/admin/?p=settings&g=requisites", null, $ed);
+check('editor GET requisites → 403', $code === 403, (string)$code);
+
+$h1 = $val('hero_h1');
+[$code] = req("$base/admin/?p=settings&g=hero&a=save", ['_csrf' => $csrfOf($mgr), 'hero_p' => 'x', 'hero_h1' => '<img src=x onerror=alert(1)>'], $mgr);
+check('manager POST trusted key → 403', $code === 403 && $val('hero_h1') === $h1 && $val('hero_p') !== 'x', (string)$code);
+[$code] = req("$base/admin/?p=settings&g=mail&a=save", ['_csrf' => $csrfOf($mgr), 'notify_email' => 'a@gmail.com'], $mgr);
+check('manager POST notify_email → 403', $code === 403 && $val('notify_email') === '', (string)$code);
+[$code] = req("$base/admin/?p=settings&g=contacts&a=save", ['_csrf' => $csrfOf($mgr), 'whatsapp' => 'javascript:alert(1)'], $mgr);
+check('manager POST whatsapp "javascript:…" → 422', $code === 422 && $val('whatsapp') === 'https://wa.me/79807691111', (string)$code);
+
+$row = db()->query("SELECT * FROM fleet_prices WHERE sort = 1")->fetch();
+$n0 = $audits();
+[$code] = req("$base/admin/?p=content&t=fleet_prices&a=save", ['_csrf' => $csrfOf($boss), 'id' => $row['id'], 'name' => $row['name'],
+    'model' => $row['model'], 'price_kind' => 'fixed', 'price' => '99999', 'unit' => $row['unit']], $boss);
+$au = db()->query('SELECT * FROM audit_log ORDER BY id DESC LIMIT 1')->fetch();
+check('owner save price → audit row', $code === 302 && $audits() === $n0 + 1 && $au['tbl'] === 'fleet_prices' && $au['row_key'] === (string)$row['id']
+    && json_decode($au['old_value'], true) === ['price' => 36000] && json_decode($au['new_value'], true) === ['price' => '99999'], "$code " . json_encode($au, JSON_UNESCAPED_UNICODE));
+check('price 99999 → на / «99 999 ₽»', str_contains(req("$base/")[1], '99 999 ₽'));
+
+$sv = db()->query('SELECT * FROM services WHERE sort = 2')->fetch();
+[$code] = req("$base/admin/?p=content&t=services&a=save", ['_csrf' => $csrfOf($ed), 'id' => $sv['id'], 'title' => $sv['title'], 'text' => $sv['text'],
+    'href' => 'javascript:x', 'in_form' => '1', 'in_footer' => '1'], $ed);
+check('href "javascript:x" через POST админки → 422', $code === 422
+    && db()->query("SELECT href FROM services WHERE id = {$sv['id']}")->fetchColumn() === '#services', (string)$code);
+[$code] = req("$base/admin/?p=content&t=fleet_cards&a=save", ['_csrf' => $csrfOf($ed), 'id' => 1, 'title' => 'x', 'img' => 'assets/../../var/x.webp',
+    'alt' => 'x', 'img_pos' => '50% 50%', 'price_kind' => 'contract', 'price' => '', 'unit' => ''], $ed);
+check('img "assets/../../var/x.webp" → 422', $code === 422, (string)$code);
+[$code] = req("$base/admin/?p=content&t=marquee&a=sort", ['_csrf' => $csrfOf($ed), 'id' => db()->query("SELECT id FROM items WHERE kind='marquee' AND sort=2")->fetchColumn(), 'dir' => 'up'], $ed);
+check('editor sort marquee #2 up → 302, стал первым', $code === 302
+    && db()->query("SELECT title FROM items WHERE kind='marquee' ORDER BY sort LIMIT 1")->fetchColumn() === 'Благоустройство территорий', (string)$code);
+
+[$code] = req("$base/admin/?p=users", null, $mgr);
+check('manager GET ?p=users → 403', $code === 403, (string)$code);
+$np = 'new secret password 42';
+[$code] = req("$base/admin/?p=users&a=save", ['_csrf' => $csrfOf($boss), 'id' => '', 'login' => 'newbie', 'role' => 'editor', 'password' => 'first password 123'], $boss);
+$uid = db()->query("SELECT id FROM users WHERE login = 'newbie'")->fetchColumn();
+[$code2] = req("$base/admin/?p=users&a=password", ['_csrf' => $csrfOf($boss), 'id' => $uid, 'password' => $np], $boss);
+$hash = db()->query("SELECT pass_hash FROM users WHERE id = $uid")->fetchColumn();
+$dump = implode("\n", array_map(fn($r) => implode('|', $r), db()->query('SELECT * FROM audit_log')->fetchAll()));
+check('owner password change → audit_log has no pass_hash', $code === 302 && $code2 === 302 && $login('newbie', $np)[0] === 302
+    && !str_contains($dump, $hash) && !str_contains($dump, $np) && !str_contains($dump, 'first password') && !preg_match('~\$2y\$|\$argon|pass_hash~', $dump), "$code $code2");
+[$code] = req("$base/admin/?p=users&a=toggle", ['_csrf' => $csrfOf($boss), 'id' => $uid], $boss);
+check('owner toggle → newbie не входит', $code === 302 && $login('newbie', $np)[0] === 200, (string)$code);
+check('admin: баннер виден на ?p=content', str_contains(req("$base/admin/?p=content", null, $ed)[1], 'Реквизиты не заполнены'));
+
 exit($fail ? 1 : 0);

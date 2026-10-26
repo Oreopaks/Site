@@ -95,9 +95,229 @@ if ($p === 'logout') {
     go('login');
 }
 
-// ponytail: заглушки разделов; CRUD — M4, дашборды заявок/статистики/аудита — M5
-$titles = ['home' => 'Обзор', 'content' => 'Контент', 'settings' => 'Настройки', 'leads' => 'Заявки',
-    'stats' => 'Статистика', 'users' => 'Пользователи', 'audit' => 'Журнал изменений'];
-page($titles[$p], $p === 'home'
-    ? '<p>Вы вошли как <b>' . e(user()['login']) . '</b> (' . e(user()['role']) . ').</p>'
-    : '<p>Раздел в разработке.</p>');
+
+// Раздел через шаблон app/tpl/admin/<tpl>.php; переменные шаблона — из $vars
+function view(string $tpl, string $title, array $vars, int $code = 200): never
+{
+    extract($vars);
+    $csrf = $_SESSION['csrf'];
+    ob_start();
+    require dirname(__DIR__, 2) . "/app/tpl/admin/$tpl.php";
+    page($title, ob_get_clean(), $code);
+}
+
+// audit_log: одна строка на изменённую запись; old/new — JSON только изменённых полей (или сырое значение settings)
+function audit(string $tbl, string $key, ?string $old, ?string $new): void
+{
+    db()->prepare('INSERT INTO audit_log (user_id, tbl, row_key, old_value, new_value) VALUES (?, ?, ?, ?, ?)')
+        ->execute([user()['id'], $tbl, $key, $old, $new]);
+}
+$json = fn(array $a): string => json_encode($a, JSON_UNESCAPED_UNICODE);
+$in = fn(string $k): string => is_string($_POST[$k] ?? null) ? trim($_POST[$k]) : '';
+$a = $post && is_string($_GET['a'] ?? null) ? $_GET['a'] : '';
+
+if ($p === 'home') {
+    page('Обзор', '<p>Вы вошли как <b>' . e(user()['login']) . '</b> (' . e(user()['role']) . ').</p>');
+}
+
+if ($p === 'content') {
+    $t = is_string($_GET['t'] ?? null) ? $_GET['t'] : 'services';
+    $stat = ['title' => 'line', 'text' => 'line0', 'num' => 'int', 'suffix' => 'line0'];
+    $price = ['price_kind' => 'kind', 'price' => 'price', 'unit' => 'line0'];
+    // t → [таблица, kind в items, заголовок, поля => тип]; тип задаёт и форму, и проверку
+    [$tbl, $kind, $tTitle, $fields] = match ($t) {
+        'services' => ['services', null, 'Услуги', ['title' => 'line', 'text' => 'area', 'href' => 'href', 'in_form' => 'bool', 'in_footer' => 'bool']],
+        'fleet_cards' => ['fleet_cards', null, 'Техника: карточки', ['title' => 'line', 'img' => 'img', 'alt' => 'line', 'img_pos' => 'pos'] + $price],
+        'fleet_prices' => ['fleet_prices', null, 'Техника: прайс', ['name' => 'line', 'model' => 'line0'] + $price + ['is_sub' => 'bool']],
+        'materials' => ['materials', null, 'Материалы', ['title' => 'line', 'text' => 'area', 'img' => 'img', 'alt' => 'line', 'badge' => 'line0'] + $price],
+        'nav' => ['items', 'nav', 'Меню', ['title' => 'line', 'href' => 'href']],
+        'marquee' => ['items', 'marquee', 'Бегущая строка', ['title' => 'line']],
+        'stat_hero' => ['items', 'stat_hero', 'Цифры в шапке', $stat],
+        'stat_bar' => ['items', 'stat_bar', 'Цифры под шапкой', $stat],
+        'why' => ['items', 'why', 'О компании: карточки', ['title' => 'line', 'text' => 'area']],
+        'step' => ['items', 'step', 'Этапы работы', ['title' => 'line', 'text' => 'area']],
+        default => [null, null, null, null],
+    };
+    if ($tbl === null) page('Не найдено', '<p>Список не найден.</p>', 404);
+    $where = $kind === null ? '' : 'WHERE kind = ' . db()->quote($kind);
+    $list = fn() => rows("SELECT * FROM $tbl $where ORDER BY sort, id");
+    $labels = ['title' => 'Название', 'name' => 'Название', 'model' => 'Модель', 'text' => 'Текст', 'href' => 'Ссылка',
+        'in_form' => 'В форме', 'in_footer' => 'В подвале', 'img' => 'Картинка (assets/….webp)', 'alt' => 'Alt картинки',
+        'img_pos' => 'Позиция картинки (NN% NN%)', 'badge' => 'Бейдж', 'price_kind' => 'Цена', 'price' => 'Цена, ₽',
+        'unit' => 'Единица', 'is_sub' => 'Подстрока', 'num' => 'Число', 'suffix' => 'Суффикс'];
+    $vars = ['t' => $t, 'fields' => $fields, 'labels' => $labels, 'err' => '', 'errId' => 0];
+
+    if ($a === 'save') {
+        $id = (int)$in('id');
+        $old = current(array_filter($list(), fn($r) => (int)$r['id'] === $id));
+        if (!$old) page('Не найдено', '<p>Строка не найдена.</p>', 404);
+        $new = [];
+        $err = '';
+        foreach ($fields as $f => $type) {
+            $v = $in($f);
+            $ok = match ($type) {
+                'line' => preg_match('/^.{1,200}$/suD', $v),
+                'line0' => preg_match('/^.{0,200}$/suD', $v),
+                'area' => preg_match('/^.{0,2000}$/suD', $v),
+                'href' => valid_href($v), // D5
+                'img' => preg_match('~^assets/[a-z0-9_\-/]+\.(webp|svg)$~D', $v) && is_file(__DIR__ . '/../' . $v), // D10
+                'pos' => preg_match('/^\d{1,3}% \d{1,3}%$/D', $v), // уходит в style — только «NN% NN%»
+                'kind' => in_array($v, ['fixed', 'from', 'contract'], true),
+                'price', 'int' => preg_match('/^\d{0,9}$/D', $v),
+                'bool' => true,
+            };
+            if (!$ok) $err .= "Неверное значение: «{$labels[$f]}». ";
+            $new[$f] = match ($type) {
+                'bool' => $v === '1' ? '1' : '0',
+                'price', 'int' => $v === '' ? null : (string)(int)$v,
+                default => $v,
+            };
+        }
+        if (isset($new['price_kind']) && $new['price_kind'] !== 'contract' && $new['price'] === null) $err .= 'Укажите цену или выберите «договорная». ';
+        if ($err !== '') view('content', $tTitle, $vars + ['rows' => $list(), 'err' => $err, 'errId' => $id], 422);
+
+        $o = $n = [];
+        foreach ($new as $f => $v) {
+            if (($old[$f] === null ? null : (string)$old[$f]) !== $v) { $o[$f] = $old[$f]; $n[$f] = $v; }
+        }
+        if ($n) {
+            db()->beginTransaction();
+            $set = implode(', ', array_map(fn($f) => "$f = ?", array_keys($n))); // имена полей — из $fields, не из запроса
+            db()->prepare("UPDATE $tbl SET $set WHERE id = ?")->execute([...array_values($n), $id]);
+            audit($tbl, (string)$id, $json($o), $json($n));
+            db()->commit();
+        }
+        go("content&t=$t&ok=1");
+    }
+
+    if ($a === 'sort') {
+        $l = $list();
+        $i = array_search((int)$in('id'), array_map('intval', array_column($l, 'id')), true);
+        $j = $i === false ? false : $i + ($in('dir') === 'up' ? -1 : 1);
+        if ($i === false || !isset($l[$j])) page('Не найдено', '<p>Нельзя переместить.</p>', 404);
+        [$l[$i], $l[$j]] = [$l[$j], $l[$i]];
+        db()->beginTransaction();
+        // ponytail: после обмена перенумеровываем весь список 1..n — лишние строки аудита только при «дырявом» sort
+        foreach ($l as $k => $r) {
+            if ((int)$r['sort'] === $k + 1) continue;
+            db()->prepare("UPDATE $tbl SET sort = ? WHERE id = ?")->execute([$k + 1, $r['id']]);
+            audit($tbl, (string)$r['id'], $json(['sort' => (int)$r['sort']]), $json(['sort' => $k + 1]));
+        }
+        db()->commit();
+        go("content&t=$t&ok=1");
+    }
+    if ($post) page('Не найдено', '<p>Действие не найдено.</p>', 404);
+    view('content', $tTitle, $vars + ['rows' => $list()]);
+}
+
+if ($p === 'settings') {
+    // §3: группа → право; trusted_html (hero_h1, why_h2) — отдельно, только owner
+    $grpPerm = ['seo' => 'content', 'ld' => 'content', 'hero' => 'content', 'texts' => 'content',
+        'contacts' => 'contacts', 'requisites' => 'contacts', 'legal' => 'contacts', 'metrika' => 'owner_settings', 'mail' => 'owner_settings'];
+    $g = is_string($_GET['g'] ?? null) ? $_GET['g'] : 'seo';
+    if (!isset($grpPerm[$g])) page('Не найдено', '<p>Группа не найдена.</p>', 404);
+    if (!can($grpPerm[$g])) deny();
+    $list = rows('SELECT * FROM settings WHERE grp = ? ORDER BY sort, key', [$g]);
+    $vars = ['g' => $g, 'groups' => array_keys(array_filter($grpPerm, 'can')), 'list' => $list, 'err' => ''];
+
+    if ($a === 'save') {
+        $new = [];
+        $err = '';
+        foreach ($list as $r) {
+            $k = $r['key'];
+            if (!array_key_exists($k, $_POST)) continue; // поле не прислано — не меняем (disabled trusted у не-владельца)
+            if ($r['trusted_html'] && !can('trusted_html')) deny();
+            $v = $in($k);
+            $ok = preg_match('/^.{0,4000}$/suD', $v) && match ($k) {
+                'base_url' => preg_match('~^https?://\S+/$~D', $v),
+                'whatsapp', 'telegram' => valid_href($v),
+                'phone_mobile', 'phone_city' => valid_href("tel:$v"),
+                'email' => valid_href("mailto:$v"),
+                'metrika_id' => preg_match('/^\d{0,12}$/D', $v),
+                'notify_email' => preg_match('/^([^@\s]+@[^@\s]+\.[a-z]{2,})?$/iD', $v),
+                'ld_geo_lat', 'ld_geo_lon' => preg_match('/^-?\d{1,3}(\.\d+)?$/D', $v),
+                'ld_opens', 'ld_closes' => preg_match('/^[0-2]\d:[0-5]\d$/D', $v),
+                default => true,
+            };
+            if (!$ok) $err .= "Неверное значение: «{$r['label']}». ";
+            if ($v !== $r['value']) $new[$k] = [$r['value'], $v];
+        }
+        if ($err !== '') view('settings', 'Настройки', ['list' => array_map(fn($r) => ['value' => $in($r['key'])] + $r, $list), 'err' => $err] + $vars, 422);
+        db()->beginTransaction();
+        foreach ($new as $k => [$o, $v]) {
+            db()->prepare('UPDATE settings SET value = ? WHERE key = ?')->execute([$v, $k]);
+            audit('settings', $k, $o, $v);
+        }
+        db()->commit();
+        go("settings&g=$g&ok=1");
+    }
+    if ($post) page('Не найдено', '<p>Действие не найдено.</p>', 404);
+    view('settings', 'Настройки', $vars);
+}
+
+if ($p === 'users') {
+    $me = (int)user()['id'];
+    $one = function (int $id): array {
+        $st = db()->prepare('SELECT id, login, role, is_active FROM users WHERE id = ?');
+        $st->execute([$id]);
+        return $st->fetch() ?: page('Не найдено', '<p>Пользователь не найден.</p>', 404);
+    };
+    // MINOR-9: в аудит только login/role/is_active; pass_hash и пароль — никогда
+    $pub = fn(array $u): array => ['login' => $u['login'], 'role' => $u['role'], 'is_active' => (int)$u['is_active']];
+    $err = '';
+    if ($a === 'save') {
+        $role = $in('role');
+        if (!isset(ROLE_PERMS[$role])) $err = 'Неверная роль.';
+        elseif ($in('id') === '') { // новый пользователь
+            $login = $in('login');
+            $pass = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
+            if (!preg_match('/^[a-z0-9_.-]{3,32}$/D', $login)) $err = 'Логин: a-z 0-9 _ . - , 3–32 символа.';
+            elseif (!preg_match('/^.{12,200}$/suD', $pass)) $err = 'Пароль — не короче 12 символов.';
+            elseif (rows('SELECT 1 FROM users WHERE login = ?', [$login])) $err = 'Логин уже занят.';
+            else {
+                db()->beginTransaction();
+                db()->prepare('INSERT INTO users (login, pass_hash, role) VALUES (?, ?, ?)')->execute([$login, password_hash($pass, PASSWORD_DEFAULT), $role]);
+                $id = (int)db()->lastInsertId();
+                audit('users', (string)$id, null, $json($pub($one($id))));
+                db()->commit();
+                go('users&ok=1');
+            }
+        } else {
+            $u = $one((int)$in('id'));
+            if ((int)$u['id'] === $me) $err = 'Свою роль менять нельзя.'; // иначе владелец может остаться без владельцев
+            else {
+                db()->beginTransaction();
+                db()->prepare('UPDATE users SET role = ? WHERE id = ?')->execute([$role, $u['id']]);
+                audit('users', (string)$u['id'], $json($pub($u)), $json($pub(['role' => $role] + $u)));
+                db()->commit();
+                go('users&ok=1');
+            }
+        }
+    } elseif ($a === 'password') {
+        $u = $one((int)$in('id'));
+        $pass = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
+        if (!preg_match('/^.{12,200}$/suD', $pass)) $err = 'Пароль — не короче 12 символов.';
+        else {
+            db()->beginTransaction();
+            db()->prepare('UPDATE users SET pass_hash = ? WHERE id = ?')->execute([password_hash($pass, PASSWORD_DEFAULT), $u['id']]);
+            audit('users', (string)$u['id'], null, $json(['login' => $u['login'], 'password' => 'changed']));
+            db()->commit();
+            go('users&ok=1');
+        }
+    } elseif ($a === 'toggle') {
+        $u = $one((int)$in('id'));
+        if ((int)$u['id'] === $me) $err = 'Себя отключить нельзя.';
+        else {
+            db()->beginTransaction();
+            db()->prepare('UPDATE users SET is_active = 1 - is_active WHERE id = ?')->execute([$u['id']]);
+            audit('users', (string)$u['id'], $json($pub($u)), $json($pub(['is_active' => 1 - (int)$u['is_active']] + $u)));
+            db()->commit();
+            go('users&ok=1');
+        }
+    } elseif ($post) page('Не найдено', '<p>Действие не найдено.</p>', 404);
+    view('users', 'Пользователи', ['list' => rows('SELECT id, login, role, is_active, created_at FROM users ORDER BY id'), 'me' => $me, 'err' => $err], $err ? 422 : 200);
+}
+
+// ponytail: дашборды заявок/статистики/аудита — M5
+$titles = ['leads' => 'Заявки', 'stats' => 'Статистика', 'audit' => 'Журнал изменений'];
+page($titles[$p], '<p>Раздел в разработке.</p>');
