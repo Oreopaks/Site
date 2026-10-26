@@ -24,14 +24,19 @@ function check(string $name, bool $ok, string $why = ''): void
     if (!$ok) $fail++;
 }
 
-// HTTP-запрос → [код, тело]
-function req(string $url, ?array $post = null): array
+// HTTP-запрос без редиректов → [код, тело, заголовки]; $cookie — «name=value» или ''
+function req(string $url, ?array $post = null, string $cookie = ''): array
 {
-    $opt = ['ignore_errors' => true];
-    if ($post !== null) $opt += ['method' => 'POST', 'header' => 'Content-Type: application/x-www-form-urlencoded', 'content' => http_build_query($post)];
+    $h = $cookie !== '' ? ["Cookie: $cookie"] : [];
+    $opt = ['ignore_errors' => true, 'follow_location' => 0];
+    if ($post !== null) {
+        $h[] = 'Content-Type: application/x-www-form-urlencoded';
+        $opt += ['method' => 'POST', 'content' => http_build_query($post)];
+    }
+    $opt['header'] = $h;
     $body = file_get_contents($url, false, stream_context_create(['http' => $opt]));
     preg_match('~^HTTP/\S+ (\d+)~', $http_response_header[0] ?? '', $m);
-    return [(int)($m[1] ?? 0), $body];
+    return [(int)($m[1] ?? 0), $body, $http_response_header ?? []];
 }
 $leads = fn() => (int)db()->query('SELECT COUNT(*) FROM leads')->fetchColumn();
 $lead = ['source' => 'calc', 'name' => 'Тест', 'phone' => '+7 980 000-00-00', 'service' => 'Благоустройство', 'comment' => 'x', 'website' => ''];
@@ -79,5 +84,69 @@ $saveHref = function (string $href): int {
 check('href "javascript:x" → 422', $saveHref('javascript:x') === 422);
 check('href "//evil/x.php" → 422', $saveHref('//evil/x.php') === 422);
 check('href "#fleet" → saved', $saveHref('#fleet') === 200 && db()->query('SELECT href FROM services WHERE sort = 1')->fetchColumn() === '#fleet');
+
+// --- M3: админка, роли, CSRF, блокировка входа
+$cli = function (array $args, string $stdin = '') use ($root, $dbPath): int {
+    $p = proc_open(array_merge([PHP_BINARY], $args), [0 => ['pipe', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']], $pp, $root, getenv() + ['RDS_DB' => $dbPath]);
+    fwrite($pp[0], $stdin);
+    fclose($pp[0]);
+    return proc_close($p);
+};
+$pw = 'correct horse battery';
+check('create-user: пароль < 12 символов → отказ', $cli(['bin/create-user.php', 'shorty', 'owner'], "short\n") !== 0);
+foreach (['boss' => 'owner', 'redactor' => 'editor', 'victim' => 'manager'] as $l => $r) $cli(['bin/create-user.php', $l, $r], "$pw\n");
+check('create-user: 3 пользователя', (int)db()->query('SELECT COUNT(*) FROM users')->fetchColumn() === 3);
+
+$setCookie = fn(array $hdr) => implode("\n", preg_grep('~^Set-Cookie:~i', $hdr));
+$sid = fn(array $hdr) => preg_match('~^Set-Cookie: (rds_admin=[^;]+)~mi', implode("\n", $hdr), $m) ? $m[1] : '';
+// GET формы (сессия + токен) → POST логина; → [код ответа на POST, cookie после входа, cookie до входа, заголовки GET]
+$login = function (string $l, string $p) use ($base, $sid): array {
+    [, $html, $h0] = req("$base/admin/?p=login");
+    $c0 = $sid($h0);
+    preg_match('~name="_csrf" value="([0-9a-f]+)"~', $html, $m);
+    [$code, , $h] = req("$base/admin/?p=login", ['_csrf' => $m[1] ?? '', 'login' => $l, 'password' => $p], $c0);
+    return [$code, $sid($h) ?: $c0, $c0, $h0];
+};
+$csrfOf = fn(string $c) => preg_match('~name="_csrf" value="([0-9a-f]+)"~', req("$base/admin/", null, $c)[1], $m) ? $m[1] : '';
+
+[, , $hdr] = req("$base/");
+check('curl -I / → нет Set-Cookie', $setCookie($hdr) === '', $setCookie($hdr));
+
+[$code, $boss, $pre, $h0] = $login('boss', $pw);
+$sc = $setCookie($h0);
+check('Set-Cookie админки: path=/admin/, HttpOnly, SameSite=Strict',
+    stripos($sc, 'path=/admin/') !== false && stripos($sc, 'HttpOnly') !== false && stripos($sc, 'SameSite=Strict') !== false, $sc);
+check('owner login → 302, session id regenerated', $code === 302 && $boss !== '' && $boss !== $pre, "$code $pre → $boss");
+[$code, , $hdr] = req("$base/admin/?p=leads", null, $boss);
+$csp = implode("\n", preg_grep('~^Content-Security-Policy:~i', $hdr));
+check("owner GET ?p=leads → 200, CSP default-src 'self'; frame-ancestors 'none'",
+    $code === 200 && str_contains($csp, "default-src 'self'") && str_contains($csp, "frame-ancestors 'none'"), "$code $csp");
+check('admin: баннер «Реквизиты не заполнены»', str_contains(req("$base/admin/", null, $boss)[1], 'Реквизиты не заполнены'));
+
+[, $ed] = $login('redactor', $pw);
+[$code] = req("$base/admin/?p=leads", null, $ed);
+check('editor GET ?p=leads → 403', $code === 403, (string)$code);
+[$code] = req("$base/admin/?p=leads&a=delete", ['_csrf' => $csrfOf($ed)], $ed);
+check('editor POST ?p=leads (с CSRF) → 403', $code === 403, (string)$code);
+
+[$code] = req("$base/admin/?p=logout", [], $boss);
+check('logged-in POST without _csrf → 403', $code === 403 && req("$base/admin/", null, $boss)[0] === 200, (string)$code);
+[$code, , $hdr] = req("$base/admin/?p=logout", []);
+check('same POST without session → 302', $code === 302 && in_array('Location: /admin/?p=login', $hdr, true), (string)$code);
+[$code] = req("$base/admin/?p=logout", ['_csrf' => $csrfOf($boss)], $boss);
+check('logout POST с CSRF → 302, сессия закрыта', $code === 302 && req("$base/admin/", null, $boss)[0] === 302, (string)$code);
+
+$codes = [];
+for ($i = 0; $i < 5; $i++) $codes[] = $login('victim', 'wrong password!')[0];
+check('5 wrong → 423', $codes === [200, 200, 200, 200, 423], implode(',', $codes));
+[$code] = $login('victim', $pw);
+check('6th correct still 423', $code === 423, (string)$code);
+[$code] = $login('nobody', 'whatever password');
+check('unknown login → 200 (не 302), строка в login_attempts', $code === 200
+    && (int)db()->query("SELECT fails FROM login_attempts WHERE login = 'nobody'")->fetchColumn() === 1, (string)$code);
+$cli(['bin/unlock.php', 'victim']);
+[$code] = $login('victim', $pw);
+check('unlock.php → login OK', $code === 302
+    && db()->query("SELECT COUNT(*) FROM login_attempts WHERE login = 'victim'")->fetchColumn() == 0, (string)$code);
 
 exit($fail ? 1 : 0);
