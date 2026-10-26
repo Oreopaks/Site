@@ -12,6 +12,8 @@ if (!DB) { console.error('нужен RDS_DB — та же БД, что у сте
 const sql = (q, ...args) => JSON.parse(execFileSync('php', ['-r',
   '$p=new PDO("sqlite:".$argv[1]); $s=$p->prepare($argv[2]); $s->execute(array_slice($argv,3)); echo json_encode($s->fetchAll(PDO::FETCH_NUM));',
   DB, q, ...args]).toString());
+// первый запрос к стенду создаёт схему и сид в свежей БД
+execFileSync('php', ['-r', 'file_get_contents($argv[1]);', BASE]);
 const today = execFileSync('php', ['-r', 'echo gmdate("Y-m-d");']).toString();
 const rev = sql("SELECT value FROM settings WHERE key='cookie_text_rev'")[0][0];
 
