@@ -11,7 +11,7 @@ ini_set('display_errors', '1');
 db(); // создать БД до старта стенда — без гонки двух процессов
 
 $base = 'http://127.0.0.1:8081';
-$srv = proc_open([PHP_BINARY, '-S', '127.0.0.1:8081', '-t', "$root/public", "$root/public/router.php"],
+$srv = proc_open([PHP_BINARY, '-d', 'upload_max_filesize=12M', '-d', 'post_max_size=13M', '-S', '127.0.0.1:8081', '-t', "$root/public", "$root/public/router.php"],
     [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']], $pipes, $root, getenv() + ['RDS_DB' => $dbPath]);
 register_shutdown_function(fn() => proc_terminate($srv));
 for ($i = 0; $i < 50 && !@fsockopen('127.0.0.1', 8081); $i++) usleep(100000);
@@ -37,6 +37,18 @@ function req(string $url, ?array $post = null, string $cookie = '', array $hdr =
     $body = file_get_contents($url, false, stream_context_create(['http' => $opt]));
     preg_match('~^HTTP/\S+ (\d+)~', $http_response_header[0] ?? '', $m);
     return [(int)($m[1] ?? 0), $body, $http_response_header ?? []];
+}
+// multipart POST: поля + один файл photo → [код, тело, заголовки]
+function reqFile(string $url, array $fields, string $bytes, string $mime, string $cookie = ''): array
+{
+    $b = bin2hex(random_bytes(8));
+    $body = '';
+    foreach ($fields as $k => $v) $body .= "--$b\r\nContent-Disposition: form-data; name=\"$k\"\r\n\r\n$v\r\n";
+    $body .= "--$b\r\nContent-Disposition: form-data; name=\"photo\"; filename=\"x\"\r\nContent-Type: $mime\r\n\r\n$bytes\r\n--$b--\r\n";
+    $h = ["Content-Type: multipart/form-data; boundary=$b", ...($cookie !== '' ? ["Cookie: $cookie"] : [])];
+    $res = file_get_contents($url, false, stream_context_create(['http' => ['method' => 'POST', 'header' => $h, 'content' => $body, 'ignore_errors' => true, 'follow_location' => 0]]));
+    preg_match('~^HTTP/\S+ (\d+)~', $http_response_header[0] ?? '', $m);
+    return [(int)($m[1] ?? 0), $res, $http_response_header ?? []];
 }
 $leads = fn() => (int)db()->query('SELECT COUNT(*) FROM leads')->fetchColumn();
 $lead = ['source' => 'calc', 'name' => 'Тест', 'phone' => '+7 980 000-00-00', 'service' => 'Благоустройство', 'comment' => 'x', 'website' => ''];
@@ -202,12 +214,18 @@ check('manager POST notify_email → 403', $code === 403 && $val('notify_email')
 [$code] = req("$base/admin/?p=settings&g=contacts&a=save", ['_csrf' => $csrfOf($mgr), 'whatsapp' => 'javascript:alert(1)'], $mgr);
 check('manager POST whatsapp "javascript:…" → 422', $code === 422 && $val('whatsapp') === 'https://wa.me/79807691111', (string)$code);
 
+$drafts = fn() => (int)db()->query('SELECT COUNT(*) FROM drafts')->fetchColumn();
+$lastAudit = fn() => db()->query('SELECT * FROM audit_log ORDER BY id DESC LIMIT 1')->fetch();
+$publish = fn(string $c) => req("$base/admin/?p=draft&a=publish", ['_csrf' => $csrfOf($c)], $c);
 $row = db()->query("SELECT * FROM fleet_prices WHERE sort = 1")->fetch();
 $n0 = $audits();
 [$code] = req("$base/admin/?p=content&t=fleet_prices&a=save", ['_csrf' => $csrfOf($boss), 'id' => $row['id'], 'name' => $row['name'],
     'model' => $row['model'], 'price_kind' => 'fixed', 'price' => '99999', 'unit' => $row['unit']], $boss);
-$au = db()->query('SELECT * FROM audit_log ORDER BY id DESC LIMIT 1')->fetch();
-check('owner save price → audit row', $code === 302 && $audits() === $n0 + 1 && $au['tbl'] === 'fleet_prices' && $au['row_key'] === (string)$row['id']
+check('owner save price → 302, в черновик: audit нет, на / прежняя цена', $code === 302 && $audits() === $n0 && $drafts() === 1
+    && !str_contains(req("$base/")[1], '99 999 ₽'), (string)$code);
+[$code] = $publish($boss);
+$au = $lastAudit();
+check('owner publish price → audit row', $code === 302 && $audits() === $n0 + 1 && $au['tbl'] === 'fleet_prices' && $au['row_key'] === (string)$row['id']
     && json_decode($au['old_value'], true) === ['price' => 36000] && json_decode($au['new_value'], true) === ['price' => '99999'], "$code " . json_encode($au, JSON_UNESCAPED_UNICODE));
 check('price 99999 → на / «99 999 ₽»', str_contains(req("$base/")[1], '99 999 ₽'));
 
@@ -218,10 +236,416 @@ check('href "javascript:x" через POST админки → 422', $code === 42
     && db()->query("SELECT href FROM services WHERE id = {$sv['id']}")->fetchColumn() === '#services', (string)$code);
 [$code] = req("$base/admin/?p=content&t=fleet_cards&a=save", ['_csrf' => $csrfOf($ed), 'id' => 1, 'title' => 'x', 'img' => 'assets/../../var/x.webp',
     'alt' => 'x', 'img_pos' => '50% 50%', 'price_kind' => 'contract', 'price' => '', 'unit' => ''], $ed);
-check('img "assets/../../var/x.webp" → 422', $code === 422, (string)$code);
+check('img "assets/../../var/x.webp" → 422, черновик не создан', $code === 422 && $drafts() === 0, (string)$code);
+$firstMarquee = fn() => db()->query("SELECT title FROM items WHERE kind='marquee' ORDER BY sort LIMIT 1")->fetchColumn();
 [$code] = req("$base/admin/?p=content&t=marquee&a=sort", ['_csrf' => $csrfOf($ed), 'id' => db()->query("SELECT id FROM items WHERE kind='marquee' AND sort=2")->fetchColumn(), 'dir' => 'up'], $ed);
-check('editor sort marquee #2 up → 302, стал первым', $code === 302
-    && db()->query("SELECT title FROM items WHERE kind='marquee' ORDER BY sort LIMIT 1")->fetchColumn() === 'Благоустройство территорий', (string)$code);
+check('editor sort marquee #2 up → 302, в черновике первый, вживую нет', $code === 302 && $firstMarquee() === 'Строительство дорог'
+    && preg_match('~value="([^"]+)"~', explode('name="title"', req("$base/admin/?p=content&t=marquee", null, $ed)[1])[1] ?? '', $m) && $m[1] === 'Благоустройство территорий', (string)$code);
+$publish($mgr);
+check('manager publish → marquee: «Благоустройство территорий» стал первым', $firstMarquee() === 'Благоустройство территорий' && $drafts() === 0);
+
+// --- M8/M1: черновик
+$oldDb = dirname($dbPath) . '/old-' . getmypid() . '.sqlite';
+$o = new PDO("sqlite:$oldDb");
+$o->exec(file_get_contents("$root/db/schema.sql"));
+$o->exec('DROP TABLE drafts; DROP TABLE trash');
+$o = null;
+$p = proc_open([PHP_BINARY, '-r', "require 'app/bootstrap.php'; echo implode(',', array_column(rows(\"SELECT name FROM sqlite_master WHERE name IN ('drafts', 'trash', 'trash_at') ORDER BY name\"), 'name'));"],
+    [0 => ['file', '/dev/null', 'r'], 1 => ['pipe', 'w'], 2 => ['file', '/dev/null', 'w']], $pp, $root, ['RDS_DB' => $oldDb] + getenv());
+$out = stream_get_contents($pp[1]);
+proc_close($p);
+array_map('unlink', glob("$oldDb*"));
+check('миграция: старая БД без drafts/trash → drafts, trash, trash_at', $out === 'drafts,trash,trash_at', $out);
+
+$sv = db()->query('SELECT * FROM services ORDER BY sort, id LIMIT 1')->fetch();
+$svPost = ['id' => $sv['id'], 'title' => 'M1 черновик', 'text' => $sv['text'], 'href' => $sv['href'], 'in_form' => $sv['in_form'], 'in_footer' => $sv['in_footer']];
+[$code] = req("$base/admin/?p=content&t=services&a=save", ['_csrf' => $csrfOf($ed)] + $svPost, $ed);
+[, $html] = req("$base/admin/?p=content", null, $ed);
+check('editor save → 302, / без изменений, N=1, у editor нет «Опубликовать»', $code === 302 && !str_contains(req("$base/")[1], 'M1 черновик') && $drafts() === 1
+    && str_contains($html, 'value="M1 черновик"') && str_contains($html, '<b>1 изменение</b> · redactor')
+    && str_contains($html, 'Изменения ждут публикации — опубликует владелец или менеджер') && !str_contains($html, 'a=publish'), (string)$code);
+[, $html] = req("$base/admin/?p=content", null, $boss);
+check('owner видит «Опубликовать» и «Отменить всё» с подтверждением', str_contains($html, 'a=publish') && str_contains($html, 'data-confirm="Отменить все 1 изменение? Сайт останется как сейчас"'));
+$n0 = $audits();
+[$code] = $publish($ed);
+check('editor publish (с CSRF) → 403, черновик цел, / без изменений', $code === 403 && $drafts() === 1 && $audits() === $n0 && !str_contains(req("$base/")[1], 'M1 черновик'), (string)$code);
+[$code, , $hdr] = $publish($mgr);
+$au = $lastAudit();
+check('manager publish → 302 ok=published, / изменён, drafts пуст, audit', $code === 302 && in_array('Location: /admin/?p=content&ok=published', $hdr, true)
+    && str_contains(req("$base/")[1], 'M1 черновик') && $drafts() === 0 && $audits() === $n0 + 1 && $au['tbl'] === 'services' && $au['row_key'] === (string)$sv['id']
+    && json_decode($au['old_value'], true) === ['title' => $sv['title']] && json_decode($au['new_value'], true) === ['title' => 'M1 черновик'], "$code " . json_encode($au, JSON_UNESCAPED_UNICODE));
+req("$base/admin/?p=content&t=services&a=save", ['_csrf' => $csrfOf($ed), 'title' => 'M1 отмена'] + $svPost, $ed);
+[$code] = req("$base/admin/?p=draft&a=discard", ['_csrf' => $csrfOf($boss)], $boss);
+$au = $lastAudit();
+$home = req("$base/")[1];
+check('owner discard → 302, / без изменений, drafts пуст, audit discard', $code === 302 && $drafts() === 0 && !str_contains($home, 'M1 отмена')
+    && str_contains($home, 'M1 черновик') && $au['tbl'] === 'drafts' && $au['row_key'] === 'discard', "$code " . json_encode($au, JSON_UNESCAPED_UNICODE));
+
+// --- M8/M5: превью черновика
+[$code, , $hdr] = req("$base/admin/?p=preview");
+check('превью без сессии → 302 на login', $code === 302 && in_array('Location: /admin/?p=login', $hdr, true), (string)$code);
+req("$base/admin/?p=content&t=services&a=save", ['_csrf' => $csrfOf($ed), 'title' => 'M5 превью <b>x</b>'] + $svPost, $ed);
+[$code, $html, $hdr] = req("$base/admin/?p=preview", null, $ed);
+$csp = implode("\n", preg_grep('~^Content-Security-Policy:~i', $hdr));
+check('превью editor → 200: заголовок из черновика (экранирован), <base href="/">, полоска, CSP script-src \'none\'', $code === 200
+    && str_contains($html, 'M5 превью &lt;b&gt;x&lt;/b&gt;') && str_contains($html, '<head><base href="/">')
+    && str_contains($html, 'Это черновик — посетители видят прежнюю версию') && str_contains($csp, "script-src 'none'") && str_contains($csp, "form-action 'none'"), "$code $csp");
+check('/ не содержит заголовок черновика', !str_contains(req("$base/")[1], 'M5 превью'));
+check('плашка: ссылка «Посмотреть страницу» на ?p=preview', str_contains(req("$base/admin/?p=content", null, $ed)[1], '<a href="/admin/?p=preview" target="_blank">Посмотреть страницу</a>'));
+req("$base/admin/?p=draft&a=discard", ['_csrf' => $csrfOf($boss)], $boss);
+check('превью без черновика → живые данные', str_contains(req("$base/admin/?p=preview", null, $ed)[1], 'M1 черновик') && $drafts() === 0);
+
+// --- M8/M2: добавить/удалить, min/max, корзина, undo, revert
+$dj = fn() => json_decode((string)db()->query('SELECT data FROM drafts')->fetchColumn(), true);
+$loc = fn(array $h) => preg_match('~^Location: (.*)$~m', implode("\n", $h), $m) ? $m[1] : '';
+$content = fn(string $t, string $a, array $p, string $c) => req("$base/admin/?p=content&t=$t&a=$a", ['_csrf' => $csrfOf($c)] + $p, $c);
+$imgOf = fn(string $tbl) => db()->query("SELECT img FROM $tbl LIMIT 1")->fetchColumn();
+// валидная новая строка для каждого из 10 списков (заголовок — уникальная метка)
+$newRow = fn(string $t, string $title) => match ($t) {
+    'services' => ['title' => $title, 'text' => 'Текст', 'href' => '#services', 'in_form' => '1', 'in_footer' => '0'],
+    'fleet_cards' => ['title' => $title, 'img' => $imgOf('fleet_cards'), 'alt' => 'Фото', 'img_pos' => '50% 50%', 'price_kind' => 'contract', 'price' => '', 'unit' => ''],
+    'fleet_prices' => ['name' => $title, 'model' => '', 'price_kind' => 'fixed', 'price' => '1000', 'unit' => 'смена', 'is_sub' => '0'],
+    'materials' => ['title' => $title, 'text' => 'Текст', 'img' => $imgOf('materials'), 'alt' => 'Фото', 'badge' => '', 'price_kind' => 'contract', 'price' => '', 'unit' => ''],
+    'nav' => ['title' => $title, 'href' => '#services'],
+    'marquee' => ['title' => $title],
+    'stat_hero', 'stat_bar' => ['title' => $title, 'text' => '', 'num' => '7', 'suffix' => ''],
+    'why', 'step' => ['title' => $title, 'text' => 'Текст'],
+};
+$L = ['services', 'fleet_cards', 'fleet_prices', 'materials', 'nav', 'marquee', 'stat_hero', 'stat_bar', 'why', 'step'];
+// M3: в сиде меню занимает 64 из 66 (правило шапки) — шестой пункт не влезет; укорачиваем живые названия до 4 символов
+db()->exec("UPDATE items SET title = substr(title, 1, 4) WHERE kind = 'nav'");
+$ids = [];
+foreach ($L as $t) {
+    $n0 = count($dj()[$t] ?? []) ?: count(db()->query("SELECT 1 FROM " . (in_array($t, ['services', 'fleet_cards', 'fleet_prices', 'materials'], true) ? $t : "items WHERE kind = '$t'"))->fetchAll());
+    [$code, , $hdr] = $content($t, 'save', ['id' => ''] + $newRow($t, "M2 новое $t"), $ed);
+    $l = $dj()[$t];
+    $ids[$t] = (int)end($l)['id'];
+    check("editor add $t → 302 &rev, в черновике N+1, последняя — новая", $code === 302 && preg_match("~ok=saved&rev=\d+$~", $loc($hdr)) && count($l) === $n0 + 1
+        && (end($l)['title'] ?? end($l)['name']) === "M2 новое $t", "$code {$loc($hdr)} " . count($l) . " vs $n0");
+}
+$maxId = (int)db()->query('SELECT MAX(id) FROM items')->fetchColumn();
+check('новые id items: уникальны по всем kind и > max живой', count(array_unique(array_intersect_key($ids, array_flip(['nav', 'marquee', 'stat_hero', 'stat_bar', 'why', 'step'])))) === 6
+    && min($ids['nav'], $ids['why'], $ids['step']) > $maxId, json_encode($ids));
+[, $html] = req("$base/admin/?p=content&t=services", null, $ed);
+check('content: бейдж «новое», форма «Добавить», ссылка на корзину, удаление с data-confirm', str_contains($html, '<span class="badge">новое</span>')
+    && str_contains($html, '>Добавить</button>') && str_contains($html, 'href="/admin/?p=trash"') && str_contains($html, 'data-confirm="Удалить «M2 новое services»?"'));
+[$code] = $content('nav', 'save', ['id' => ''] + $newRow('nav', 'M2 седьмой'), $ed);
+check('add nav сверх max 6 → 422, черновик не изменён', $code === 422 && count($dj()['nav']) === 6, (string)$code);
+$publish($boss);
+$home = req("$base/")[1];
+check('publish → все 10 новых строк на /', array_filter($L, fn($t) => !str_contains($home, "M2 новое $t")) === [] && $drafts() === 0,
+    implode(',', array_filter($L, fn($t) => !str_contains($home, "M2 новое $t"))));
+foreach ($L as $t) {
+    [$code] = $content($t, 'delete', ['id' => $ids[$t]], $ed);
+    check("editor delete $t → 302, в черновике нет", $code === 302 && !in_array($ids[$t], array_map('intval', array_column($dj()[$t], 'id')), true), (string)$code);
+}
+[, $html] = req("$base/admin/?p=content&t=marquee", null, $ed);
+check('content: удалённая строка с бейджем «удалено» и «Вернуть»', str_contains($html, '<span class="badge">удалено</span> <span class="fields">M2 новое marquee</span>') && str_contains($html, 'a=revert'));
+check('до publish удалённые ещё на /', str_contains(req("$base/")[1], 'M2 новое why'));
+$publish($mgr);
+$home = req("$base/")[1];
+$tr = array_column(db()->query('SELECT t, row FROM trash')->fetchAll(), 'row', 't');
+check('publish delete → нет на /, строки в trash, audit(old, null)', array_filter($L, fn($t) => str_contains($home, "M2 новое $t")) === [] && count($tr) === 10
+    && (int)json_decode($tr['why'], true)['id'] === $ids['why'] && $lastAudit()['new_value'] === null, implode(',', array_keys($tr)));
+[$code] = $content('services', 'save', ['id' => ''] + $newRow('services', 'M2 после корзины'), $ed);
+check('новый id не переиспользует id из корзины', (int)end($dj()['services'])['id'] > $ids['services']);
+req("$base/admin/?p=draft&a=discard", ['_csrf' => $csrfOf($boss)], $boss);
+
+// delete last → 422 (stat_hero: удаляем все, кроме одного)
+$sh = array_map('intval', array_column($dj() ? $dj()['stat_hero'] : db()->query("SELECT id FROM items WHERE kind = 'stat_hero' ORDER BY sort")->fetchAll(), 'id'));
+foreach (array_slice($sh, 1) as $id) $content('stat_hero', 'delete', ['id' => $id], $ed);
+[$code, $html] = $content('stat_hero', 'delete', ['id' => $sh[0]], $ed);
+check('delete последнего → 422 «хотя бы один», строка цела', $code === 422 && count($dj()['stat_hero']) === 1 && str_contains($html, 'хотя бы один'), (string)$code);
+req("$base/admin/?p=draft&a=discard", ['_csrf' => $csrfOf($boss)], $boss);
+
+// корзина: restore → discard → строка ещё в trash; restore дважды → одна копия; publish → на /, из trash удалено; -31 день → вычищено
+$trWhy = (int)db()->query("SELECT id FROM trash WHERE t = 'why'")->fetchColumn();
+$inTrash = fn() => (bool)db()->query("SELECT 1 FROM trash WHERE id = $trWhy")->fetchColumn();
+$restore = fn() => req("$base/admin/?p=trash&a=restore", ['_csrf' => $csrfOf($ed), 'id' => $trWhy], $ed)[0];
+[, $html] = req("$base/admin/?p=trash", null, $ed);
+check('editor GET ?p=trash → «M2 новое why» с «Восстановить»', str_contains($html, 'M2 новое why') && str_contains($html, 'Восстановить'));
+$code = $restore();
+$au = $lastAudit();
+check('restore из trash → 302, в конце черновика, в trash ещё есть, audit restore', $code === 302 && (int)end($dj()['why'])['id'] === $ids['why']
+    && $inTrash() && $au['tbl'] === 'trash' && $au['row_key'] === 'restore', (string)$code);
+req("$base/admin/?p=draft&a=discard", ['_csrf' => $csrfOf($boss)], $boss);
+check('restore → «Отменить всё» → строка всё ещё в trash', $inTrash());
+$restore();
+$code = $restore();
+[, $html] = req("$base/admin/?p=trash", null, $ed);
+check('restore дважды → в черновике одна копия, в корзине «уже в черновике»', $code === 302
+    && count(array_filter($dj()['why'], fn($r) => (int)$r['id'] === $ids['why'])) === 1 && str_contains($html, '<span class="badge">уже в черновике</span>'), (string)$code);
+$content('why', 'save', ['id' => ''] + $newRow('why', 'M2 fix why'), $ed);
+$nid = (int)end($dj()['why'])['id'];
+check('restore без publish: новый id не совпадает с восстановленным', $nid > $ids['why'], "$nid vs {$ids['why']}");
+$content('why', 'revert', ['id' => $nid], $ed);
+[$code] = $publish($boss);
+check('restore → publish → на /, строки в trash нет', str_contains(req("$base/")[1], 'M2 новое why') && !$inTrash(), "$code");
+db()->exec("UPDATE trash SET deleted_at = datetime('now', '-31 days') WHERE t = 'step'");
+db()->exec("UPDATE trash SET deleted_at = datetime('now', '-29 days') WHERE t = 'nav'");
+req("$base/admin/?p=trash", null, $ed);
+check('trash −31 день → вычищен при открытии корзины, −29 — остался', !db()->query("SELECT 1 FROM trash WHERE t = 'step'")->fetchColumn()
+    && db()->query("SELECT 1 FROM trash WHERE t = 'nav'")->fetchColumn());
+// «Вернуть» неопубликованное удаление из корзины
+$st1 = db()->query("SELECT id, title FROM items WHERE kind = 'step' ORDER BY sort LIMIT 1")->fetch();
+$content('step', 'delete', ['id' => $st1['id']], $ed);
+[, $html] = req("$base/admin/?p=trash", null, $ed);
+[$code] = req("$base/admin/?p=trash&a=restore", ['_csrf' => $csrfOf($ed), 't' => 'step', 'id' => $st1['id']], $ed);
+check('корзина: удалённое в черновике → «Вернуть» → снова в черновике на своём месте', str_contains($html, e($st1['title'])) && $code === 302
+    && (int)$dj()['step'][0]['id'] === (int)$st1['id']);
+req("$base/admin/?p=draft&a=discard", ['_csrf' => $csrfOf($boss)], $boss);
+
+// undo и revert
+$mq = db()->query("SELECT * FROM items WHERE kind = 'marquee' ORDER BY sort LIMIT 1")->fetch();
+[, , $hdr] = $content('marquee', 'save', ['id' => $mq['id'], 'title' => 'M2 undo-1'], $ed);
+preg_match('~rev=(\d+)~', $loc($hdr), $m1);
+[, , $hdr] = $content('marquee', 'save', ['id' => $mq['id'], 'title' => 'M2 undo-2'], $boss);
+preg_match('~rev=(\d+)~', $loc($hdr), $m2);
+[, $html] = req("$base/admin/?p=content&t=marquee&ok=saved&rev=$m2[1]", null, $boss);
+check('тост «Сохранено» с формой «Отменить» (POST a=undo, rev)', str_contains($html, 'a=undo') && str_contains($html, "name=\"rev\" value=\"$m2[1]\"") && str_contains($html, '>Отменить</button>'));
+[$code] = $content('marquee', 'undo', ['rev' => $m1[1]], $ed);
+check('undo с устаревшим rev → 409, черновик не тронут', $code === 409 && $dj()['marquee'][0]['title'] === 'M2 undo-2', (string)$code);
+[$code, , $hdr] = $content('marquee', 'undo', ['rev' => $m2[1]], $boss);
+check('undo с текущим rev → 302, data = prev', $code === 302 && $dj()['marquee'][0]['title'] === 'M2 undo-1' && str_contains($loc($hdr), 'ok=undone'), (string)$code);
+[$code] = $content('marquee', 'undo', ['rev' => $m2[1] + 1], $boss);
+check('повторный undo (prev = NULL) → 409', $code === 409 && $dj()['marquee'][0]['title'] === 'M2 undo-1', (string)$code);
+// F1: rev не повторяется после publish — старое «Отменить» не стирает правку, сделанную после публикации
+$publish($boss); // чистый черновик: обе правки ниже — первые в своём черновике
+[, , $hdr] = $content('marquee', 'save', ['id' => $mq['id'], 'title' => 'F1 до публикации'], $ed);
+preg_match('~rev=(\d+)~', $loc($hdr), $f1);
+$publish($boss);
+[, , $hdr] = $content('marquee', 'save', ['id' => $mq['id'], 'title' => 'F1 после публикации'], $boss);
+[$code] = $content('marquee', 'undo', ['rev' => $f1[1]], $ed);
+check('undo со старым rev после publish → 409, новая правка цела', $code === 409 && $dj()['marquee'][0]['title'] === 'F1 после публикации', (string)$code);
+$content('marquee', 'save', ['id' => $mq['id'], 'title' => $mq['title']], $boss);
+$publish($boss);
+$content('marquee', 'save', ['id' => $mq['id'], 'title' => 'M2 undo-1'], $ed); // состояние до блока F1
+[, $html] = req("$base/admin/?p=content&t=marquee", null, $ed);
+check('бейдж «изменено» и «Вернуть как было»', str_contains($html, '<span class="badge">изменено</span>') && str_contains($html, 'Вернуть как было'));
+[$code] = $content('marquee', 'revert', ['id' => $mq['id']], $ed);
+check('revert (editor) → 302, строка = опубликованная, N=0', $code === 302 && $dj()['marquee'][0]['title'] === $mq['title']
+    && str_contains(req("$base/admin/?p=content&t=marquee", null, $ed)[1], '<b>0 изменений</b>'), (string)$code);
+$content('marquee', 'save', ['id' => '', 'title' => 'M2 revert new'], $ed);
+$nid = (int)end($dj()['marquee'])['id'];
+$content('marquee', 'revert', ['id' => $nid], $ed);
+check('revert новой строки → убрана из черновика', !in_array($nid, array_map('intval', array_column($dj()['marquee'], 'id')), true));
+req("$base/admin/?p=draft&a=discard", ['_csrf' => $csrfOf($boss)], $boss);
+
+// --- R2: «Что изменено» в плашке, автор строки (_by), «Опубликовать выбранное»
+$edId = (int)db()->query("SELECT id FROM users WHERE login = 'redactor'")->fetchColumn();
+$stp = db()->query("SELECT * FROM items WHERE kind = 'step' ORDER BY sort DESC, id DESC LIMIT 1")->fetch();
+$content('step', 'save', ['id' => $stp['id'], 'title' => 'R2 этап', 'text' => $stp['text']], $ed);
+$content('services', 'save', ['title' => 'R2 услуга'] + $svPost, $boss);
+[, $html] = req("$base/admin/?p=content", null, $boss);
+[, $edHtml] = req("$base/admin/?p=content", null, $ed);
+check('(f) плашка owner: «Что изменено (2)», строки с авторами, чекбоксы, ссылка на строку; editor — без чекбоксов и публикации',
+    str_contains($html, '<summary>Что изменено (2)</summary>') && str_contains($html, '>Этапы работы: R2 этап</a> — изменено · redactor')
+    && str_contains($html, '>Услуги: R2 услуга</a> — изменено · boss') && str_contains($html, "name=\"pick[]\" value=\"step:{$stp['id']}\" checked")
+    && str_contains($html, "name=\"pick[]\" value=\"services:{$sv['id']}\" checked") && str_contains($html, "href=\"/admin/?p=content&amp;t=step#r{$stp['id']}\"")
+    && str_contains($html, '>Опубликовать выбранное</button>') && str_contains(req("$base/admin/?p=content&t=step", null, $boss)[1], "id=\"r{$stp['id']}\"")
+    && str_contains($edHtml, '>Этапы работы: R2 этап</a> — изменено · redactor') && !str_contains($edHtml, 'pick[]') && !str_contains($edHtml, 'a=publish'));
+check('П20: главная «Опубликовать» при чужой правке спрашивает подтверждение с автором и строкой',
+    str_contains($html, 'action="/admin/?p=draft&amp;a=publish" data-confirm="Опубликовать и чужие правки: redactor — Этапы работы: R2 этап?'));
+$pickPub = fn(string $c, array $pick) => req("$base/admin/?p=draft&a=publish", ['_csrf' => $csrfOf($c), 'picked' => '1', 'pick' => $pick], $c);
+$n0 = $audits();
+[$code] = $pickPub($ed, ["services:{$sv['id']}"]);
+check('(e) editor publish с pick → 403, / без изменений', $code === 403 && !str_contains(req("$base/")[1], 'R2 услуга') && $audits() === $n0, (string)$code);
+[$code, $html] = $pickPub($boss, ['services:999999', "step:{$stp['id']}x", ['x']]);
+$home = req("$base/")[1];
+check('(c) pick без совпадений → 422 «Нечего публиковать», / и черновик целы', $code === 422 && str_contains($html, 'Нечего публиковать')
+    && !str_contains($home, 'R2 услуга') && !str_contains($home, 'R2 этап') && $audits() === $n0 && $dj()['step'] && $drafts() === 1, (string)$code);
+[$code] = $pickPub($boss, []);
+check('picked без единой галочки → 422, а не «опубликовать всё»', $code === 422 && !str_contains(req("$base/")[1], 'R2 услуга'), (string)$code);
+[$code, , $hdr] = $pickPub($boss, ["services:{$sv['id']}"]);
+$home = req("$base/")[1];
+$au = $lastAudit();
+[, $html] = req("$base/admin/?p=content", null, $boss);
+check('(a) owner publish pick=[services] → / новая услуга, старый этап; черновик остался, 1 изменение, _by step = editor', $code === 302
+    && str_contains($loc($hdr), 'ok=published') && str_contains($home, 'R2 услуга') && !str_contains($home, 'R2 этап') && str_contains($home, e($stp['title']))
+    && $drafts() === 1 && str_contains($html, '<b>1 изменение</b>') && str_contains($html, '<summary>Что изменено (1)</summary>')
+    && ($dj()['_by']['step'][$stp['id']] ?? null) === $edId && !isset($dj()['_by']['services'][$sv['id']])
+    && $audits() === $n0 + 1 && $au['tbl'] === 'services' && $au['row_key'] === (string)$sv['id'], "$code " . json_encode($dj()['_by'] ?? null));
+check('после выборочной публикации плашка подписана автором оставшейся правки (redactor), а не публиковавшим', str_contains($html, '<b>1 изменение</b> · redactor,'));
+[$code] = $publish($boss);
+check('(b) потом publish всего → / новый этап, drafts пуст', $code === 302 && str_contains(req("$base/")[1], 'R2 этап') && $drafts() === 0, (string)$code);
+$content('services', 'save', ['title' => 'R2 своя'] + $svPost, $boss);
+[, $html] = req("$base/admin/?p=content", null, $boss);
+check('П20: только свои правки — «Опубликовать» без подтверждения', str_contains($html, '<form method="post" action="/admin/?p=draft&amp;a=publish">'));
+req("$base/admin/?p=draft&a=discard", ['_csrf' => $csrfOf($boss)], $boss);
+// (d) выборочная публикация удаления → строка в trash; неотмеченная правка остаётся черновиком
+$wh = db()->query("SELECT * FROM items WHERE kind = 'why' ORDER BY sort DESC, id DESC LIMIT 1")->fetch();
+$content('why', 'delete', ['id' => $wh['id']], $ed);
+$content('marquee', 'save', ['id' => $mq['id'], 'title' => 'R2 строка'], $ed);
+check('_by: delete и save помечают строки автором', ($dj()['_by']['why'][$wh['id']] ?? null) === $edId && ($dj()['_by']['marquee'][$mq['id']] ?? null) === $edId);
+[$code] = $pickPub($mgr, ["why:{$wh['id']}"]);
+$home = req("$base/")[1];
+check('(d) publish pick=[удаление why] → нет на /, в trash; правка marquee — в черновике', $code === 302 && !str_contains($home, e($wh['title']))
+    && (bool)db()->query("SELECT 1 FROM trash WHERE t = 'why' AND json_extract(row, '$.id') = {$wh['id']}")->fetchColumn()
+    && !str_contains($home, 'R2 строка') && $dj()['marquee'][0]['title'] === 'R2 строка' && array_keys($dj()['_by']['why'] ?? []) === [], (string)$code);
+$content('marquee', 'revert', ['id' => $mq['id']], $ed);
+check('revert снимает автора строки', !isset($dj()['_by']['marquee'][$mq['id']]));
+req("$base/admin/?p=draft&a=discard", ['_csrf' => $csrfOf($boss)], $boss);
+
+// --- M8/M3: таблица полей — лимиты формы = лимиты сервера (значения — из ADR, независимо от lists()), ошибки у поля, повторная проверка при publish
+$lim = [
+    'services' => ['title' => 40, 'text' => 200, 'href' => 100],
+    'fleet_cards' => ['title' => 40, 'img' => 100, 'alt' => 120, 'img_pos' => 9, 'price' => 6, 'unit' => 8],
+    'fleet_prices' => ['name' => 40, 'model' => 30, 'price' => 6, 'unit' => 12],
+    'materials' => ['title' => 30, 'text' => 150, 'img' => 100, 'alt' => 120, 'badge' => 14, 'price' => 6, 'unit' => 8],
+    'nav' => ['title' => 16, 'href' => 100],
+    'marquee' => ['title' => 40],
+    'stat_hero' => ['title' => 22, 'text' => 8, 'num' => 4, 'suffix' => 3],
+    'stat_bar' => ['title' => 22, 'text' => 7, 'num' => 4, 'suffix' => 3],
+    'why' => ['title' => 30, 'text' => 160],
+    'step' => ['title' => 24, 'text' => 120],
+];
+$num = ['price', 'num'];
+// значение длины n: цифры для чисел, «#a…» для ссылки, «100% 1000%» для позиции, иначе кириллица
+$fill = fn(string $f, int $n) => match (true) {
+    in_array($f, $num, true) => str_repeat('9', $n),
+    $f === 'href' => '#' . str_repeat('a', $n - 1),
+    $f === 'img_pos' => $n === 9 ? '100% 100%' : '100% 1000%',
+    $f === 'img' => 'assets/' . str_repeat('a', $n - 12) . '.webp',
+    default => str_repeat('Ж', $n),
+};
+$first = fn(string $t) => (int)(($dj() ?: [])[$t][0]['id'] ?? db()->query("SELECT id FROM " . (in_array($t, ['services', 'fleet_cards', 'fleet_prices', 'materials'], true) ? $t : "items WHERE kind = '$t'") . ' ORDER BY sort, id LIMIT 1')->fetchColumn());
+foreach ($lim as $t => $fl) {
+    [, $html] = req("$base/admin/?p=content&t=$t", null, $ed);
+    preg_match_all('~<(?:input|textarea|select)\b[^>]*\bname="([a-z_]+)"[^>]*>~', $html, $tags, PREG_SET_ORDER);
+    $got = $bad = [];
+    foreach ($tags as [$tag, $f]) {
+        if ($f === '_csrf' || $f === 'id' || $f === 'rev' || $f === 'dir') continue;
+        $got[$f] = 1;
+        $ml = preg_match('~\bmaxlength="(\d+)"~', $tag, $mm) ? (int)$mm[1] : null;
+        if ($ml !== ($fl[$f] ?? null)) $bad[] = "$f: maxlength=" . var_export($ml, true) . ' vs ' . var_export($fl[$f] ?? null, true);
+    }
+    check("$t: maxlength каждого поля в HTML == лимит ADR", !$bad && !array_diff_key($fl, $got), implode('; ', $bad) . ' нет: ' . implode(',', array_keys(array_diff_key($fl, $got))));
+    $base0 = ['id' => $first($t)] + $newRow($t, 'М3');
+    $tf = $t === 'fleet_prices' ? 'name' : 'title';
+    [$code, $html] = $content($t, 'save', [$tf => ''] + $base0, $ed);
+    check("$t: пустое «{$tf}» → 422 «Введите», id=\"err-$tf\", «Ошибка: » в title", $code === 422 && str_contains($html, "id=\"err-$tf\">Введите ")
+        && str_contains($html, '<title>Ошибка: '), (string)$code);
+    foreach ($fl as $f => $n) {
+        $over = $fill($f, $n + 1);
+        [$code, $html] = $content($t, 'save', [$f => $over] + $base0, $ed);
+        $ok = $code === 422 && str_contains($html, "id=\"err-$f\"") && str_contains($html, "href=\"#f{$base0['id']}-$f\"") && str_contains($html, '<title>Ошибка: ');
+        if ($f === 'img') { check("$t.$f: лимит+1 ($n+1) → 422, id=\"err-$f\"", $ok, (string)$code); continue; } // ровно лимит — только существующий файл
+        [$code2] = $content($t, 'save', [$f => $fill($f, $n)] + $base0, $ed);
+        check("$t.$f: лимит+1 ($n+1) → 422, id=\"err-$f\", ссылка в сводке; ровно $n → 302", $ok && $code2 === 302, "$code $code2");
+    }
+}
+[$code, $html] = $content('services', 'save', ['title' => str_repeat('Ж', 41)] + ['id' => $first('services')] + $newRow('services', 'М3'), $ed);
+check('422: присланное значение в поле сохранено, рамка, подсказка, aria-describedby', $code === 422 && str_contains($html, 'value="' . str_repeat('Ж', 41) . '"')
+    && preg_match('~<input id="f\d+-title" name="title" aria-describedby="hf\d+-title err-title"[^>]*class="bad"[^>]* value="Ж{41}">~u', $html), (string)$code);
+[, $html] = req("$base/admin/?p=content&t=fleet_cards", null, $ed);
+check('форма: «обязательно», подсказка, data-max, inputmode=numeric, подпись alt', str_contains($html, '<span class="req">обязательно</span>')
+    && str_contains($html, 'Описание фото для поисковиков и незрячих') && preg_match('~name="price"[^>]*inputmode="numeric"~', $html)
+    && preg_match('~name="title"[^>]*maxlength="40" data-max="40"[^>]*required~', $html) && str_contains($html, '<p class="hint" id="hf'));
+[$code] = $content('services', 'save', ['text' => str_repeat('Ж', 99) . "\r\n" . str_repeat('Ж', 100)] + ['id' => $first('services')] + $newRow('services', 'М3'), $ed);
+check('textarea: 200 символов с переносом \r\n → 302 (перенос = 1 символ, как в maxlength)', $code === 302, (string)$code);
+[$code, $html] = $content('fleet_prices', 'save', ['price_kind' => 'fixed', 'price' => ''] + ['id' => $first('fleet_prices')] + $newRow('fleet_prices', 'М3'), $ed);
+check('цена не договорная и пустая → 422 у поля price', $code === 422 && str_contains($html, 'id="err-price">Введите цену'), (string)$code);
+// R1: вставка сверх лимита (JS снимает maxlength) — сервер 422, присланный текст целиком в поле
+$long = str_repeat('Ж', 562);
+[$code, $html] = $content('services', 'save', ['text' => $long] + ['id' => $first('services')] + $newRow('services', 'М3'), $ed);
+check('services.text 562 (лимит+362) → 422, текст целиком в поле, «сейчас 562», ссылка в сводке', $code === 422 && str_contains($html, ">$long</textarea>")
+    && str_contains($html, 'Сократите до 200 символов — сейчас 562') && preg_match('~<a href="#f\d+-text">~', $html), (string)$code);
+[$code] = $content('services', 'save', ['id' => '', 'at' => 'first'] + $newRow('services', 'R1 первая'), $ed);
+$l = $dj()['services'];
+[, $html] = req("$base/admin/?p=content&t=services", null, $ed);
+check('add «в начало списка» → 302, строка первая в черновике и на странице', $code === 302 && $l[0]['title'] === 'R1 первая' && (int)$l[0]['sort'] < (int)$l[1]['sort']
+    && preg_match('~name="title"[^>]*value="([^"]*)"~', $html, $mm) && $mm[1] === 'R1 первая', "$code " . ($l[0]['title'] ?? ''));
+check('services: «Ссылка» помечена «обязательно» и required; ссылка «Настройки → Тексты»', preg_match('~for="f\d+-href">Ссылка <span class="req">обязательно</span>~', $html)
+    && preg_match('~name="href"[^>]*required~', $html) && str_contains($html, 'href="/admin/?p=settings&amp;g=texts">Настройки → Тексты</a>'));
+req("$base/admin/?p=draft&a=discard", ['_csrf' => $csrfOf($boss)], $boss);
+
+// nav: сумма длин названий + 4·n ≤ 66; 5 пунктов: остальные 8+8+9+9=34, +20 → первый 11 = 65, 12 = 66, 13 = 67
+$nv = array_map('intval', array_column(db()->query("SELECT id FROM items WHERE kind = 'nav' ORDER BY sort")->fetchAll(), 'id'));
+foreach ([1 => 8, 2 => 8, 3 => 9, 4 => 9] as $i => $k) $content('nav', 'save', ['id' => $nv[$i], 'title' => str_repeat('Ж', $k), 'href' => '#services'], $ed);
+$res = [];
+foreach ([11, 12, 13] as $k) $res[$k] = $content('nav', 'save', ['id' => $nv[0], 'title' => str_repeat('М', $k), 'href' => '#services'], $ed);
+check('nav: 5 пунктов, сумма 65 → 302, 66 → 302, 67 → 422 «Меню не помещается в шапку — сократите названия»', count($nv) === 5
+    && $res[11][0] === 302 && $res[12][0] === 302 && $res[13][0] === 422 && str_contains($res[13][1], 'id="err-title">Меню не помещается в шапку — сократите названия')
+    && $dj()['nav'][0]['title'] === str_repeat('М', 12), "{$res[11][0]} {$res[12][0]} {$res[13][0]}");
+[, $html] = req("$base/admin/?p=content&t=nav", null, $ed);
+check('nav: общий счётчик «В шапке осталось 0 символов», data-room=66', str_contains($html, 'data-room="66" aria-live="polite">В шапке осталось 0 символов'));
+[$code] = $content('nav', 'save', ['id' => '', 'title' => 'Ж', 'href' => '#services'], $ed);
+check('nav: добавить пункт сверх правила → 422, черновик не изменён', $code === 422 && count($dj()['nav']) === 5, (string)$code);
+req("$base/admin/?p=draft&a=discard", ['_csrf' => $csrfOf($boss)], $boss);
+
+// publish: картинка строки черновика пропала с диска → 422, ROLLBACK, / и черновик целы
+$fc = $first('fleet_cards');
+$content('fleet_cards', 'save', ['id' => $fc] + $newRow('fleet_cards', 'М3 пропало фото'), $ed);
+$d0 = $dj();
+$d0['fleet_cards'][0]['img'] = 'assets/m3-gone.webp';
+db()->prepare('UPDATE drafts SET data = ?')->execute([json_encode($d0, JSON_UNESCAPED_UNICODE)]);
+$raw0 = db()->query('SELECT data FROM drafts')->fetchColumn();
+$n0 = $audits();
+[$code, $html] = $publish($boss);
+check('publish с удалённым img → 422 со списком, «Ошибка: », / без изменений, черновик цел, audit нет', $code === 422 && str_contains($html, '<title>Ошибка: ')
+    && str_contains($html, 'Картинка не найдена на сервере') && str_contains($html, 'М3 пропало фото') && !str_contains(req("$base/")[1], 'М3 пропало фото')
+    && db()->query('SELECT data FROM drafts')->fetchColumn() === $raw0 && $audits() === $n0, (string)$code);
+req("$base/admin/?p=draft&a=discard", ['_csrf' => $csrfOf($boss)], $boss);
+
+// --- M8/M4: загрузка фото → WebP в public/assets/uploads (созданные тестом файлы удаляются в конце блока)
+$upDir = "$root/public/assets/uploads";
+$hadUp = is_dir($upDir);
+$made = [];
+$up = function (string $bytes, string $mime, ?string $cookie = null, bool $csrf = true) use ($base, $ed, $csrfOf, &$made, $root): array {
+    $c = $cookie ?? $ed;
+    [$code, $body, $h] = reqFile("$base/admin/?p=content&t=fleet_cards&a=upload", $csrf ? ['_csrf' => $csrfOf($c)] : [], $bytes, $mime, $c);
+    $j = json_decode((string)$body, true);
+    if (is_string($j['img'] ?? null)) $made[] = "$root/public/" . $j['img'];
+    return [$code, $j, $h, $body];
+};
+$gd = function (int $w, int $h, string $fmt): string {
+    $im = imagecreatetruecolor($w, $h);
+    imagefilledrectangle($im, 0, 0, $w / 2, $h, imagecolorallocate($im, 255, 199, 0));
+    ob_start();
+    $fmt === 'png' ? imagepng($im) : imagejpeg($im);
+    return ob_get_clean();
+};
+[$code, $j, $h] = $up($gd(1600, 1000, 'png'), 'image/png');
+$f = "$root/public/" . ($j['img'] ?? '-');
+$gi = is_file($f) ? getimagesize($f) : [];
+check('upload PNG (GD 1600×1000) → 200 JSON, img assets/uploads/<32hex>.webp, файл есть, image/webp, ширина 1200', $code === 200
+    && preg_match('~^assets/uploads/[0-9a-f]{32}\.webp$~D', $j['img'] ?? '') && ($gi['mime'] ?? '') === 'image/webp' && $gi[0] === 1200 && $gi[1] === 750
+    && in_array('Content-Type: application/json; charset=utf-8', $h, true), "$code " . json_encode($j));
+$fc = $first('fleet_cards');
+[$code] = $content('fleet_cards', 'save', ['id' => $fc, 'img' => $j['img'] ?? ''] + $newRow('fleet_cards', 'М4 фото'), $ed);
+check('путь из ответа upload проходит проверку img при сохранении → 302', $code === 302, (string)$code);
+req("$base/admin/?p=draft&a=discard", ['_csrf' => $csrfOf($boss)], $boss);
+[$code, $j] = $up('просто текст', 'text/plain');
+check('upload text/plain → 422 «Это не картинка. Подойдут JPG, PNG или WebP»', $code === 422 && ($j['error'] ?? '') === 'Это не картинка. Подойдут JPG, PNG или WebP', "$code " . json_encode($j));
+[$code, $j] = $up($gd(400, 300, 'jpeg') . '<?php echo 1; ?>', 'image/jpeg');
+$f = "$root/public/" . ($j['img'] ?? '-');
+check('upload JPEG + "<?php" в хвосте → 200, файл .webp без "<?php"', $code === 200 && is_file($f) && !str_contains(file_get_contents($f), '<?php')
+    && getimagesize($f)['mime'] === 'image/webp', "$code " . json_encode($j));
+// EXIF Orientation=6 (телефон держали вертикально): 400×300 → 300×400
+$tiff = "MM\0*" . pack('N', 8) . pack('n', 1) . pack('nnNnn', 0x0112, 3, 1, 6, 0) . pack('N', 0);
+$jp = $gd(400, 300, 'jpeg');
+[$code, $j] = $up(substr($jp, 0, 2) . "\xFF\xE1" . pack('n', 2 + 6 + strlen($tiff)) . "Exif\0\0" . $tiff . substr($jp, 2), 'image/jpeg');
+$gi = getimagesize("$root/public/" . ($j['img'] ?? '-')) ?: [];
+check('upload JPEG с EXIF Orientation=6 → повёрнут: 300×400', $code === 200 && ($gi[0] ?? 0) === 300 && ($gi[1] ?? 0) === 400, "$code " . json_encode($gi));
+[$code, $j] = $up(random_bytes(11 << 20), 'image/jpeg');
+check('upload 11 МБ → 422 «Файл больше 10 МБ»', $code === 422 && ($j['error'] ?? '') === 'Файл больше 10 МБ', "$code " . json_encode($j));
+[$code, $j] = $up(random_bytes(14 << 20), 'image/jpeg');
+check('upload 14 МБ (> post_max_size) → 413 JSON «Файл больше 10 МБ», не 403', $code === 413 && ($j['error'] ?? '') === 'Файл больше 10 МБ', "$code " . json_encode($j));
+// 9000×9000: только заголовок PNG (IHDR) — getimagesize читает его, до декодирования дело не доходит
+$chunk = fn(string $t, string $d) => pack('N', strlen($d)) . $t . $d . pack('N', crc32($t . $d));
+[$code, $j] = $up("\x89PNG\r\n\x1a\n" . $chunk('IHDR', pack('NNCCCCC', 9000, 9000, 8, 2, 0, 0, 0)) . $chunk('IDAT', gzcompress('')) . $chunk('IEND', ''), 'image/png');
+check('upload PNG 9000×9000 → 422 «Слишком большое разрешение»', $code === 422 && str_starts_with($j['error'] ?? '', 'Слишком большое разрешение'), "$code " . json_encode($j));
+$n0 = count(glob("$upDir/*.webp"));
+[$code] = $up($gd(100, 100, 'png'), 'image/png', null, false);
+check('upload без CSRF → 403, файл не создан', $code === 403 && count(glob("$upDir/*.webp")) === $n0, (string)$code);
+[$code, , $h] = reqFile("$base/admin/?p=content&t=fleet_cards&a=upload", [], $gd(100, 100, 'png'), 'image/png');
+check('upload без сессии → 302 на login, файл не создан', $code === 302 && in_array('Location: /admin/?p=login', $h, true) && count(glob("$upDir/*.webp")) === $n0, (string)$code);
+[, $html] = req("$base/admin/?p=content&t=materials", null, $ed);
+check('форма: accept="image/jpeg,image/png,image/webp", подпись «JPG, PNG или WebP, до 10 МБ», живая карточка .pv-mat [data-pv]', str_contains($html, 'accept="image/jpeg,image/png,image/webp"')
+    && str_contains($html, 'JPG, PNG или WebP, до 10 МБ') && str_contains($html, 'class="pv pv-mat"') && str_contains($html, 'data-pv="badge"') && !str_contains($html, 'style='));
+foreach ($made as $m) @unlink($m);
+if (!$hadUp) @rmdir($upDir);
+check('файлы, созданные тестом, удалены', !array_filter($made, 'file_exists'), implode(' ', $made));
 
 [$code] = req("$base/admin/?p=users", null, $mgr);
 check('manager GET ?p=users → 403', $code === 403, (string)$code);

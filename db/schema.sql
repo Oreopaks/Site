@@ -87,4 +87,20 @@ CREATE TABLE audit_log (
   tbl TEXT NOT NULL, row_key TEXT NOT NULL, old_value TEXT, new_value TEXT);
 CREATE INDEX audit_at ON audit_log(at);
 
+CREATE TABLE drafts (                 -- общий черновик списков: 0 или 1 строка
+  id INTEGER PRIMARY KEY CHECK(id = 1),
+  data TEXT NOT NULL,                 -- JSON {t: [строки целиком с id, sort; у items — с kind]}, все 10 списков
+  prev TEXT,                          -- снимок до последней правки (undo, 1 шаг)
+  rev INTEGER NOT NULL DEFAULT 1,     -- +1 на правку; undo только при совпадении rev
+  updated_by INTEGER REFERENCES users(id),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')));
+
+CREATE TABLE trash (
+  id INTEGER PRIMARY KEY,
+  t TEXT NOT NULL,                    -- ключ списка как в ?t=
+  row TEXT NOT NULL,                  -- JSON строки целиком
+  deleted_at TEXT NOT NULL DEFAULT (datetime('now')),
+  user_id INTEGER REFERENCES users(id));
+CREATE INDEX trash_at ON trash(deleted_at);
+
 CREATE TABLE send_window (bucket TEXT PRIMARY KEY, n INTEGER NOT NULL);

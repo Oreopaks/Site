@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 const ROLE_PERMS = [
-    'owner'   => ['content', 'trusted_html', 'contacts', 'leads', 'leads_delete', 'stats', 'users', 'owner_settings', 'audit'],
-    'manager' => ['content', 'contacts', 'leads', 'stats', 'audit'],
+    'owner'   => ['content', 'publish', 'trusted_html', 'contacts', 'leads', 'leads_delete', 'stats', 'users', 'owner_settings', 'audit'],
+    'manager' => ['content', 'publish', 'contacts', 'leads', 'stats', 'audit'],
     'editor'  => ['content', 'stats'],
 ];
 const LOGIN_MAX_FAILS = 5;

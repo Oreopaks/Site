@@ -16,12 +16,13 @@
 - `tests/` — `run.php` (assert), `oracle.php` (DOM главной против тега `static-final`),
   `pw/*.js` (Playwright).
 
-Рантайму нужны только расширения `pdo_sqlite`, `json`, `session` (проверка: `php -m`).
+Рантайму нужны расширения `pdo_sqlite`, `json`, `session`, `gd` с WebP (загрузка фото; `exif` желательно —
+поворот снимков с телефона). Проверка: `php -m`.
 
 ## Запуск локально
 
 ```sh
-php -S 127.0.0.1:8080 -t public public/router.php
+php -d upload_max_filesize=12M -d post_max_size=13M -S 127.0.0.1:8080 -t public public/router.php
 ```
 
 БД `var/site.sqlite` создаётся из схемы и сида при первом запросе. Другую БД можно
@@ -38,14 +39,27 @@ php bin/unlock.php owner                 # снять блокировку по�
 
 Остальных пользователей владелец заводит в админке («Пользователи»).
 
+## Черновик, публикация, корзина, фото
+
+- Правки списков в «Контенте» (услуги, техника, материалы, меню, цифры и т.д.) попадают в **общий
+  черновик**, а не на сайт. Плашка сверху (на телефоне — внизу экрана): число изменений, кто и когда
+  правил, «Посмотреть страницу» (`?p=preview` — главная на данных черновика).
+- «Опубликовать» и «Отменить всё» — только `owner` и `manager`; `editor` правит и ждёт публикации.
+  После каждой правки — «Отменить» (один шаг назад); у изменённой строки — «Вернуть как было».
+- Удалённое после публикации лежит в «Корзине» 30 дней; «Восстановить» возвращает строку
+  в черновик (на сайт — после «Опубликовать»).
+- Настройки (`?p=settings`) черновика не имеют — сохраняются сразу на сайт.
+- Фото: JPG, PNG или WebP до 10 МБ, до 24 Мп. Сервер перекодирует в WebP (ширина ≤ 1200)
+  в `public/assets/uploads/<случайное имя>.webp`, исходный файл не хранит.
+
 ## Тесты
 
 ```sh
 RDS_DB=/tmp/x.sqlite php tests/run.php          # файл не должен существовать; свой стенд на :8081
-RDS_DB=/tmp/o.sqlite php -S 127.0.0.1:8080 -t public public/router.php &
+RDS_DB=/tmp/o.sqlite php -d upload_max_filesize=12M -d post_max_size=13M -S 127.0.0.1:8080 -t public public/router.php &
 php tests/oracle.php                             # на свежей БД → OK 0 diffs
 RDS_DB=/tmp/o.sqlite NODE_PATH=<каталог с playwright-core> node tests/pw/lead.js
-#   то же для price.js, metrika.js, overflow.js
+#   то же для price, metrika, overflow, grid, draft, upload — каждый на своей свежей БД
 ```
 
 ## Настройки, которые заполняет заказчик (админка)
@@ -80,6 +94,7 @@ RDS_DB=/tmp/o.sqlite NODE_PATH=<каталог с playwright-core> node tests/pw
 ```nginx
 server {
     listen 80; server_name _;
+    client_max_body_size 13m;          # фото в админке до 10 МБ
     root /srv/rds/public;              # допущение: путь
     index index.php;
     location ~ /\. { deny all; }
@@ -97,9 +112,14 @@ server {
 
 Шаги:
 
-1. `sudo apt install php8.3-fpm nginx` (php8.3-sqlite3 — если `pdo_sqlite` нет в `php -m`).
+1. `sudo apt install php8.3-fpm php8.3-gd nginx` (php8.3-sqlite3 — если `pdo_sqlite` нет в `php -m`;
+   `exif` обычно уже в php8.3-common).
 2. Репозиторий в `/srv/rds`.
-3. `sudo mkdir -p var && sudo chown www-data:www-data var && sudo chmod 0700 var`.
+3. `sudo mkdir -p var && sudo chown www-data:www-data var && sudo chmod 0700 var`;
+   `sudo mkdir -p public/assets/uploads && sudo chown www-data:www-data public/assets/uploads` (фото из админки).
+   Лимиты загрузки (фото до 10 МБ): в пуле php-fpm (`/etc/php/8.3/fpm/pool.d/www.conf`)
+   `php_admin_value[upload_max_filesize] = 12M`, `php_admin_value[post_max_size] = 13M`;
+   в `server {}` nginx — `client_max_body_size 13m;` (по умолчанию 1m — фото не загрузятся).
 4. `sudo -u www-data php bin/create-user.php owner owner` — БД создаётся от имени www-data,
    и php-fpm сможет писать в неё и в WAL.
 5. В админке: `base_url` → домен; `robots.txt` — заменить адрес sitemap.

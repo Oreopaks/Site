@@ -28,6 +28,7 @@ execFileSync('php', [path.join(__dirname, '../../bin/create-user.php'), LOGIN, '
   await row.locator('[name=price]').fill('99999');
   await Promise.all([page.waitForNavigation(), row.locator('button').click()]);
   check('сохранено', await page.locator('p.ok').isVisible());
+  await Promise.all([page.waitForNavigation(), page.click('form[action*="a=publish"] button')]); // сохранение — в черновик; на / только после «Опубликовать»
 
   await page.goto(BASE);
   const dd = page.locator('#fleet dl > div', { hasText: 'Hyundai 170W-7' });

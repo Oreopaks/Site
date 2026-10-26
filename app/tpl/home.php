@@ -32,6 +32,8 @@ $ld = [
 // значение статистики: счётчик data-count или текст
 $stat = fn(array $r): string => $r['num'] === null ? e($r['text'])
     : '<span data-count data-to="' . (int)$r['num'] . '" data-suffix="' . e($r['suffix']) . '">' . (int)$r['num'] . e($r['suffix']) . '</span>';
+// колонок сетки: n ≤ max → n, иначе минимум рядов и ряды поровну (5 при max 4 → 3+2, а не 4+1)
+$cols = fn(int $n, int $max): int => $n <= $max ? $n : (int)ceil($n / ceil($n / $max));
 $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:600;font-size:13px;line-height:1.2;letter-spacing:1px;text-transform:uppercase;color:#FFC700;border:1px solid #FFC700;padding:5px 10px">договорная</span>';
 ?>
 <!DOCTYPE html>
@@ -259,7 +261,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
         <p data-anim="slide-right" style="max-width:380px;color:#5a5a5a;font-size:15.5px;line-height:1.6"><?= e($s['services_lead']) ?></p>
       </div>
 
-      <div data-r="g3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:#e2e2de;border:1px solid #e2e2de">
+      <div data-r="g3" style="display:grid;grid-template-columns:repeat(<?= $cols(count($services), 3) ?>,1fr);gap:2px;background:#e2e2de;border:1px solid #e2e2de">
 <?php foreach ($services as $i => $r): ?>
           <div data-anim="rise" data-svc style="background:#fff;padding:38px 32px">
             <div data-svc-num style="font-family:'Oswald';font-weight:700;font-size:15px;color:#8a6d00;letter-spacing:1px;margin-bottom:18px;transition:color .3s ease"><?= sprintf('%02d', $i + 1) ?> /</div>
@@ -282,7 +284,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
         <p data-anim="fade-up" style="max-width:400px;color:#a8a8a8;font-size:15.5px;line-height:1.6"><?= e($s['fleet_lead']) ?></p>
       </div>
 
-      <div data-r="g3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px">
+      <div data-r="g3" style="display:grid;grid-template-columns:repeat(<?= $cols(count($fleet), 3) ?>,1fr);gap:18px">
 <?php foreach ($fleet as $r): ?>
           <div data-anim="tilt" data-lift data-imgzoom style="background:#161616;border:1px solid #262626" style-hover="border-color:#FFC700">
             <img src="<?= e($r['img']) ?>" alt="<?= e($r['alt']) ?>" loading="lazy" style="display:block;width:100%;height:150px;object-fit:cover;object-position:<?= e($r['img_pos']) ?>">
@@ -344,7 +346,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
         <p data-anim="slide-right" style="max-width:400px;color:#5a5a5a;font-size:15.5px;line-height:1.6"><?= e($s['materials_lead']) ?></p>
       </div>
 
-      <div data-r="g4" style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px">
+      <div data-r="g4" style="display:grid;grid-template-columns:repeat(<?= $cols(count($materials), 4) ?>,1fr);gap:20px">
 <?php foreach ($materials as $r): ?>
           <div data-anim="rotate-rise" data-lift style="border:1px solid #e6e6e2;display:flex;flex-direction:column;background:#fff" style-hover="border-color:#FFC700">
             <div data-imgzoom style="position:relative">
@@ -375,7 +377,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
 
   <!-- ================= STATS BAND ================= -->
   <section data-cine style="background:#FFC700;padding:54px 0">
-    <div data-r="stats" style="max-width:1240px;margin:0 auto;padding:0 32px;display:grid;grid-template-columns:repeat(4,1fr);gap:24px">
+    <div data-r="stats" style="max-width:1240px;margin:0 auto;padding:0 32px;display:grid;grid-template-columns:repeat(<?= $cols(count($statBar), 4) ?>,1fr);gap:24px">
 <?php $n = count($statBar); foreach ($statBar as $i => $r): ?>
       <div data-anim="pop" style="<?= $i === $n - 1 ? 'text-align:center' : 'text-align:center;border-right:1px solid rgba(0,0,0,.12)' ?>">
         <div style="font-family:'Oswald';font-weight:700;font-size:46px;color:#0d0d0d;line-height:1"><?= $stat($r) ?></div>
@@ -402,7 +404,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
           </div>
         </div>
 
-        <div data-r="g2" style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div data-r="g2" style="display:grid;grid-template-columns:<?= ($c = $cols(count($why), 2)) === 2 ? '1fr 1fr' : "repeat($c,1fr)" ?>;gap:18px">
 <?php foreach ($why as $r): ?>
             <div data-anim="slide-right" style="background:#fff;border:1px solid #e6e6e2;border-top:3px solid #FFC700;padding:28px 24px">
               <h3 style="font-family:'Oswald';font-weight:600;font-size:21px;text-transform:uppercase;margin-bottom:10px;line-height:1.1"><?= e($r['title']) ?></h3>
@@ -421,7 +423,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
         <div style="font-family:'Oswald';font-weight:600;font-size:14px;letter-spacing:3px;color:#FFC700;margin-bottom:10px"><?= e($s['steps_label']) ?></div>
         <h2 style="font-family:'Oswald';font-weight:700;font-size:44px;text-transform:uppercase;letter-spacing:.5px"><?= e($s['steps_h2']) ?></h2>
       </div>
-      <div data-r="g5" style="display:grid;grid-template-columns:repeat(5,1fr);gap:18px">
+      <div data-r="g5" style="display:grid;grid-template-columns:repeat(<?= $cols(count($steps), 5) ?>,1fr);gap:18px">
 <?php foreach ($steps as $i => $r): ?>
           <div data-anim="fade-up" style="border-top:1px solid #2a2a2a;padding-top:22px">
             <div style="font-family:'Oswald';font-weight:700;font-size:40px;color:#FFC700;line-height:1;margin-bottom:14px"><?= sprintf('%02d', $i + 1) ?></div>

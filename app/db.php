@@ -25,6 +25,14 @@ function db(): PDO
         // ponytail: миграция БД до SEC-1; убрать, когда все БД обновлены
         $pdo->exec('ALTER TABLE users ADD COLUMN pw_ver INTEGER NOT NULL DEFAULT 0');
     }
+    if (!$pdo->query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'trash'")->fetchColumn()) {
+        // ponytail: миграция БД до M8 (черновик и корзина); DDL как в db/schema.sql; убрать, когда все БД обновлены
+        $pdo->exec("CREATE TABLE IF NOT EXISTS drafts (id INTEGER PRIMARY KEY CHECK(id = 1), data TEXT NOT NULL, prev TEXT,
+              rev INTEGER NOT NULL DEFAULT 1, updated_by INTEGER REFERENCES users(id), updated_at TEXT NOT NULL DEFAULT (datetime('now')));
+            CREATE TABLE IF NOT EXISTS trash (id INTEGER PRIMARY KEY, t TEXT NOT NULL, row TEXT NOT NULL,
+              deleted_at TEXT NOT NULL DEFAULT (datetime('now')), user_id INTEGER REFERENCES users(id));
+            CREATE INDEX IF NOT EXISTS trash_at ON trash(deleted_at);");
+    }
     $pdo->exec('PRAGMA foreign_keys=ON');
     return $pdo;
 }
