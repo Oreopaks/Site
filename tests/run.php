@@ -25,9 +25,9 @@ function check(string $name, bool $ok, string $why = ''): void
 }
 
 // HTTP-запрос без редиректов → [код, тело, заголовки]; $cookie — «name=value» или ''
-function req(string $url, ?array $post = null, string $cookie = ''): array
+function req(string $url, ?array $post = null, string $cookie = '', array $hdr = []): array
 {
-    $h = $cookie !== '' ? ["Cookie: $cookie"] : [];
+    $h = $cookie !== '' ? ["Cookie: $cookie", ...$hdr] : $hdr;
     $opt = ['ignore_errors' => true, 'follow_location' => 0];
     if ($post !== null) {
         $h[] = 'Content-Type: application/x-www-form-urlencoded';
@@ -203,5 +203,55 @@ check('owner password change → audit_log has no pass_hash', $code === 302 && $
 [$code] = req("$base/admin/?p=users&a=toggle", ['_csrf' => $csrfOf($boss), 'id' => $uid], $boss);
 check('owner toggle → newbie не входит', $code === 302 && $login('newbie', $np)[0] === 200, (string)$code);
 check('admin: баннер виден на ?p=content', str_contains(req("$base/admin/?p=content", null, $ed)[1], 'Реквизиты не заполнены'));
+
+// --- M5: заявки, CSV, статистика
+[$code, $body] = req("$base/send.php", ['comment' => '=1+1', 'name' => 'Формула'] + $lead + ['consent' => '1']);
+$lid = (int)(json_decode($body, true)['n'] ?? 0);
+[$code, $csv, $hdr] = req("$base/admin/?p=leads&a=csv&source=calc", null, $boss);
+$cells = [];
+foreach (explode("\n", trim(substr($csv, 3))) as $l) if (str_starts_with($l, "$lid;")) $cells = str_getcsv($l, ';', '"', '');
+check("csv '=1+1' → \"'=1+1\"", $code === 200 && str_starts_with($csv, "\xEF\xBB\xBF") && in_array("'=1+1", $cells, true)
+    && in_array("'+7 980 000-00-00", $cells, true) && preg_grep('~^Content-Type: text/csv~i', $hdr), "$code " . json_encode($cells, JSON_UNESCAPED_UNICODE));
+[$code] = req("$base/admin/?p=leads&a=csv", null, $ed);
+check('editor GET ?p=leads&a=csv → 403', $code === 403, (string)$code);
+
+$mgrId = (int)db()->query("SELECT id FROM users WHERE login = 'victim'")->fetchColumn();
+[$code, , $hdr] = req("$base/admin/?p=leads&a=status&source=calc", ['_csrf' => $csrfOf($mgr), 'id' => $lid, 'status' => 'in_work'], $mgr);
+$evr = db()->query("SELECT * FROM lead_events WHERE lead_id = $lid")->fetchAll();
+check('status → lead_events row', $code === 302 && in_array('Location: /admin/?p=leads&source=calc&ok=1', $hdr, true)
+    && db()->query("SELECT status FROM leads WHERE id = $lid")->fetchColumn() === 'in_work'
+    && count($evr) === 1 && (int)$evr[0]['user_id'] === $mgrId && $evr[0]['from_status'] === 'new' && $evr[0]['to_status'] === 'in_work', "$code " . json_encode($evr));
+[$code] = req("$base/admin/?p=leads&a=status", ['_csrf' => $csrfOf($mgr), 'id' => $lid, 'status' => 'bogus'], $mgr);
+check('status "bogus" → 422', $code === 422, (string)$code);
+$page = fn(string $q) => req("$base/admin/?p=leads&$q", null, $mgr)[1];
+check('фильтр status=in_work показывает заявку, status=done — нет', str_contains($page('status=in_work'), 'Формула') && !str_contains($page('status=done'), 'Формула')
+    && !str_contains($page('from=2000-01-01&to=2000-01-02'), 'Формула'));
+
+[$code] = req("$base/admin/?p=leads&a=delete", ['_csrf' => $csrfOf($mgr), 'id' => $lid], $mgr);
+check('manager POST delete → 403', $code === 403 && $leads() === 2, (string)$code);
+[$code] = req("$base/admin/?p=leads&a=delete", ['_csrf' => $csrfOf($boss), 'id' => $lid], $boss);
+$au = db()->query("SELECT * FROM audit_log WHERE tbl = 'leads' AND row_key = '$lid'")->fetch();
+check('owner POST delete → 302, lead_events каскадом, в audit без ПДн', $code === 302 && $leads() === 1
+    && db()->query("SELECT COUNT(*) FROM lead_events WHERE lead_id = $lid")->fetchColumn() == 0
+    && $au && !str_contains($au['old_value'], 'Формула') && !str_contains($au['old_value'], '980'), "$code " . json_encode($au, JSON_UNESCAPED_UNICODE));
+
+$hits = function () {
+    $st = db()->prepare("SELECT hits FROM stats WHERE day = ? AND page = '/' AND ref_domain = 'ref-test.example' AND ua_class = 'mobile'");
+    $st->execute([gmdate('Y-m-d')]);
+    return (int)$st->fetchColumn();
+};
+$ua = ['Referer: https://ref-test.example/some/path?q=1', 'User-Agent: TestUA (iPhone; Mobile)'];
+req("$base/", null, '', $ua);
+req("$base/", null, '', $ua);
+check('GET / twice → hits=2', $hits() === 2, (string)$hits());
+req("$base/privacy.php", null, '', ['Referer: http://127.0.0.1:8081/', 'User-Agent: Googlebot/2.1']);
+check('свой Referer → ref_domain \'\', Googlebot → bot', (int)db()->query("SELECT hits FROM stats WHERE page = '/privacy.php' AND ref_domain = '' AND ua_class = 'bot'")->fetchColumn() === 1);
+$cols = array_column(db()->query('PRAGMA table_info(stats)')->fetchAll(), 'name');
+check('table_info(stats) no ip', $cols === ['day', 'page', 'ref_domain', 'ua_class', 'hits'] && !preg_grep('~ip|agent|cookie~i', $cols), implode(',', $cols));
+[$code, $html] = req("$base/admin/?p=stats", null, $ed);
+check('editor GET ?p=stats → 200, ref-test.example в источниках', $code === 200 && str_contains($html, 'ref-test.example'), (string)$code);
+[$code] = req("$base/admin/?p=audit", null, $ed);
+[$code2, $html] = req("$base/admin/?p=audit", null, $mgr);
+check('audit: editor → 403, manager → 200', $code === 403 && $code2 === 200 && str_contains($html, 'fleet_prices'), "$code $code2");
 
 exit($fail ? 1 : 0);

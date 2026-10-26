@@ -35,3 +35,18 @@ textarea,select{font:inherit;padding:8px;border:1px solid #bbb;border-radius:4px
 .fields input:not([type=checkbox]){width:100%}
 button:disabled{opacity:.35;cursor:default}
 .settings button{align-self:flex-start}
+.filter{margin-bottom:12px;flex:none}
+.filter a{align-self:center}
+.grid{width:100%;border-collapse:collapse;background:#fff;font-size:14px;margin-bottom:16px}
+.grid th,.grid td{border:1px solid #ddd;padding:6px 8px;text-align:left;vertical-align:top}
+.grid th{background:#eee}
+.grid .pre{white-space:pre-wrap;overflow-wrap:anywhere;max-width:320px}
+.grid .st-new td:first-child{border-left:4px solid #FFC700}
+.grid .st-spam{opacity:.6}
+.stat{max-width:700px}
+.stat meter{width:200px}
+.inline{display:flex;gap:4px;align-items:center;margin-bottom:4px}
+.inline select{width:auto;padding:4px}
+.inline button{padding:4px 10px}
+.ev{display:block;color:#666;font-size:12px}
+button.danger{background:#b00020;color:#fff}

@@ -318,6 +318,104 @@ if ($p === 'users') {
     view('users', 'Пользователи', ['list' => rows('SELECT id, login, role, is_active, created_at FROM users ORDER BY id'), 'me' => $me, 'err' => $err], $err ? 422 : 200);
 }
 
-// ponytail: дашборды заявок/статистики/аудита — M5
-$titles = ['leads' => 'Заявки', 'stats' => 'Статистика', 'audit' => 'Журнал изменений'];
-page($titles[$p], '<p>Раздел в разработке.</p>');
+// §5 CSV: ячейка, начинающаяся с = + - @ TAB CR, — с префиксом ' (иначе Excel выполнит формулу)
+function csv_cell($v): string
+{
+    $v = (string)$v;
+    return $v !== '' && str_contains("=+-@\t\r", $v[0]) ? "'$v" : $v;
+}
+
+if ($p === 'leads') {
+    $statuses = ['new' => 'новая', 'in_work' => 'в работе', 'done' => 'выполнена', 'spam' => 'спам'];
+    $sources = ['calc' => 'расчёт', 'call' => 'звонок', 'material' => 'материал'];
+    // фильтры — из GET и для списка, и для CSV, и для возврата после POST; неизвестные значения игнорируются
+    $q = fn(string $k): string => is_string($_GET[$k] ?? null) ? $_GET[$k] : '';
+    $date = fn(string $k): string => preg_match('/^\d{4}-\d{2}-\d{2}$/D', $q($k)) ? $q($k) : '';
+    $f = ['status' => isset($statuses[$q('status')]) ? $q('status') : '', 'source' => isset($sources[$q('source')]) ? $q('source') : '',
+        'from' => $date('from'), 'to' => $date('to')];
+    $w = $args = [];
+    if ($f['status'] !== '') { $w[] = 'status = ?'; $args[] = $f['status']; }
+    if ($f['source'] !== '') { $w[] = 'source = ?'; $args[] = $f['source']; }
+    if ($f['from'] !== '') { $w[] = 'created_at >= ?'; $args[] = $f['from']; }
+    if ($f['to'] !== '') { $w[] = "created_at < date(?, '+1 day')"; $args[] = $f['to']; }
+    $where = $w ? 'WHERE ' . implode(' AND ', $w) : '';
+    $qs = http_build_query(array_filter($f));
+    $one = function (int $id): array {
+        $st = db()->prepare('SELECT id, source, status, created_at FROM leads WHERE id = ?');
+        $st->execute([$id]);
+        return $st->fetch() ?: page('Не найдено', '<p>Заявка не найдена.</p>', 404);
+    };
+
+    if ($a === 'status') {
+        $l = $one((int)$in('id'));
+        $to = $in('status');
+        if (!isset($statuses[$to])) page('Заявки', '<p class="err">Неверный статус.</p>', 422);
+        if ($to !== $l['status']) {
+            db()->beginTransaction();
+            db()->prepare('UPDATE leads SET status = ? WHERE id = ?')->execute([$to, $l['id']]);
+            db()->prepare('INSERT INTO lead_events (lead_id, user_id, from_status, to_status) VALUES (?, ?, ?, ?)')
+                ->execute([$l['id'], user()['id'], $l['status'], $to]);
+            db()->commit();
+        }
+        go("leads&$qs&ok=1");
+    }
+    if ($a === 'delete') {
+        if (!can('leads_delete')) deny();
+        $l = $one((int)$in('id'));
+        db()->beginTransaction();
+        db()->prepare('DELETE FROM leads WHERE id = ?')->execute([$l['id']]); // lead_events — ON DELETE CASCADE
+        // в журнал — без ПДн (имя/телефон после удаления храниться не должны)
+        audit('leads', (string)$l['id'], $json($l), null);
+        db()->commit();
+        go("leads&$qs&ok=1");
+    }
+    if ($post) page('Не найдено', '<p>Действие не найдено.</p>', 404);
+
+    $ga = $q('a');
+    if ($ga === 'csv') {
+        audit('leads', 'csv', null, $json($f)); // выгрузка ПДн — в журнал (только фильтры)
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="leads-' . gmdate('Y-m-d') . '.csv"');
+        $out = fopen('php://output', 'w');
+        fwrite($out, "\xEF\xBB\xBF"); // BOM — чтобы Excel открыл UTF-8
+        fputcsv($out, ['№', 'Дата (UTC)', 'Источник', 'Статус', 'Имя', 'Телефон', 'Услуга', 'Материал', 'Комментарий', 'Редакция согласия'], ';', '"', '');
+        foreach (rows("SELECT * FROM leads $where ORDER BY id", $args) as $r) {
+            fputcsv($out, array_map('csv_cell', [$r['id'], $r['created_at'], $sources[$r['source']], $statuses[$r['status']],
+                $r['name'], $r['phone'], $r['service'], $r['material'], $r['comment'], $r['consent_rev']]), ';', '"', '');
+        }
+        exit;
+    }
+    if ($ga !== '') page('Не найдено', '<p>Действие не найдено.</p>', 404);
+
+    // ponytail: без пагинации — последние 200 по фильтру; остальное — через фильтр или CSV
+    $list = rows("SELECT * FROM leads $where ORDER BY id DESC LIMIT 200", $args);
+    $ev = [];
+    if ($list) {
+        $ids = implode(',', array_map('intval', array_column($list, 'id')));
+        foreach (rows("SELECT e.*, u.login FROM lead_events e LEFT JOIN users u ON u.id = e.user_id WHERE e.lead_id IN ($ids) ORDER BY e.id") as $r) $ev[$r['lead_id']][] = $r;
+    }
+    view('leads', 'Заявки', ['list' => $list, 'ev' => $ev, 'total' => (int)rows("SELECT COUNT(*) n FROM leads $where", $args)[0]['n'],
+        'f' => $f, 'qs' => $qs, 'statuses' => $statuses, 'sources' => $sources]);
+}
+
+if ($post) page('Не найдено', '<p>Действие не найдено.</p>', 404); // stats, audit — только чтение
+
+if ($p === 'stats') {
+    // ponytail: окно фиксировано — 30 дней; выбор периода — когда попросят
+    $since = gmdate('Y-m-d', time() - 29 * 86400);
+    $by = fn(string $col, string $extra = '') => rows("SELECT $col k, SUM(hits) n FROM stats WHERE day >= ? $extra GROUP BY $col ORDER BY n DESC, k LIMIT 20", [$since]);
+    view('stats', 'Статистика', [
+        'since' => $since,
+        'byDay' => rows('SELECT day k, SUM(hits) n FROM stats WHERE day >= ? GROUP BY day ORDER BY day DESC', [$since]),
+        'byPage' => $by('page'),
+        'byRef' => $by('ref_domain', "AND ref_domain <> ''"), // top-20
+        'byUa' => $by('ua_class'),
+        'consent' => rows("SELECT day, SUM(CASE WHEN choice = 'accept' THEN n ELSE 0 END) acc, SUM(CASE WHEN choice = 'reject' THEN n ELSE 0 END) rej
+            FROM consent_stats WHERE day >= ? GROUP BY day ORDER BY day DESC", [$since]),
+    ]);
+}
+
+if ($p === 'audit') {
+    // ponytail: последние 300 записей, без фильтров
+    view('audit', 'Журнал изменений', ['list' => rows('SELECT a.*, u.login FROM audit_log a LEFT JOIN users u ON u.id = a.user_id ORDER BY a.id DESC LIMIT 300')]);
+}
