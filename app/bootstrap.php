@@ -53,3 +53,9 @@ function price(string $kind, $price): string
 {
     return ($kind === 'from' ? 'от ' : '') . number_format((int)$price, 0, '', ' ') . ' ₽';
 }
+
+// D5: белый список href (якорь, своя .php, http(s), tel, mailto); иначе сохранение → 422
+function valid_href(string $h): bool
+{
+    return (bool)preg_match('~^(#[a-z0-9_-]+|[a-z0-9_-]+\.php|https?://\S+|tel:\+?[0-9]+|mailto:\S+)$~D', $h);
+}

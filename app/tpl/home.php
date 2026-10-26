@@ -484,8 +484,10 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
               <textarea placeholder="Комментарий (объём, адрес, сроки)" aria-label="Комментарий" rows="3" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none;resize:vertical" style-focus="border-color:#FFC700"></textarea>
               <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;cursor:pointer">
                 <input type="checkbox" required aria-label="Согласие на обработку персональных данных" style="margin-top:2px;width:16px;height:16px;accent-color:#FFC700;flex-shrink:0">
-                <span style="color:#8f8f8f;font-size:11.5px;line-height:1.45">Я согласен на обработку персональных данных и принимаю политику конфиденциальности</span>
+                <span style="color:#8f8f8f;font-size:11.5px;line-height:1.45">Даю <a href="consent.php" target="_blank" style="text-decoration:underline">согласие на обработку персональных данных</a></span>
               </label>
+              <p class="pd-policy" style="margin:-8px 0 16px 25px;color:#8f8f8f;font-size:11.5px;line-height:1.45"><a href="privacy.php" target="_blank" style="text-decoration:underline">Политика обработки персональных данных</a></p>
+              <input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
               <button type="submit" style="width:100%;background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope';font-weight:800;font-size:15px;padding:16px;cursor:pointer;text-transform:uppercase;letter-spacing:.4px" style-hover="background:#ffd633">Отправить заявку</button>
             </form>
           </div>
@@ -521,12 +523,14 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
             <a href="tel:<?= e($s['phone_city']) ?>" style-hover="color:#FFC700"><?= e($s['phone_city_fmt']) ?> (город)</a>
             <a href="mailto:<?= e($s['email']) ?>" style-hover="color:#FFC700"><?= e($s['email']) ?></a>
             <span><?= e($s['address_short']) ?></span>
+            <span><?= e($s['hours_text']) ?></span>
           </div>
         </div>
       </div>
       <div style="padding-top:22px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:12.5px;color:#6a6a6a">
         <span><?= e($s['copyright']) ?></span>
-        <span>г. Орёл · Орловская область</span>
+        <span><?= e($s['org_name']) ?> · ИНН <?= e(stub($s, 'org_inn', '[УКАЗАТЬ ИНН]')) ?> · ОГРН <?= e(stub($s, 'org_ogrn', '[УКАЗАТЬ ОГРН]')) ?> · <?= e(stub($s, 'org_address', '[УКАЗАТЬ ЮР. АДРЕС]')) ?></span>
+        <span><a href="privacy.php" style-hover="color:#FFC700">Политика конфиденциальности</a> · <a href="consent.php" style-hover="color:#FFC700">Согласие на обработку ПДн</a></span>
       </div>
     </div>
   </footer>
@@ -556,8 +560,10 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
               <input required placeholder="Телефон" aria-label="Телефон" autocomplete="tel" inputmode="tel" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none" style-focus="border-color:#FFC700">
               <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;cursor:pointer">
                 <input type="checkbox" required aria-label="Согласие на обработку персональных данных" style="margin-top:2px;width:16px;height:16px;accent-color:#FFC700;flex-shrink:0">
-                <span style="color:#888;font-size:11.5px;line-height:1.45">Я согласен на обработку персональных данных и принимаю политику конфиденциальности</span>
+                <span style="color:#888;font-size:11.5px;line-height:1.45">Даю <a href="consent.php" target="_blank" style="text-decoration:underline">согласие на обработку персональных данных</a></span>
               </label>
+              <p class="pd-policy" style="margin:-8px 0 16px 25px;color:#888;font-size:11.5px;line-height:1.45"><a href="privacy.php" target="_blank" style="text-decoration:underline">Политика обработки персональных данных</a></p>
+              <input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
               <button type="submit" style="width:100%;background:#0d0d0d;color:#fff;border:none;font-family:'Manrope';font-weight:800;font-size:15px;padding:16px;cursor:pointer;text-transform:uppercase;letter-spacing:.4px" style-hover="background:#FFC700;color:#0d0d0d"><span id="modalBtn"><?= e($s['modal_call_btn']) ?></span></button>
             </form>
           </div>

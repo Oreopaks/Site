@@ -1,7 +1,8 @@
 <?php
 // Оракул DOM: `/` на сид-данных vs эталон `git show static-final:index.html`.
 // Запуск: стенд `php -S 127.0.0.1:8080 -t public public/router.php` (RDS_DB → чистая БД), затем `php tests/oracle.php`.
-// Белый список (M1): P1/P2 — последний inline <script> в <body>; решение заказчика — option «Благоустройство территории» → «Благоустройство».
+// Белый список (§8): P1/P2 — последний inline <script> в <body>; P3 — label с галочкой + honeypot/hidden source в <form>;
+// P6 — <footer>; P7 — 3-я плашка в data-r=stats (наличие); решение заказчика — option «Благоустройство территории» → «Благоустройство».
 
 if (!class_exists('DOMDocument')) { fwrite(STDERR, "BLOCKED: нет ext-dom (нужен только для тестов)\n"); exit(2); }
 
@@ -45,6 +46,27 @@ else {
         if (!str_contains($js, $f)) $diff('//body/script[last]', "содержит $f", 'нет');
     if (preg_match('/api\.telegram\.org|bot[0-9]/', $js)) $diff('//body/script[last]', 'без Telegram Bot API', 'найден');
 }
+
+// P3: label с галочкой согласия — вырезаем из обоих; в actual внутри <form> разрешены honeypot website и hidden source
+$le = $ex->query("//label[input[@type='checkbox']]")->length;
+$la = $ax->query("//label[input[@type='checkbox']][.//a[@href='consent.php']][not(.//a[@href='privacy.php'])]")->length;
+if ($le !== $la) $diff("//label[input[@type='checkbox']]", "$le со ссылкой на consent.php (без privacy.php)", (string)$la);
+// P3: строка «Политика…» отдельно от label — только в actual, сразу после label с галочкой внутри form, ровно одна ссылка privacy.php
+$pp = "//form/p[@class='pd-policy'][preceding-sibling::*[1][self::label[input[@type='checkbox']]]][count(*)=1][a[@href='privacy.php']]";
+if ($ax->query($pp)->length !== $le || $ax->query("//*[@class='pd-policy']")->length !== $le)
+    $diff($pp, (string)$le, (string)$ax->query("//*[@class='pd-policy']")->length);
+foreach (iterator_to_array($ax->query($pp)) as $n) $n->parentNode->removeChild($n);
+foreach ([$ex, $ax] as $x)
+    foreach (iterator_to_array($x->query("//label[input[@type='checkbox']]")) as $n) $n->parentNode->removeChild($n);
+foreach (iterator_to_array($ax->query("//form//input[@name='website'] | //form//input[@type='hidden'][@name='source']")) as $n)
+    $n->parentNode->removeChild($n);
+// P6: подвал целиком (реквизиты-заглушки, режим работы, ссылки на политику и согласие)
+if (!$ax->query('//footer')->length) $diff('//footer', 'footer', '(нет)');
+foreach ([$ex, $ax] as $x) foreach (iterator_to_array($x->query('//footer')) as $n) $n->parentNode->removeChild($n);
+// P7: 3-я плашка статистики («100% качество работ» → текст заказчика) — только наличие
+$p7 = "//div[@data-r='stats']/div[@data-anim='pop'][3]";
+if (!$ax->query($p7)->length) $diff($p7, 'div', '(нет)');
+foreach ([$ex, $ax] as $x) foreach (iterator_to_array($x->query($p7)) as $n) $n->parentNode->removeChild($n);
 
 // инварианты
 foreach (['data-r', 'data-anim', 'data-count', 'style-hover', 'style-focus'] as $at) {
