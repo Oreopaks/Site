@@ -15,7 +15,7 @@ $tty = stream_isatty(STDIN);
 if ($tty) { fwrite(STDERR, 'Пароль: '); shell_exec('stty -echo'); }
 $pass = rtrim((string)fgets(STDIN), "\r\n");
 if ($tty) { shell_exec('stty echo'); fwrite(STDERR, "\n"); }
-if (!preg_match('/^.{12,}$/suD', $pass)) { fwrite(STDERR, "пароль короче 12 символов\n"); exit(1); }
+if (!preg_match('/^[^\0]{12,}$/uD', $pass)) { fwrite(STDERR, "пароль короче 12 символов\n"); exit(1); }
 
 try {
     db()->prepare('INSERT INTO users (login, pass_hash, role) VALUES (?, ?, ?)')

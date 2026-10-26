@@ -151,8 +151,20 @@ check('unlock.php → login OK', $code === 302
 // SEC-1: счётчик растёт до password_verify — при fails=5 без locked_until верный пароль уже не проверяется
 db()->exec("INSERT INTO login_attempts (login, fails) VALUES ('victim', 5)");
 [$code] = $login('victim', $pw);
-check('fails=5 (без locked_until) + верный пароль → 423, без verify', $code === 423, (string)$code);
-$cli(['bin/unlock.php', 'victim']);
+$lu = db()->query("SELECT locked_until FROM login_attempts WHERE login = 'victim'")->fetchColumn();
+check('fails=5 (без locked_until) + верный пароль → 423 без verify, locked_until выставлен', $code === 423 && $lu !== null, "$code " . var_export($lu, true));
+db()->exec("UPDATE login_attempts SET locked_until = datetime('now', '-1 second') WHERE login = 'victim'");
+// заодно Ф4: хэш с устаревшим cost перехэшируется при входе, pw_ver не меняется
+$h4 = password_hash($pw, PASSWORD_BCRYPT, ['cost' => 4]);
+db()->prepare("UPDATE users SET pass_hash = ? WHERE login = 'victim'")->execute([$h4]);
+[$code] = $login('victim', $pw);
+$vu = db()->query("SELECT pass_hash, pw_ver FROM users WHERE login = 'victim'")->fetch();
+check('блокировка истекла → вход 302; cost 4 → перехэширован, pw_ver 0', $code === 302 && $vu['pass_hash'] !== $h4
+    && !password_needs_rehash($vu['pass_hash'], PASSWORD_DEFAULT) && (int)$vu['pw_ver'] === 0, (string)$code);
+[$c1] = $login('nobody2', "a\0b");
+[$c2] = $login('boss', "a\0b");
+check('password "a\\0b": неизвестный и известный логин → 200 «неверный», не 500', $c1 === 200 && $c2 === 200, "$c1 $c2");
+check('create-user: пароль с NUL → отказ', $cli(['bin/create-user.php', 'nulluser', 'editor'], "correct horse\0battery\n") !== 0);
 // SEC-1: исключение внутри login() не пишет пароль в лог (RDS_DB → каталог: PDO не откроет файл; -d — как PHP без php.ini)
 $log = sys_get_temp_dir() . '/rds-log-' . getmypid() . '.txt';
 @mkdir($dir = sys_get_temp_dir() . '/rds-dir-' . getmypid());
@@ -261,9 +273,8 @@ $au = db()->query("SELECT * FROM audit_log WHERE tbl = 'leads' AND row_key = '$l
 check('owner POST delete → 302, lead_events каскадом, в audit без ПДн', $code === 302 && $leads() === 1
     && db()->query("SELECT COUNT(*) FROM lead_events WHERE lead_id = $lid")->fetchColumn() == 0
     && $au && !str_contains($au['old_value'], 'Формула') && !str_contains($au['old_value'], '980'), "$code " . json_encode($au, JSON_UNESCAPED_UNICODE));
-db()->query('PRAGMA wal_checkpoint(TRUNCATE)')->fetchAll();
-// байты читает cat: свой open/close файла БД снял бы POSIX-блокировки SQLite этого процесса
-check('удалённая заявка: «Формула» нет в байтах БД после checkpoint (secure_delete)',
+// checkpoint делает сам обработчик удаления; байты читает cat: свой open/close файла БД снял бы POSIX-блокировки SQLite этого процесса
+check('удалённая заявка: «Формула» нет ни в site.sqlite, ни в -wal (secure_delete + checkpoint)',
     !str_contains((string)shell_exec('cat ' . escapeshellarg($dbPath) . '*'), 'Формула'));
 
 $hits = function () {

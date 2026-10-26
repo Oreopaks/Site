@@ -46,8 +46,11 @@ function login(string $login, #[\SensitiveParameter] string $pass): array
     $db = db();
     $db->prepare("DELETE FROM login_attempts WHERE login = ? AND locked_until <= datetime('now')")->execute([$login]);
     // попытка считается ДО password_verify одним оператором: параллельные запросы не проскочат лимит
+    // сверх лимита без locked_until (сбой между попытками) — блокировка ставится здесь же
     $st = $db->prepare("INSERT INTO login_attempts (login, fails) VALUES (?, 1)
-        ON CONFLICT(login) DO UPDATE SET fails = fails + 1 RETURNING fails, locked_until > datetime('now')");
+        ON CONFLICT(login) DO UPDATE SET fails = fails + 1,
+            locked_until = CASE WHEN fails + 1 > " . LOGIN_MAX_FAILS . " AND locked_until IS NULL THEN datetime('now', '+15 minutes') ELSE locked_until END
+        RETURNING fails, locked_until > datetime('now')");
     $st->execute([$login]);
     [$fails, $locked] = $st->fetch(PDO::FETCH_NUM);
     $st->closeCursor(); // отпустить запись в БД до долгого password_verify
@@ -56,9 +59,16 @@ function login(string $login, #[\SensitiveParameter] string $pass): array
     $st = $db->prepare('SELECT id, pass_hash, pw_ver FROM users WHERE login = ? AND is_active = 1');
     $st->execute([$login]);
     $u = $st->fetch();
-    // неизвестный логин: password_hash той же стоимости вместо verify — время ответа одинаковое, cost берётся из PASSWORD_DEFAULT
-    if ($u ? password_verify($pass, $u['pass_hash']) : !password_hash($pass, PASSWORD_DEFAULT)) {
+    // фиктивный хэш текущего PASSWORD_DEFAULT: неизвестный логин проверяется столько же, сколько известный.
+    // ponytail: считается на каждой попытке (static живёт один запрос под php-fpm) — иначе неизвестный был бы вдвое дольше
+    static $dummy;
+    $dummy ??= password_hash(bin2hex(random_bytes(16)), PASSWORD_DEFAULT);
+    // "\0" — обычная неудача (bcrypt на NUL бросает ValueError → было бы 500)
+    if (!str_contains($pass, "\0") && password_verify($pass, $u['pass_hash'] ?? $dummy) && $u) {
         $db->prepare('DELETE FROM login_attempts WHERE login = ?')->execute([$login]);
+        if (password_needs_rehash($u['pass_hash'], PASSWORD_DEFAULT)) { // pw_ver не трогаем: пароль тот же
+            $db->prepare('UPDATE users SET pass_hash = ? WHERE id = ?')->execute([password_hash($pass, PASSWORD_DEFAULT), $u['id']]);
+        }
         return ['ok', (int)$u['id'], (int)$u['pw_ver']];
     }
     if ($fails >= LOGIN_MAX_FAILS) {

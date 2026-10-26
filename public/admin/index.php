@@ -278,7 +278,7 @@ if ($p === 'users') {
             $login = $in('login');
             $pass = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
             if (!preg_match('/^[a-z0-9_.-]{3,32}$/D', $login)) $err = 'Логин: a-z 0-9 _ . - , 3–32 символа.';
-            elseif (!preg_match('/^.{12,200}$/suD', $pass)) $err = 'Пароль — не короче 12 символов.';
+            elseif (!preg_match('/^[^\0]{12,200}$/uD', $pass)) $err = 'Пароль — не короче 12 символов.';
             elseif (rows('SELECT 1 FROM users WHERE login = ?', [$login])) $err = 'Логин уже занят.';
             else {
                 db()->beginTransaction();
@@ -302,7 +302,7 @@ if ($p === 'users') {
     } elseif ($a === 'password') {
         $u = $one((int)$in('id'));
         $pass = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
-        if (!preg_match('/^.{12,200}$/suD', $pass)) $err = 'Пароль — не короче 12 символов.';
+        if (!preg_match('/^[^\0]{12,200}$/uD', $pass)) $err = 'Пароль — не короче 12 символов.';
         else {
             db()->beginTransaction();
             db()->prepare('UPDATE users SET pass_hash = ?, pw_ver = pw_ver + 1 WHERE id = ?')->execute([password_hash($pass, PASSWORD_DEFAULT), $u['id']]);
@@ -374,6 +374,8 @@ if ($p === 'leads') {
         // в журнал — без ПДн (имя/телефон после удаления храниться не должны)
         audit('leads', (string)$l['id'], $json($l), null);
         db()->commit();
+        // ponytail: best-effort — secure_delete затирает страницы в файле БД, но старые кадры с ПДн живут в -wal до checkpoint
+        db()->query('PRAGMA wal_checkpoint(TRUNCATE)')->fetchAll();
         go("leads&$qs&ok=1");
     }
     if ($post) page('Не найдено', '<p>Действие не найдено.</p>', 404);
