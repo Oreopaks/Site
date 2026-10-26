@@ -43,8 +43,9 @@ button:disabled{opacity:.35;cursor:default}
 .grid .pre{white-space:pre-wrap;overflow-wrap:anywhere;max-width:320px}
 .grid .st-new td:first-child{border-left:4px solid #FFC700}
 .grid .st-spam{opacity:.6}
+@media (max-width:760px){.grid{display:block;overflow-x:auto}} /* узкий экран: таблица прокручивается сама, страница — нет */
 .stat{max-width:700px}
-.stat meter{width:200px}
+.stat meter{width:200px;max-width:30vw}
 .inline{display:flex;gap:4px;align-items:center;margin-bottom:4px}
 .inline select{width:auto;padding:4px}
 .inline button{padding:4px 10px}

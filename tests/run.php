@@ -254,4 +254,33 @@ check('editor GET ?p=stats → 200, ref-test.example в источниках', $
 [$code2, $html] = req("$base/admin/?p=audit", null, $mgr);
 check('audit: editor → 403, manager → 200', $code === 403 && $code2 === 200 && str_contains($html, 'fleet_prices'), "$code $code2");
 
+// --- M6: consent.php POST (sendBeacon, text/plain)
+$beacon = function (string $body, array $hdr) use ($base): int {
+    $ctx = stream_context_create(['http' => ['method' => 'POST', 'ignore_errors' => true, 'content' => $body,
+        'header' => ['Content-Type: text/plain;charset=UTF-8', ...$hdr]]]);
+    file_get_contents("$base/consent.php", false, $ctx);
+    preg_match('~^HTTP/\S+ (\d+)~', $http_response_header[0] ?? '', $m);
+    return (int)($m[1] ?? 0);
+};
+$consentN = fn() => (int)db()->query("SELECT COALESCE(SUM(n), 0) FROM consent_stats")->fetchColumn();
+$code = $beacon('c=accept&rev=1', []);
+check('consent.php POST без Origin → 403', $code === 403 && $consentN() === 0, (string)$code);
+$code2 = $beacon('c=accept&rev=1', ['Origin: http://evil.example']);
+$code = $beacon('c=accept&rev=1', ['Origin: http://127.0.0.1:8081']);
+$st = db()->prepare("SELECT n FROM consent_stats WHERE day = ? AND choice = 'accept' AND text_rev = '1'");
+$st->execute([gmdate('Y-m-d')]);
+$n = (int)$st->fetchColumn();
+$st = null; // не держать открытый курсор (блокирует запись в БД)
+check('POST text/plain "c=accept&rev=1" с Origin → consent_stats n=1', $code2 === 403 && $code === 204 && $n === 1 && $consentN() === 1, "$code2 $code");
+$code = $beacon('c=maybe&rev=1', ['Origin: http://127.0.0.1:8081']);
+check('consent.php c=maybe → 400', $code === 400 && $consentN() === 1, (string)$code);
+[, $html] = req("$base/");
+check('metrika_id пуст → нет #cookie-bar, mc.yandex, «Настройки cookie»', !str_contains($html, 'cookie-bar') && !str_contains($html, 'mc.yandex') && !str_contains($html, 'Настройки cookie'));
+$set('metrika_id', '12345');
+[, $html] = req("$base/");
+[, $priv] = req("$base/privacy.php");
+check('metrika_id=12345 → #cookie-bar hidden, ссылка «Настройки cookie», раздел в политике', str_contains($html, '<div id="cookie-bar" hidden')
+    && str_contains($html, 'Настройки cookie') && str_contains($priv, 'подключается только после нажатия «Принять»'));
+$set('metrika_id', '');
+
 exit($fail ? 1 : 0);

@@ -530,7 +530,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
       <div style="padding-top:22px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:12.5px;color:#6a6a6a">
         <span><?= e($s['copyright']) ?></span>
         <span><?= e($s['org_name']) ?> · ИНН <?= e(stub($s, 'org_inn', '[УКАЗАТЬ ИНН]')) ?> · ОГРН <?= e(stub($s, 'org_ogrn', '[УКАЗАТЬ ОГРН]')) ?> · <?= e(stub($s, 'org_address', '[УКАЗАТЬ ЮР. АДРЕС]')) ?></span>
-        <span><a href="privacy.php" style-hover="color:#FFC700">Политика конфиденциальности</a> · <a href="consent.php" style-hover="color:#FFC700">Согласие на обработку ПДн</a></span>
+        <span><a href="privacy.php" style-hover="color:#FFC700">Политика конфиденциальности</a> · <a href="consent.php" style-hover="color:#FFC700">Согласие на обработку ПДн</a><?php if (trim($s['metrika_id']) !== ''): ?> · <a href="#" onclick="cookieSettings();return false" style-hover="color:#FFC700">Настройки cookie</a><?php endif ?></span>
       </div>
     </div>
   </footer>
@@ -669,5 +669,41 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
   });
 })();
 </script>
+<?php if (trim($s['metrika_id']) !== ''): ?>
+<div id="cookie-bar" hidden style="position:fixed;left:0;right:0;bottom:0;z-index:90;background:#0d0d0d;color:#cfcfcf;border-top:3px solid #FFC700;padding:16px 20px;font-family:'Manrope';font-size:13.5px;line-height:1.5">
+  <div style="max-width:1240px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px">
+    <p style="flex:1 1 260px;min-width:0">Сайт может использовать cookie и сервис Яндекс Метрика для анализа посещаемости — только если вы нажмёте «Принять». Подробнее — в <a href="privacy.php" style="color:#FFC700;text-decoration:underline">политике конфиденциальности</a>.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button type="button" id="cookie-accept" style="background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope';font-weight:800;font-size:13.5px;padding:11px 22px;cursor:pointer;text-transform:uppercase;letter-spacing:.4px">Принять</button>
+      <button type="button" id="cookie-reject" style="background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope';font-weight:800;font-size:13.5px;padding:11px 22px;cursor:pointer;text-transform:uppercase;letter-spacing:.4px">Отклонить</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  // Метрика грузится только после «Принять»; выбор хранится в localStorage (mtk = выбор:редакция текста)
+  var ID=<?= (int)$s['metrika_id'] ?>, REV='<?= jsstr($s['cookie_text_rev']) ?>', K='mtk', bar=document.getElementById('cookie-bar'), c=null;
+  function loadMetrika(){
+    window.ym=window.ym||function(){ (window.ym.a=window.ym.a||[]).push(arguments); }; window.ym.l=1*new Date();
+    var t=document.createElement('script'); t.defer=true; t.src='https://mc.yandex.ru/metrika/tag.js'; document.head.appendChild(t);
+    window.ym(ID,'init',{webvisor:false,clickmap:true,accurateTrackBounce:true});
+  }
+  function off(){ window['disableYaCounter'+ID]=true; }
+  function choose(v){
+    try{ localStorage.setItem(K, v+':'+REV); }catch(_){}
+    bar.hidden=true;
+    try{ navigator.sendBeacon('consent.php','c='+v+'&rev='+encodeURIComponent(REV)); }catch(_){}
+    if(v==='accept') loadMetrika(); else off();
+  }
+  window.cookieSettings=function(){ try{ localStorage.removeItem(K); }catch(_){} location.reload(); };
+  try{ c=localStorage.getItem(K); }catch(_){}
+  if(c==='accept:'+REV) loadMetrika();
+  else if(c==='reject:'+REV) off();
+  else bar.hidden=false;
+  document.getElementById('cookie-accept').addEventListener('click', function(){ choose('accept'); });
+  document.getElementById('cookie-reject').addEventListener('click', function(){ choose('reject'); });
+})();
+</script>
+<?php endif ?>
 </body>
 </html>
