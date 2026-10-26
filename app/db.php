@@ -12,6 +12,7 @@ function db(): PDO
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     ]);
     $pdo->exec('PRAGMA busy_timeout=5000');
+    $pdo->exec('PRAGMA secure_delete=ON'); // удалённые заявки затираются нулями, а не остаются в свободных страницах
     if ($fresh) {
         // ponytail: первый запрос создаёт БД из схемы+сида; гонка двух первых запросов
         // ловится исключением UNIQUE во втором — после деплоя сделать один GET вручную.
@@ -20,6 +21,9 @@ function db(): PDO
         $pdo->beginTransaction();
         $pdo->exec(file_get_contents(dirname(__DIR__) . '/db/seed.sql'));
         $pdo->commit();
+    } elseif (!$pdo->query("SELECT 1 FROM pragma_table_info('users') WHERE name = 'pw_ver'")->fetchColumn()) {
+        // ponytail: миграция БД до SEC-1; убрать, когда все БД обновлены
+        $pdo->exec('ALTER TABLE users ADD COLUMN pw_ver INTEGER NOT NULL DEFAULT 0');
     }
     $pdo->exec('PRAGMA foreign_keys=ON');
     return $pdo;

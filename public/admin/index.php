@@ -64,16 +64,22 @@ if ($p === 'login') {
 </form>';
     if (!$post) page('Вход', $form(''));
     if (!$csrfOk()) deny();
-    [$res, $uid] = login(is_string($_POST['login'] ?? null) ? $_POST['login'] : '', is_string($_POST['password'] ?? null) ? $_POST['password'] : '');
+    [$res, $uid, $pwVer] = login(is_string($_POST['login'] ?? null) ? $_POST['login'] : '', is_string($_POST['password'] ?? null) ? $_POST['password'] : '');
     if ($res === 'locked') page('Вход', $form('Слишком много неудачных попыток. Вход заблокирован на 15 минут.'), 423);
     if ($res === 'bad') page('Вход', $form('Неверный логин или пароль.'));
     session_regenerate_id(true);
     $_SESSION['uid'] = $uid;
+    $_SESSION['pw_ver'] = $pwVer;
+    $_SESSION['started'] = time();
     $_SESSION['csrf'] = bin2hex(random_bytes(32));
     go('home');
 }
 
-if (!user()) go('login');
+if (!user()) {
+    // отключён, сменён пароль или истёк срок — сессию не оставлять (иначе оживёт после реактивации)
+    if (isset($_SESSION['uid'])) { $_SESSION = []; session_destroy(); }
+    go('login');
+}
 
 $perm = match ($p) {
     'home', 'logout' => null,
@@ -299,7 +305,8 @@ if ($p === 'users') {
         if (!preg_match('/^.{12,200}$/suD', $pass)) $err = 'Пароль — не короче 12 символов.';
         else {
             db()->beginTransaction();
-            db()->prepare('UPDATE users SET pass_hash = ? WHERE id = ?')->execute([password_hash($pass, PASSWORD_DEFAULT), $u['id']]);
+            db()->prepare('UPDATE users SET pass_hash = ?, pw_ver = pw_ver + 1 WHERE id = ?')->execute([password_hash($pass, PASSWORD_DEFAULT), $u['id']]);
+            if ((int)$u['id'] === $me) $_SESSION['pw_ver']++; // свою текущую сессию не выкидывать
             audit('users', (string)$u['id'], null, $json(['login' => $u['login'], 'password' => 'changed']));
             db()->commit();
             go('users&ok=1');
@@ -309,7 +316,7 @@ if ($p === 'users') {
         if ((int)$u['id'] === $me) $err = 'Себя отключить нельзя.';
         else {
             db()->beginTransaction();
-            db()->prepare('UPDATE users SET is_active = 1 - is_active WHERE id = ?')->execute([$u['id']]);
+            db()->prepare('UPDATE users SET is_active = 1 - is_active, pw_ver = pw_ver + 1 WHERE id = ?')->execute([$u['id']]);
             audit('users', (string)$u['id'], $json($pub($u)), $json($pub(['is_active' => 1 - (int)$u['is_active']] + $u)));
             db()->commit();
             go('users&ok=1');

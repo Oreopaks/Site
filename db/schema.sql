@@ -48,6 +48,7 @@ CREATE TABLE users (
   id INTEGER PRIMARY KEY, login TEXT NOT NULL UNIQUE, pass_hash TEXT NOT NULL,
   role TEXT NOT NULL CHECK(role IN ('owner','manager','editor')),
   is_active INTEGER NOT NULL DEFAULT 1,
+  pw_ver INTEGER NOT NULL DEFAULT 0,  -- +1 при смене пароля и вкл/выкл: старые сессии недействительны
   created_at TEXT NOT NULL DEFAULT (datetime('now')));
 
 CREATE TABLE login_attempts (login TEXT PRIMARY KEY, fails INTEGER NOT NULL DEFAULT 0, locked_until TEXT);

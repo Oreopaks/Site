@@ -105,6 +105,8 @@ server {
 5. В админке: `base_url` → домен; `robots.txt` — заменить адрес sitemap.
    `notify_email` — только ящик на хостинге в РФ.
 6. HTTPS — после появления домена (B4). Проверка: `curl -I https://<host>/var/site.sqlite` → 404.
+   Если TLS снимает прокси перед nginx — в `location` с php добавить `fastcgi_param HTTPS on;`,
+   иначе cookie админки уйдёт без `Secure` (`X-Forwarded-Proto` код не читает: без доверенного прокси подделывается).
 
 Apache-хостинг: docroot → `public/` (там `.htaccess`: `ErrorDocument 404`, rewrite
 `sitemap.xml`, `Options -Indexes`). Если docroot сместить нельзя — положить в `var/`

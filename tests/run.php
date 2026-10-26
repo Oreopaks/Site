@@ -148,6 +148,27 @@ $cli(['bin/unlock.php', 'victim']);
 [$code] = $login('victim', $pw);
 check('unlock.php → login OK', $code === 302
     && db()->query("SELECT COUNT(*) FROM login_attempts WHERE login = 'victim'")->fetchColumn() == 0, (string)$code);
+// SEC-1: счётчик растёт до password_verify — при fails=5 без locked_until верный пароль уже не проверяется
+db()->exec("INSERT INTO login_attempts (login, fails) VALUES ('victim', 5)");
+[$code] = $login('victim', $pw);
+check('fails=5 (без locked_until) + верный пароль → 423, без verify', $code === 423, (string)$code);
+$cli(['bin/unlock.php', 'victim']);
+// SEC-1: исключение внутри login() не пишет пароль в лог (RDS_DB → каталог: PDO не откроет файл; -d — как PHP без php.ini)
+$log = sys_get_temp_dir() . '/rds-log-' . getmypid() . '.txt';
+@mkdir($dir = sys_get_temp_dir() . '/rds-dir-' . getmypid());
+$p = proc_open([PHP_BINARY, '-d', 'zend.exception_ignore_args=0', '-d', 'zend.exception_string_param_max_len=15', '-r', "require 'app/bootstrap.php'; require 'app/auth.php'; ini_set('error_log', '$log'); login('boss', 'leak-me-secret-pass');"],
+    [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']], $pp, $root, ['RDS_DB' => $dir] + getenv());
+proc_close($p);
+@rmdir($dir);
+$lg = (string)@file_get_contents($log);
+@unlink($log);
+check('PDOException в login() → в логе нет пароля', str_contains($lg, 'PDOException') && str_contains($lg, 'login(') && !str_contains($lg, 'leak-me'), $lg);
+// SEC-1: абсолютный срок сессии 8 ч — started сдвигаем прямо в файле сессии стенда
+[, $old] = $login('redactor', $pw);
+$sf = rtrim(ini_get('session.save_path') ?: sys_get_temp_dir(), '/') . '/sess_' . substr($old, strlen('rds_admin='));
+file_put_contents($sf, preg_replace('~started\|i:\d+;~', 'started|i:' . (time() - 28801) . ';', (string)file_get_contents($sf), 1, $n));
+[$code, , $hdr] = req("$base/admin/", null, $old);
+check('сессия со started −8 ч −1 с → 302 на login', $n === 1 && $code === 302 && in_array('Location: /admin/?p=login', $hdr, true), "$n $code");
 
 // --- M4: CRUD, права по группам, аудит
 [, $boss] = $login('boss', $pw);
@@ -195,13 +216,19 @@ check('manager GET ?p=users → 403', $code === 403, (string)$code);
 $np = 'new secret password 42';
 [$code] = req("$base/admin/?p=users&a=save", ['_csrf' => $csrfOf($boss), 'id' => '', 'login' => 'newbie', 'role' => 'editor', 'password' => 'first password 123'], $boss);
 $uid = db()->query("SELECT id FROM users WHERE login = 'newbie'")->fetchColumn();
+[, $nb] = $login('newbie', 'first password 123');
 [$code2] = req("$base/admin/?p=users&a=password", ['_csrf' => $csrfOf($boss), 'id' => $uid, 'password' => $np], $boss);
 $hash = db()->query("SELECT pass_hash FROM users WHERE id = $uid")->fetchColumn();
 $dump = implode("\n", array_map(fn($r) => implode('|', $r), db()->query('SELECT * FROM audit_log')->fetchAll()));
 check('owner password change → audit_log has no pass_hash', $code === 302 && $code2 === 302 && $login('newbie', $np)[0] === 302
     && !str_contains($dump, $hash) && !str_contains($dump, $np) && !str_contains($dump, 'first password') && !preg_match('~\$2y\$|\$argon|pass_hash~', $dump), "$code $code2");
+[$code, , $hdr] = req("$base/admin/", null, $nb);
+check('смена пароля → старая сессия 302 на login', $nb !== '' && $code === 302 && in_array('Location: /admin/?p=login', $hdr, true), (string)$code);
+[, $nb] = $login('newbie', $np);
 [$code] = req("$base/admin/?p=users&a=toggle", ['_csrf' => $csrfOf($boss), 'id' => $uid], $boss);
 check('owner toggle → newbie не входит', $code === 302 && $login('newbie', $np)[0] === 200, (string)$code);
+[$code] = req("$base/admin/?p=users&a=toggle", ['_csrf' => $csrfOf($boss), 'id' => $uid], $boss);
+check('отключение + включение → старая сессия 302', $code === 302 && req("$base/admin/", null, $nb)[0] === 302 && $login('newbie', $np)[0] === 302, (string)$code);
 check('admin: баннер виден на ?p=content', str_contains(req("$base/admin/?p=content", null, $ed)[1], 'Реквизиты не заполнены'));
 
 // --- M5: заявки, CSV, статистика
@@ -234,6 +261,10 @@ $au = db()->query("SELECT * FROM audit_log WHERE tbl = 'leads' AND row_key = '$l
 check('owner POST delete → 302, lead_events каскадом, в audit без ПДн', $code === 302 && $leads() === 1
     && db()->query("SELECT COUNT(*) FROM lead_events WHERE lead_id = $lid")->fetchColumn() == 0
     && $au && !str_contains($au['old_value'], 'Формула') && !str_contains($au['old_value'], '980'), "$code " . json_encode($au, JSON_UNESCAPED_UNICODE));
+db()->query('PRAGMA wal_checkpoint(TRUNCATE)')->fetchAll();
+// байты читает cat: свой open/close файла БД снял бы POSIX-блокировки SQLite этого процесса
+check('удалённая заявка: «Формула» нет в байтах БД после checkpoint (secure_delete)',
+    !str_contains((string)shell_exec('cat ' . escapeshellarg($dbPath) . '*'), 'Формула'));
 
 $hits = function () {
     $st = db()->prepare("SELECT hits FROM stats WHERE day = ? AND page = '/' AND ref_domain = 'ref-test.example' AND ua_class = 'mobile'");
