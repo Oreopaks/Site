@@ -67,7 +67,8 @@ function login(string $login, #[\SensitiveParameter] string $pass): array
     if (!str_contains($pass, "\0") && password_verify($pass, $u['pass_hash'] ?? $dummy) && $u) {
         $db->prepare('DELETE FROM login_attempts WHERE login = ?')->execute([$login]);
         if (password_needs_rehash($u['pass_hash'], PASSWORD_DEFAULT)) { // pw_ver не трогаем: пароль тот же
-            $db->prepare('UPDATE users SET pass_hash = ? WHERE id = ?')->execute([password_hash($pass, PASSWORD_DEFAULT), $u['id']]);
+            // AND pass_hash = старый: не затереть пароль, сменённый владельцем в ту же секунду
+            $db->prepare('UPDATE users SET pass_hash = ? WHERE id = ? AND pass_hash = ?')->execute([password_hash($pass, PASSWORD_DEFAULT), $u['id'], $u['pass_hash']]);
         }
         return ['ok', (int)$u['id'], (int)$u['pw_ver']];
     }
