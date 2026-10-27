@@ -132,6 +132,26 @@ Apache-хостинг: docroot → `public/` (там `.htaccess`: `ErrorDocument
 `sitemap.xml`, `Options -Indexes`). Если docroot сместить нельзя — положить в `var/`
 `.htaccess` с `Require all denied` и `chmod 0700 var`.
 
+### Timeweb (виртуальный хостинг, развёрнуто 2026-10-27)
+
+Аккаунт `co511959`, сервер `vh460.timeweb.ru` (СПб, RU), временный адрес `https://co511959.tw1.ru/`.
+Apache (mod_php) за nginx; лимиты загрузки по умолчанию 5000M — менять не нужно.
+`.htaccess` переводит http → https по `%{ENV:HTTPS}` / `X-Forwarded-Proto` (`%{HTTPS}` за прокси всегда off — цикл).
+
+- Раскладка: код в `~/regiondorstroy/{app,bin,db,public}`, БД `~/regiondorstroy/var/site.sqlite`
+  (создаётся первым запросом), `~/public_html` → симлинк на `regiondorstroy/public`
+  (заглушка Timeweb сохранена в `~/public_html.orig`).
+- PHP сайта выбирается в панели (Сайты → версия PHP): поставить **8.3**. В консоли — `/opt/php83/bin/php`
+  (`php` по умолчанию 8.2).
+- Обновление с машины разработчика (БД и загруженные фото не трогаются):
+  ```
+  rsync -az --delete --exclude 'public/assets/uploads/' -e "ssh -i ~/.ssh/id_ed25519_timeweb" \
+    app bin db public co511959@vh460.timeweb.ru:regiondorstroy/
+  ```
+- Владелец админки: `ssh co511959@vh460.timeweb.ru`, затем
+  `cd regiondorstroy && /opt/php83/bin/php bin/create-user.php <логин> owner`.
+- Бэкап БД: Timeweb копирует всё ежедневно (30 дней); вручную — `~/regiondorstroy/var/site.sqlite`.
+
 ## Источник дизайна
 
 Дизайн ведётся в **Claude Design**, проект `РегионДорСтрой — дизайн сайта`

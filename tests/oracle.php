@@ -11,6 +11,27 @@ $url = getenv('ORACLE_URL') ?: 'http://127.0.0.1:8080/';
 $expected = shell_exec('git -C ' . escapeshellarg($root) . ' show static-final:index.html');
 $actual = @file_get_contents($url);
 if (!$expected || !$actual) { fwrite(STDERR, "FAIL: нет эталона или ответа $url\n"); exit(1); }
+// решения заказчика 2026-10-27 — точечные правки эталона; каждая обязана найтись ровно один раз
+$tag = '<div style="font-size:10.5px;letter-spacing:3px;color:#FFC700;font-weight:600">';
+$sany = "Sany SY245H</span></dt>\n            <dd style=\"margin:0;white-space:nowrap\">";
+foreach ([
+    // карточки услуг не перекрашиваются в чёрный при наведении/нажатии
+    "  [data-svc]{transition:background-color .2s ease}\n" => '',
+    "  [data-svc] h3,[data-svc] p,[data-svc-num]{transition:color .2s ease}\n" => '',
+    "  [data-svc]:hover{background:#0d0d0d!important}\n" => '',
+    "  [data-svc]:hover h3{color:#fff!important}\n" => '',
+    "  [data-svc]:hover p{color:#d0d0d0!important}\n" => '',
+    "  [data-svc]:hover [data-svc-num]{color:#FFC700!important}\n" => '',
+    // вторая строка подписи под логотипом
+    "{$tag}ДОРОГИ · БЛАГОУСТРОЙСТВО</div>" => "{$tag}ДОРОГИ · БЛАГОУСТРОЙСТВО</div>{$tag}АРЕНДА СПЕЦТЕХНИКИ</div>",
+    // прайс: цены с НДС; Sany — 36 000 ₽ / смена вместо «договорная»
+    '>Цены на аренду</h3>' => '>Цены на аренду (с НДС)</h3>',
+    $sany . '<span style="display:inline-block;font-family:\'Oswald\';font-weight:600;font-size:13px;line-height:1.2;letter-spacing:1px;text-transform:uppercase;color:#FFC700;border:1px solid #FFC700;padding:5px 10px">договорная</span> <span style="font-size:14px;color:#a8a8a8;margin-left:4px">смена</span>'
+        => $sany . '<span style="font-family:\'Oswald\';font-weight:700;font-size:20px;color:#fff">36 000 ₽</span> <span style="font-size:14px;color:#a8a8a8">/ смена</span>',
+] as $from => $to) {
+    if (substr_count($expected, $from) !== 1) { fwrite(STDERR, "FAIL: правка эталона не найдена ровно один раз: $from\n"); exit(1); }
+    $expected = str_replace($from, $to, $expected);
+}
 
 function load(string $html): DOMDocument
 {

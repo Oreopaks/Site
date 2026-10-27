@@ -44,7 +44,7 @@ INSERT INTO settings (key, value, grp, label, type, trusted_html, required, sort
 ('fleet_label','— СОБСТВЕННЫЙ ПАРК','texts','Техника: надзаголовок','text',0,0,20),
 ('fleet_h2','Спецтехника в аренду','texts','Техника: заголовок','text',0,0,21),
 ('fleet_lead','Более 15 единиц техники с опытными операторами. Почасовая и сменная аренда по Орлу и области.','texts','Техника: подводка','textarea',0,0,22),
-('fleet_prices_h3','Цены на аренду','texts','Техника: заголовок прайса','text',0,0,23),
+('fleet_prices_h3','Цены на аренду (с НДС)','texts','Техника: заголовок прайса','text',0,0,23),
 ('fleet_cta_text','Нужна техника на объект?','texts','Техника: текст у кнопки','text',0,0,24),
 ('materials_label','— КАТАЛОГ ТОВАРОВ','texts','Материалы: надзаголовок','text',0,0,30),
 ('materials_h2','Сыпучие материалы','texts','Материалы: заголовок','text',0,0,31),
@@ -102,7 +102,7 @@ INSERT INTO fleet_cards (sort, title, img, alt, img_pos, price_kind, price, unit
 
 INSERT INTO fleet_prices (sort, name, model, price_kind, price, unit, is_sub) VALUES
 (1,'Экскаватор','Hyundai 170W-7','fixed',36000,'смена',0),
-(2,'Экскаватор гусеничный','Sany SY245H','contract',NULL,'смена',0),
+(2,'Экскаватор гусеничный','Sany SY245H','fixed',36000,'смена',0),
 (3,'Экскаватор-погрузчик','Hidromek HMK 102B','fixed',3500,'ч',0),
 (4,'с гидромолотом','','fixed',4500,'ч',1),
 (5,'Каток грунтовый','Bomag BW 211D-40','fixed',28000,'смена',0),

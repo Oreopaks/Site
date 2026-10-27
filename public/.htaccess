@@ -5,6 +5,10 @@ ErrorDocument 404 /404.php
 
 <IfModule mod_rewrite.c>
 RewriteEngine On
+# только HTTPS: cookie админки secure — по http вход молча не работал бы
+RewriteCond %{ENV:HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 RewriteRule ^sitemap\.xml$ sitemap.php [L]
 </IfModule>
 

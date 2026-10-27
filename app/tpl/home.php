@@ -99,11 +99,6 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
   ::selection{background:#FFC700;color:#111}
   a{text-decoration:none;color:inherit}
   a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid #FFC700;outline-offset:2px}
-  [data-svc]{transition:background-color .2s ease}
-  [data-svc] h3,[data-svc] p,[data-svc-num]{transition:color .2s ease}
-  [data-svc]:hover{background:#0d0d0d!important}
-  [data-svc]:hover h3{color:#fff!important}
-  [data-svc]:hover p{color:#d0d0d0!important}
   [data-burger]{display:none}
   @keyframes kenburns{0%{transform:scale(1.03) translate(0,0)}100%{transform:scale(1.13) translate(-2%,-1.5%)}}
   [data-kenburns]{animation:kenburns 24s ease-in-out infinite alternate;transform-origin:center}
@@ -111,7 +106,6 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
   [data-marquee]{animation:marquee 32s linear infinite;will-change:transform}
   [data-marquee-fast]{animation:marquee 22s linear infinite;will-change:transform}
   [data-progress]{position:fixed;top:0;left:0;height:3px;width:100%;background:#FFC700;z-index:200;transform:scaleX(0);transform-origin:0 50%;box-shadow:0 0 12px rgba(255,199,0,.6);will-change:transform}
-  [data-svc]:hover [data-svc-num]{color:#FFC700!important}
   [data-lift]{transition:transform .35s cubic-bezier(.22,.61,.36,1),border-color .25s ease,box-shadow .35s ease}
   [data-lift]:hover{transform:translateY(-8px);box-shadow:0 24px 50px -20px rgba(0,0,0,.55)}
   [data-imgzoom]{overflow:hidden}
@@ -182,6 +176,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
         <div style="line-height:1.05">
           <div style="font-family:'Oswald';font-weight:700;font-size:20px;letter-spacing:.5px;color:#fff">РЕГИОНДОРСТРОЙ</div>
           <div style="font-size:10.5px;letter-spacing:3px;color:#FFC700;font-weight:600">ДОРОГИ · БЛАГОУСТРОЙСТВО</div>
+          <div style="font-size:10.5px;letter-spacing:3px;color:#FFC700;font-weight:600">АРЕНДА СПЕЦТЕХНИКИ</div>
         </div>
       </a>
 
