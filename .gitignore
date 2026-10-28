@@ -11,3 +11,7 @@
 
 # Загруженные фото (админка)
 /public/assets/uploads/
+
+# Аудит: сырьё и сборка (в git только src/, final/, figures/)
+/docs/audit/raw/
+/docs/audit/build/

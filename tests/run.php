@@ -954,4 +954,19 @@ array_map('unlink', glob("$oldDb*"));
 check('M4: старая БД после миграции: nav #fleet → /arenda-spetstekhniki/, nav, изменённый вручную (#why), не тронут; services 1,2,3,5 → посадочные',
     $out === '#services,/arenda-spetstekhniki/,#why,#why,#contacts,/asfaltirovanie/,/blagoustroystvo/,/arenda-spetstekhniki/,#services,/shcheben-pesok-grunt/,#services', $out);
 
+$ht = file_get_contents("$root/public/.htaccess");
+$dirRule = strpos($ht, "RewriteCond %{REQUEST_FILENAME} -d\nRewriteCond %{HTTP_HOST} ^(?:www\\.)?(.+)$ [NC]\nRewriteRule [^/]$ https://%1%{REQUEST_URI}/ [R=301,L]");
+check('T4: .htaccess — каталог без «/» → https://<без www>/…/ одним хопом, правило до www- и https-правил',
+    $dirRule !== false && $dirRule < strpos($ht, '^www\\.(.+)$') && $dirRule < strpos($ht, '%{ENV:HTTPS}'));
+
+// ключи fact_* собираются из кода и сида — новый ключ без пункта в OWNER-ACTIONS роняет тест
+$facts = [];
+foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator("$root/app", FilesystemIterator::SKIP_DOTS)) as $f)
+    if (preg_match_all('/\bfact_[a-z0-9_]+/', file_get_contents($f->getPathname()), $m)) $facts = array_merge($facts, $m[0]);
+preg_match_all('/\bfact_[a-z0-9_]+/', file_get_contents("$root/db/seed-pages.sql"), $m);
+$facts = array_unique(array_merge($facts, $m[0]));
+$oa = @file_get_contents("$root/docs/OWNER-ACTIONS.md") ?: '';
+$miss = array_filter($facts, fn($k) => !str_contains($oa, "`$k`"));
+check('T5: docs/OWNER-ACTIONS.md есть и упоминает все fact_* из app/ и db/seed-pages.sql', $oa !== '' && count($facts) >= 13 && !$miss, implode(', ', $miss));
+
 exit($fail ? 1 : 0);

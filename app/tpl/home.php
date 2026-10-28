@@ -144,8 +144,10 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
     [data-r="g4"]{grid-template-columns:repeat(2,1fr)!important}
     [data-r="g5"]{grid-template-columns:repeat(3,1fr)!important}
   }
+  [data-hcall]{display:none;width:44px;height:42px;border:1.5px solid #3a3a3a;align-items:center;justify-content:center}
   @media (max-width:1120px){
     [data-hphone]{display:none!important}
+    [data-hcall]{display:inline-flex!important}
   }
   @media (max-width:1024px){
     [data-desknav]{display:none!important}
@@ -163,6 +165,13 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
     [data-r="stats"]{grid-template-columns:repeat(2,1fr)!important;gap:30px 16px!important}
   }
   @media (max-width:640px){
+    header>div:first-child{gap:10px!important}
+    header>div:first-child>a{gap:9px!important}
+    header>div:first-child>a img{width:40px!important;height:40px!important}
+    header>div:first-child>a div div:first-child{font-size:18px!important}
+    header>div:first-child>a div div+div{letter-spacing:1px!important}
+    header>div:first-child>div:last-child{gap:8px!important}
+    [data-burger]{width:44px!important}
     [data-r="g3"],[data-r="g4"],[data-r="g5"],[data-r="g2"],[data-r="foot"]{grid-template-columns:1fr!important}
     h1{font-size:33px!important}
     h2{font-size:32px!important}
@@ -217,6 +226,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
       <div style="display:flex;align-items:center;gap:18px;flex-shrink:0">
         <a href="tel:<?= e($s['phone_mobile']) ?>" data-hphone style="font-family:'Oswald';font-weight:600;font-size:18px;color:#fff;letter-spacing:.3px"><?= e($s['phone_mobile_fmt']) ?></a>
         <button onclick="openModal()" data-desknav style="background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope';font-weight:800;font-size:13.5px;padding:13px 22px;cursor:pointer;letter-spacing:.3px;text-transform:uppercase" style-hover="background:#ffd633">Заказать звонок</button>
+        <a href="tel:<?= e($s['phone_mobile']) ?>" data-hcall aria-label="Позвонить <?= e($s['phone_mobile_fmt']) ?>"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h3l2 5-2.2 1.3a12 12 0 0 0 5.7 5.7L16 15l5 2v3a2 2 0 0 1-2 2A17 17 0 0 1 4 5a2 2 0 0 1 2-2Z"/></svg></a>
         <button onclick="toggleMenu()" data-burger aria-label="Открыть меню" style="background:none;border:1.5px solid #3a3a3a;color:#fff;width:48px;height:42px;cursor:pointer;align-items:center;justify-content:center;flex-direction:column;gap:5px" style-hover="border-color:#FFC700">
           <span aria-hidden="true" style="display:block;width:20px;height:2px;background:#FFC700"></span>
           <span aria-hidden="true" style="display:block;width:20px;height:2px;background:#FFC700"></span>
@@ -327,7 +337,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
                 <span style="font-size:14px;color:#a8a8a8">/ <?= e($r['unit']) ?></span>
 <?php endif ?>
               </div>
-              <div style="margin-top:6px;font-size:12.5px;color:#FFC700;font-weight:700;letter-spacing:.5px">В АРЕНДУ →</div>
+              <button type="button" onclick="openRent(this)" style="display:block;margin-top:0;padding:6px 0;background:none;border:none;cursor:pointer;font-family:inherit;font-size:12.5px;color:#FFC700;font-weight:700;letter-spacing:.5px">В АРЕНДУ →</button>
             </div>
           </div>
 <?php endforeach ?>
@@ -347,7 +357,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
             <dt style="flex:1;min-width:0;font-weight:600"><?= e($r['name']) ?><?php if ($r['model'] !== ''): ?> <span style="color:#a8a8a8;font-weight:500;white-space:nowrap"><?= e($r['model']) ?></span><?php endif ?></dt>
 <?php endif ?>
 <?php if ($r['price_kind'] === 'contract'): ?>
-            <dd style="margin:0;white-space:nowrap"><?= $badge ?> <span style="font-size:14px;color:#a8a8a8;margin-left:4px"><?= e($r['unit']) ?></span></dd>
+            <dd style="margin:0;white-space:nowrap"><?= $badge ?> <span style="font-size:14px;color:#a8a8a8">/ <?= e($r['unit']) ?></span></dd>
 <?php else: ?>
             <dd style="margin:0;white-space:nowrap"><span style="font-family:'Oswald';font-weight:700;font-size:20px;color:#fff"><?= e(price($r['price_kind'], $r['price'])) ?></span> <span style="font-size:14px;color:#a8a8a8">/ <?= e($r['unit']) ?></span></dd>
 <?php endif ?>
@@ -523,9 +533,9 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
               <textarea placeholder="Комментарий (объём, адрес, сроки)" aria-label="Комментарий" rows="3" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none;resize:vertical" style-focus="border-color:#FFC700"></textarea>
               <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;cursor:pointer">
                 <input type="checkbox" required aria-label="Согласие на обработку персональных данных" style="margin-top:2px;width:16px;height:16px;accent-color:#FFC700;flex-shrink:0">
-                <span style="color:#8f8f8f;font-size:11.5px;line-height:1.45">Даю <a href="consent.php" target="_blank" style="text-decoration:underline">согласие на обработку персональных данных</a></span>
+                <span style="color:#8f8f8f;font-size:13px;line-height:1.45">Даю <a href="consent.php" target="_blank" style="text-decoration:underline">согласие на обработку персональных данных</a></span>
               </label>
-              <p class="pd-policy" style="margin:-8px 0 16px 25px;color:#8f8f8f;font-size:11.5px;line-height:1.45"><a href="privacy.php" target="_blank" style="text-decoration:underline">Политика обработки персональных данных</a></p>
+              <p class="pd-policy" style="margin:-8px 0 16px 25px;color:#8f8f8f;font-size:13px;line-height:1.45"><a href="privacy.php" target="_blank" style="text-decoration:underline">Политика обработки персональных данных</a></p>
               <input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
               <button type="submit" style="width:100%;background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope';font-weight:800;font-size:15px;padding:16px;cursor:pointer;text-transform:uppercase;letter-spacing:.4px" style-hover="background:#ffd633">Отправить заявку</button>
             </form>
@@ -566,7 +576,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
           </div>
         </div>
       </div>
-      <div style="padding-top:22px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:12.5px;color:#6a6a6a">
+      <div style="padding-top:22px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:12.5px;color:#8f8f8f">
         <span><?= e($s['copyright']) ?></span>
         <span><?= e($s['org_name']) ?> · ИНН <?= e(stub($s, 'org_inn', '[УКАЗАТЬ ИНН]')) ?> · ОГРН <?= e(stub($s, 'org_ogrn', '[УКАЗАТЬ ОГРН]')) ?> · <?= e(stub($s, 'org_address', '[УКАЗАТЬ ЮР. АДРЕС]')) ?></span>
         <span><a href="privacy.php" style-hover="color:#FFC700">Политика конфиденциальности</a> · <a href="consent.php" style-hover="color:#FFC700">Согласие на обработку ПДн</a><?php if (trim($s['metrika_id']) !== ''): ?> · <a href="#" onclick="cookieSettings();return false" style-hover="color:#FFC700">Настройки cookie</a><?php endif ?></span>
@@ -592,16 +602,16 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
             <h3 style="font-family:'Oswald';font-weight:600;font-size:26px;text-transform:uppercase;margin-bottom:6px"><span id="modalTitle"><?= e($s['modal_call_title']) ?></span></h3>
             <p style="color:#6a6a6a;font-size:14px;margin-bottom:18px"><span id="modalDesc"><?= e($s['modal_call_text']) ?></span></p>
             <div id="modalMat" style="display:none">
-              <div style="background:#f4f4f2;border-left:3px solid #FFC700;padding:11px 14px;margin-bottom:18px;font-size:14px;font-weight:700">Материал: <span id="modalMatName"></span></div>
+              <div style="background:#f4f4f2;border-left:3px solid #FFC700;padding:11px 14px;margin-bottom:18px;font-size:14px;font-weight:700"><span id="modalMatLbl">Материал</span>: <span id="modalMatName"></span></div>
             </div>
             <form onsubmit="submitModal(event)">
               <input required placeholder="Ваше имя" aria-label="Ваше имя" autocomplete="name" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
               <input required placeholder="Телефон" aria-label="Телефон" autocomplete="tel" inputmode="tel" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none" style-focus="border-color:#FFC700">
               <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;cursor:pointer">
                 <input type="checkbox" required aria-label="Согласие на обработку персональных данных" style="margin-top:2px;width:16px;height:16px;accent-color:#FFC700;flex-shrink:0">
-                <span style="color:#888;font-size:11.5px;line-height:1.45">Даю <a href="consent.php" target="_blank" style="text-decoration:underline">согласие на обработку персональных данных</a></span>
+                <span style="color:#6a6a6a;font-size:13px;line-height:1.45">Даю <a href="consent.php" target="_blank" style="text-decoration:underline">согласие на обработку персональных данных</a></span>
               </label>
-              <p class="pd-policy" style="margin:-8px 0 16px 25px;color:#888;font-size:11.5px;line-height:1.45"><a href="privacy.php" target="_blank" style="text-decoration:underline">Политика обработки персональных данных</a></p>
+              <p class="pd-policy" style="margin:-8px 0 16px 25px;color:#6a6a6a;font-size:13px;line-height:1.45"><a href="privacy.php" target="_blank" style="text-decoration:underline">Политика обработки персональных данных</a></p>
               <input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
               <button type="submit" style="width:100%;background:#0d0d0d;color:#fff;border:none;font-family:'Manrope';font-weight:800;font-size:15px;padding:16px;cursor:pointer;text-transform:uppercase;letter-spacing:.4px" style-hover="background:#FFC700;color:#0d0d0d"><span id="modalBtn"><?= e($s['modal_call_btn']) ?></span></button>
             </form>
@@ -634,15 +644,18 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
       mMat=document.getElementById('modalMat');
   window.toggleMenu=function(){ if(menu) menu.style.display=(menu.style.display==='none'?'block':'none'); };
   window.closeMenu=function(){ if(menu) menu.style.display='none'; };
-  function setModal(t,d,b,mat){
+  function setModal(t,d,b,mat,svc){
     var T=document.getElementById('modalTitle'),D=document.getElementById('modalDesc'),B=document.getElementById('modalBtn');
     if(T)T.textContent=t; if(D)D.textContent=d; if(B)B.textContent=b;
-    if(mMat){ if(mat){ mMat.style.display=''; var n=document.getElementById('modalMatName'); if(n)n.textContent=mat; } else mMat.style.display='none'; }
+    if(mMat){ mMat.setAttribute('data-svc',svc||''); var L=document.getElementById('modalMatLbl'); if(L)L.textContent=svc||'Материал';
+      if(mat){ mMat.style.display=''; var n=document.getElementById('modalMatName'); if(n)n.textContent=mat; } else mMat.style.display='none'; }
   }
   function show(){ if(overlay)overlay.style.display='block'; if(mForm)mForm.style.display=''; if(mOk)mOk.style.display='none'; document.body.style.overflow='hidden'; }
   window.openModal=function(){ setModal('<?= jsstr($s['modal_call_title']) ?>','<?= jsstr($s['modal_call_text']) ?>','<?= jsstr($s['modal_call_btn']) ?>',null); show(); };
   window.openModalMobile=function(){ closeMenu(); window.openModal(); };
-  window.openCalc=function(name){ setModal('<?= jsstr($s['modal_calc_title']) ?>','<?= jsstr($s['modal_calc_text']) ?>','<?= jsstr($s['modal_calc_btn']) ?>',name); show(); };
+  window.openCalc=function(name,svc){ setModal('<?= jsstr($s['modal_calc_title']) ?>','<?= jsstr($s['modal_calc_text']) ?>','<?= jsstr($s['modal_calc_btn']) ?>',name,svc); show(); };
+  // карточка техники: та же форма расчёта, услуга «Аренда спецтехники» + название из заголовка карточки
+  window.openRent=function(btn){ var h=btn.closest('[data-lift]').querySelector('h3'); window.openCalc(h?h.textContent:'','Аренда спецтехники'); };
   window.closeModal=function(){ if(overlay)overlay.style.display='none'; document.body.style.overflow=''; };
   // заявка уходит только на свой сервер (send.php); без галочки согласия запрос не отправляется
   function send(fd, form, onOk){
@@ -662,7 +675,9 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
   function val(f,sel){ var el=f.querySelector(sel); return el?el.value.trim():''; }
   window.submitModal=function(e){ e.preventDefault(); var f=e.target, fd=new FormData();
     var mEl=document.getElementById('modalMat'), mat=(mEl&&mEl.style.display!=='none')?(((document.getElementById('modalMatName')||{}).textContent)||''):'';
-    fd.append('source', mat?'material':'call'); fd.append('material', mat);
+    var svc=(mEl&&mat&&mEl.getAttribute('data-svc'))||'';
+    if(svc){ fd.append('source','calc'); fd.append('service',svc); fd.append('comment','Техника: '+mat); }
+    else { fd.append('source', mat?'material':'call'); fd.append('material', mat); }
     fd.append('name', val(f,'[autocomplete=name]')); fd.append('phone', val(f,'[autocomplete=tel]'));
     send(fd, f, function(){ if(mForm)mForm.style.display='none'; if(mOk)mOk.style.display=''; });
   };
@@ -673,38 +688,21 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
   };
   document.addEventListener('keydown', function(e){ if(e.key==='Escape') window.closeModal(); });
 
-  // scroll-reveal + count-up + scroll-progress (ported from the design)
+  // count-up + scroll-progress. ponytail: scroll-reveal убран (2026-10-28) — [data-anim] никогда не прячется,
+  // карточки видны сразу; при reduced-motion/без IntersectionObserver счётчики просто показывают итог
   document.addEventListener('DOMContentLoaded', function(){
-    var els=Array.prototype.slice.call(document.querySelectorAll('[data-anim]'));
     var reduce=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if(reduce){ els.forEach(function(el){ el.style.opacity='1'; el.style.clipPath='none'; }); return; }
-    var FROM={'fade-up':'translateY(46px)','fade-down':'translateY(-46px)','slide-left':'translateX(-72px)','slide-right':'translateX(72px)','zoom-in':'scale(.82)','pop':'scale(.55)','tilt':'perspective(1000px) rotateX(22deg) translateY(48px)','rotate-rise':'translateY(48px) rotate(-4deg)','rise':'translateY(40px) scale(.95)','clip-left':'none'};
-    var SOFT='cubic-bezier(.22,.61,.36,1)', EASE={'pop':'cubic-bezier(.34,1.56,.64,1)','rotate-rise':'cubic-bezier(.34,1.4,.64,1)'};
-    var hoverTrans='background-color .25s ease, border-color .25s ease, color .25s ease';
-    function hide(el){ var t=el.getAttribute('data-anim'); el.style.transitionDelay='0ms';
-      if(t==='clip-left'){ el.style.clipPath='inset(0 100% 0 0)'; el.style.transition='clip-path .9s cubic-bezier(.76,0,.24,1)'; }
-      else{ var e=EASE[t]||SOFT; el.style.opacity='0'; el.style.transform=FROM[t]||'translateY(40px)'; el.style.transition='opacity .7s '+e+', transform .8s '+e+', '+hoverTrans; }
-      el.style.willChange='opacity, transform, clip-path'; }
     function runCount(span){ if(span.__c)return; span.__c=true; var to=parseInt(span.getAttribute('data-to'),10)||0, sfx=span.getAttribute('data-suffix')||'', dur=1100, t0=performance.now();
       function tick(now){ var p=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-p,3); span.textContent=Math.round(e*to)+sfx; if(p<1)requestAnimationFrame(tick); } requestAnimationFrame(tick); }
-    function showEl(el, delay){ var t=el.getAttribute('data-anim'); el.style.transitionDelay=(delay||0)+'ms';
-      if(t==='clip-left') el.style.clipPath='inset(0 0 0 0)'; else{ el.style.opacity='1'; el.style.transform='none'; }
-      var cs=el.matches('[data-count]')?[el]:Array.prototype.slice.call(el.querySelectorAll('[data-count]'));
-      cs.forEach(function(c){ setTimeout(function(){ runCount(c); }, (delay||0)+220); });
-      setTimeout(function(){ el.style.transitionDelay='0ms'; el.style.transition=''; el.style.willChange='auto'; }, (delay||0)+950); }
     var bar=document.querySelector('[data-progress]');
     if(bar){ var maxH=0,ticking=false;
       function measure(){ maxH=document.documentElement.scrollHeight-window.innerHeight; }
       function paint(){ ticking=false; bar.style.transform='scaleX('+(maxH>0?Math.min(1,window.scrollY/maxH):0)+')'; }
       function onScroll(){ if(!ticking){ ticking=true; requestAnimationFrame(paint); } }
       measure(); paint(); window.addEventListener('scroll',onScroll,{passive:true}); window.addEventListener('resize',function(){ measure(); paint(); },{passive:true}); }
-    function gi(el){ var sibs=Array.prototype.slice.call(el.parentElement.children).filter(function(c){return c.hasAttribute('data-anim');}); return Math.max(0,sibs.indexOf(el)); }
-    if(!('IntersectionObserver' in window)){ els.forEach(function(el){ el.style.opacity='1'; el.style.clipPath='none'; }); return; }
-    els.forEach(hide);
-    var io=new IntersectionObserver(function(ents){ ents.forEach(function(e){ var el=e.target, r=e.intersectionRatio;
-      if(!el.__s && e.isIntersecting && r>=0.15){ el.__s=true; showEl(el, Math.min(gi(el),8)*90); }
-      else if(el.__s && r===0){ el.__s=false; hide(el); } }); }, {threshold:[0,0.15], rootMargin:'0px 0px -6% 0px'});
-    els.forEach(function(el){ io.observe(el); });
+    if(reduce || !('IntersectionObserver' in window)) return;
+    var io=new IntersectionObserver(function(ents){ ents.forEach(function(e){ if(e.isIntersecting){ io.unobserve(e.target); runCount(e.target); } }); }, {threshold:0.15});
+    Array.prototype.slice.call(document.querySelectorAll('[data-count]')).forEach(function(c){ io.observe(c); });
   });
 })();
 </script>
