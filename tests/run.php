@@ -53,6 +53,17 @@ function reqFile(string $url, array $fields, string $bytes, string $mime, string
 $leads = fn() => (int)db()->query('SELECT COUNT(*) FROM leads')->fetchColumn();
 $lead = ['source' => 'calc', 'name' => 'Тест', 'phone' => '+7 980 000-00-00', 'service' => 'Благоустройство', 'comment' => 'x', 'website' => ''];
 
+// --- M2: снимок / до любых правок settings; посещение посадочных не меняет главную (эталон «до M2» — oracle.php)
+[, $home0] = req("$base/");
+[, $rent0] = req("$base/arenda-spetstekhniki/");
+[, $mat0] = req("$base/shcheben-pesok-grunt/");
+[, $home1] = req("$base/");
+check('M2: / байт в байт тот же после посещения посадочных', $home0 !== '' && $home0 === $home1);
+$at = fn(string $h, string $id): int|false => strpos($h, "id=\"$id\"");
+check('порядок /: services < fleet < materials', $at($home0, 'services') !== false && $at($home0, 'services') < $at($home0, 'fleet') && $at($home0, 'fleet') < $at($home0, 'materials'));
+check('порядок /arenda-spetstekhniki/: fleet < services', $at($rent0, 'fleet') !== false && $at($rent0, 'services') !== false && $at($rent0, 'fleet') < $at($rent0, 'services'));
+check('порядок /shcheben-pesok-grunt/: materials < services', $at($mat0, 'materials') !== false && $at($mat0, 'services') !== false && $at($mat0, 'materials') < $at($mat0, 'services'));
+
 // --- send.php
 [$code, $body] = req("$base/send.php", $lead);
 check('lead without consent → 400', $code === 400 && json_decode($body, true) === ['ok' => false, 'error' => 'consent'], "$code $body");
@@ -233,7 +244,7 @@ $sv = db()->query('SELECT * FROM services WHERE sort = 2')->fetch();
 [$code] = req("$base/admin/?p=content&t=services&a=save", ['_csrf' => $csrfOf($ed), 'id' => $sv['id'], 'title' => $sv['title'], 'text' => $sv['text'],
     'href' => 'javascript:x', 'in_form' => '1', 'in_footer' => '1'], $ed);
 check('href "javascript:x" через POST админки → 422', $code === 422
-    && db()->query("SELECT href FROM services WHERE id = {$sv['id']}")->fetchColumn() === '#services', (string)$code);
+    && db()->query("SELECT href FROM services WHERE id = {$sv['id']}")->fetchColumn() === $sv['href'], (string)$code);
 [$code] = req("$base/admin/?p=content&t=fleet_cards&a=save", ['_csrf' => $csrfOf($ed), 'id' => 1, 'title' => 'x', 'img' => 'assets/../../var/x.webp',
     'alt' => 'x', 'img_pos' => '50% 50%', 'price_kind' => 'contract', 'price' => '', 'unit' => ''], $ed);
 check('img "assets/../../var/x.webp" → 422, черновик не создан', $code === 422 && $drafts() === 0, (string)$code);
@@ -256,6 +267,43 @@ $out = stream_get_contents($pp[1]);
 proc_close($p);
 array_map('unlink', glob("$oldDb*"));
 check('миграция: старая БД без drafts/trash → drafts, trash, trash_at', $out === 'drafts,trash,trash_at', $out);
+
+// --- ADR-0009 M1: ключи посадочных, анкета, коды вебмастеров
+$keys = "SELECT (SELECT COUNT(*) FROM settings WHERE key LIKE 'pg\\_%' ESCAPE '\\' AND grp = 'pages') || ',' || (SELECT COUNT(*) FROM settings WHERE key LIKE 'fact\\_%' ESCAPE '\\' AND grp = 'facts' AND required = 0 AND value = '')"
+    . " || ',' || (SELECT COUNT(*) FROM settings WHERE key IN ('yandex_verification', 'google_verification') AND grp = 'metrika' AND value = '')";
+check('свежая БД: 16 pg_*, 13 fact_*, 2 *_verification', db()->query($keys)->fetchColumn() === '16,13,2', db()->query($keys)->fetchColumn());
+$o = new PDO("sqlite:$oldDb");
+$o->exec(file_get_contents("$root/db/schema.sql")); // схема без сида: settings пуста
+$o = null;
+$p = proc_open([PHP_BINARY, '-r', 'require "app/bootstrap.php"; echo db()->query($argv[1])->fetchColumn();', $keys],
+    [0 => ['file', '/dev/null', 'r'], 1 => ['pipe', 'w'], 2 => ['file', '/dev/null', 'w']], $pp, $root, ['RDS_DB' => $oldDb] + getenv());
+$out = stream_get_contents($pp[1]);
+proc_close($p);
+array_map('unlink', glob("$oldDb*"));
+check('миграция: старая БД без pg_* → 16 pg_*, 13 fact_*, 2 *_verification', $out === '16,13,2', $out);
+$set('pg_rent_h1', 'Правка владельца');
+$snap = fn() => json_encode(db()->query('SELECT * FROM settings ORDER BY key')->fetchAll(), JSON_UNESCAPED_UNICODE);
+$s0 = $snap();
+db()->exec(file_get_contents("$root/db/seed-pages.sql"));
+check('повторный seed-pages.sql ничего не меняет (правка pg_rent_h1 цела)', $snap() === $s0 && str_contains($s0, 'Правка владельца'));
+$set('pg_rent_h1', 'Аренда спецтехники в Орле и Орловской области');
+[$code, $html] = req("$base/admin/?p=settings&g=pages", null, $ed);
+check('editor g=pages → 200, статус «/asfaltirovanie/ не опубликована — заполните: …», rent опубликована', $code === 200
+    && str_contains($html, '/asfaltirovanie/ не опубликована — заполните: Какие асфальтовые работы')
+    && str_contains($html, '/arenda-spetstekhniki/ опубликована') && str_contains($html, '>Посадочные<') && !str_contains($html, '>Анкета<'), (string)$code);
+[$code] = req("$base/admin/?p=settings&g=facts", null, $ed);
+[$code2, $html] = req("$base/admin/?p=settings&g=facts", null, $mgr);
+check('g=facts → 403 у editor, 200 у manager со статусом страниц', $code === 403 && $code2 === 200
+    && str_contains($html, '/blagoustroystvo/ не опубликована — заполните: Что входит в благоустройство'), "$code $code2");
+[$code] = req("$base/admin/?p=settings&g=metrika", null, $mgr);
+[$code2] = req("$base/admin/?p=settings&g=metrika&a=save", ['_csrf' => $csrfOf($boss), 'yandex_verification' => 'a"b'], $boss);
+$yv = fn() => db()->query("SELECT value FROM settings WHERE key = 'yandex_verification'")->fetchColumn();
+check('g=metrika: manager → 403; owner yandex_verification=\'a"b\' → 422, не сохранено', $code === 403 && $code2 === 422 && $yv() === '', "$code $code2");
+[$code] = req("$base/admin/?p=settings&g=metrika&a=save", ['_csrf' => $csrfOf($boss), 'yandex_verification' => 'abc_DEF-123'], $boss);
+check('owner yandex_verification=abc_DEF-123 → 302, сохранено', $code === 302 && $yv() === 'abc_DEF-123', (string)$code);
+$set('yandex_verification', '');
+[$code] = req("$base/admin/?p=settings&g=facts&a=save", ['_csrf' => $csrfOf($mgr), 'fact_zone' => str_repeat('я', 501)], $mgr);
+check('fact_zone 501 символ → 422', $code === 422 && db()->query("SELECT value FROM settings WHERE key = 'fact_zone'")->fetchColumn() === '', (string)$code);
 
 $sv = db()->query('SELECT * FROM services ORDER BY sort, id LIMIT 1')->fetch();
 $svPost = ['id' => $sv['id'], 'title' => 'M1 черновик', 'text' => $sv['text'], 'href' => $sv['href'], 'in_form' => $sv['in_form'], 'in_footer' => $sv['in_footer']];
@@ -297,7 +345,7 @@ check('превью без черновика → живые данные', str_
 
 // --- M8/M2: добавить/удалить, min/max, корзина, undo, revert
 $dj = fn() => json_decode((string)db()->query('SELECT data FROM drafts')->fetchColumn(), true);
-$loc = fn(array $h) => preg_match('~^Location: (.*)$~m', implode("\n", $h), $m) ? $m[1] : '';
+$loc = fn(array $h): string => trim(substr((string)current(preg_grep('~^Location:~i', $h) ?: ['']), 9));
 $content = fn(string $t, string $a, array $p, string $c) => req("$base/admin/?p=content&t=$t&a=$a", ['_csrf' => $csrfOf($c)] + $p, $c);
 $imgOf = fn(string $tbl) => db()->query("SELECT img FROM $tbl LIMIT 1")->fetchColumn();
 // валидная новая строка для каждого из 10 списков (заголовок — уникальная метка)
@@ -748,5 +796,162 @@ $set('metrika_id', '12345');
 check('metrika_id=12345 → #cookie-bar hidden, ссылка «Настройки cookie», раздел в политике', str_contains($html, '<div id="cookie-bar" hidden')
     && str_contains($html, 'Настройки cookie') && str_contains($priv, 'подключается только после нажатия «Принять»'));
 $set('metrika_id', '');
+
+// --- M2: маршрутизация и шаблон посадочных
+$loc = fn(array $h): string => (string)preg_replace('~^Location:\s*~i', '', (string)(preg_grep('~^Location:~i', $h) ?: [''])[array_key_first(preg_grep('~^Location:~i', $h) ?: [''])]);
+$pageHits = fn(string $page) => (int)db()->query('SELECT COALESCE(SUM(hits), 0) FROM stats WHERE page = ' . db()->quote($page))->fetchColumn();
+foreach (['arenda-spetstekhniki', 'shcheben-pesok-grunt'] as $slug) {
+    $h0 = $pageHits("/$slug/");
+    $t = microtime(true);
+    [$code] = req("$base/$slug/");
+    $dt = microtime(true) - $t;
+    check("M2: /$slug/ → 200 за <1,0 с, hit('/$slug/')", $code === 200 && $dt < 1.0 && $pageHits("/$slug/") === $h0 + 1, sprintf('%d %.3f', $code, $dt));
+    [$code, , $h] = req("$base/$slug?utm_source=x");
+    check("M2: /$slug?utm_source=x → 301 Location /$slug/", $code === 301 && $loc($h) === "/$slug/", "$code " . $loc($h));
+}
+[$code] = req("$base/asfaltirovanie/");
+check('M2: /asfaltirovanie/ без fact_asphalt_works → 404', $code === 404, (string)$code);
+$set('fact_asphalt_works', 'x');
+[$code] = req("$base/asfaltirovanie/");
+check("M2: fact_asphalt_works='x' → /asfaltirovanie/ 200", $code === 200, (string)$code);
+$bad = [];
+foreach (['/nope/', '/Arenda-spetstekhniki/', '/a/b/', '/blagoustroystvo/', '/blagoustroystvo', '/arenda-spetstekhniki/x'] as $u) {
+    [$code] = req("$base$u");
+    if ($code !== 404) $bad[] = "$u $code";
+}
+check('M2: /nope/, /Arenda-spetstekhniki/, /a/b/, неопубликованная blago (со слэшем и без), /slug/x → 404', !$bad, implode(', ', $bad));
+[$code, , $h] = req("$base/admin");
+check('M2: /admin → 301 /admin/', $code === 301 && str_ends_with($loc($h), '/admin/'), "$code " . $loc($h));
+$set('fact_blago_works', "Дворы\nПлощадки");
+$s2 = db()->query('SELECT key, value FROM settings')->fetchAll(PDO::FETCH_KEY_PAIR);
+$titles = $descs = $errs = [];
+foreach (['' => null] + array_combine(array_column(PAGES, 'slug'), array_keys(PAGES)) as $slug => $id) {
+    $u = $slug === '' ? '/' : "/$slug/";
+    [$code, $html] = req("$base$u");
+    preg_match('~<title>(.*?)</title>~s', $html, $m1);
+    preg_match('~<meta name="description" content="([^"]*)">~', $html, $m2);
+    $titles[] = $m1[1] ?? '';
+    $descs[] = $m2[1] ?? '';
+    $canon = '<link rel="canonical" href="' . e($s2['base_url'] . ($slug === '' ? '' : "$slug/")) . '">';
+    $h1ok = substr_count($html, '<h1') === 1 && ($id === null || preg_match('~<h1[^>]*>' . preg_quote(e($s2["pg_{$id}_h1"]), '~') . '</h1>~', $html));
+    $base0 = str_contains($html, '<meta charset="utf-8">' . "\n" . '<base href="/">');
+    if ($code !== 200 || !$h1ok || !str_contains($html, $canon) || $base0 !== ($id !== null) || ($id !== null && str_contains($html, 'id="why"'))) $errs[] = "$u $code h1=" . (int)$h1ok . ' base=' . (int)$base0;
+}
+check('M2: 5 страниц → 200, ровно один <h1> (= pg_*_h1), canonical base_url+slug/, <base href="/"> только на посадочных, нет #why', !$errs, implode('; ', $errs));
+check('M2: title и description уникальны среди 5 страниц', count(array_unique($titles)) === 5 && count(array_unique($descs)) === 5 && !in_array('', $titles, true), implode(' | ', $titles));
+[, $html] = req("$base/blagoustroystvo/");
+check('M2: «Виды работ» на blago из fact_blago_works', str_contains($html, '>Виды работ</h2>') && str_contains($html, "Дворы\nПлощадки"));
+check('M2: в landing.php нет href="#', !str_contains(file_get_contents("$root/app/tpl/landing.php"), 'href="#'));
+$set('fact_asphalt_works', '');
+$set('fact_blago_works', '');
+$n0 = $leads();
+[$code, $body] = req("$base/send.php", ['service' => 'Аренда спецтехники'] + $lead + ['consent' => '1'], '', ["Referer: $base/arenda-spetstekhniki/"]);
+$svc = db()->query('SELECT service FROM leads ORDER BY id DESC LIMIT 1')->fetchColumn();
+check('M2: заявка с посадочной (send.php, service) → 200, в БД с услугой', $code === 200 && $leads() === $n0 + 1 && $svc === 'Аренда спецтехники', "$code $body");
+
+// --- M3: JSON-LD @graph, крошки, FAQ, sitemap, коды вебмастеров
+$s3 = db()->query('SELECT key, value FROM settings')->fetchAll(PDO::FETCH_KEY_PAIR);
+$lds = fn(string $html): array => array_map(fn($j) => json_decode($j, true), preg_match_all('~<script type="application/ld\+json">(.*?)</script>~s', $html, $m) ? $m[1] : []);
+$graph = fn(string $html): array => array_column(array_merge(...array_map(fn($d) => $d['@graph'] ?? [], $lds($html))), null, '@type');
+$sitemap = function () use ($base): ?array {
+    $x = @simplexml_load_string(req("$base/sitemap.xml")[1]);
+    if ($x === false) return null;
+    $out = [];
+    foreach ($x->url as $u) $out[] = (string)$u->loc;
+    return $out;
+};
+$pub = fn() => array_keys(array_filter(PAGES, fn($id) => !page_gaps(db()->query('SELECT key, value FROM settings')->fetchAll(PDO::FETCH_KEY_PAIR), $id), ARRAY_FILTER_USE_KEY));
+$errs = [];
+foreach (['' => null] + array_combine(array_column(PAGES, 'slug'), array_keys(PAGES)) as $slug => $id) {
+    if ($id !== null && !in_array($id, $pub(), true)) continue;
+    [, $html] = req($base . ($slug === '' ? '/' : "/$slug/"));
+    $d = $lds($html);
+    if (!$d || in_array(null, $d, true)) $errs[] = "$slug: ld+json не декодируется";
+    if (str_contains($html, 'Review') || str_contains($html, 'AggregateRating')) $errs[] = "$slug: Review/AggregateRating";
+    if ($id === null) continue;
+    $canon = $s3['base_url'] . "$slug/";
+    $g = $graph($html);
+    $bc = array_column($g['BreadcrumbList']['itemListElement'] ?? [], 'item', 'position');
+    if (!isset($g['Service'], $g['BreadcrumbList']) || $bc !== [1 => $s3['base_url'], 2 => $canon]) $errs[] = "$slug: @graph/крошки " . json_encode($bc);
+    if (($g['Service']['url'] ?? '') !== $canon || ($g['Service']['name'] ?? '') !== $s3["pg_{$id}_h1"] || isset($g['Service']['provider']['@context'])) $errs[] = "$slug: Service";
+    if (!preg_match('~<nav aria-label="Хлебные крошки"[^>]*><a href="/"[^>]*>Главная</a> / <span aria-current="page">' . preg_quote(e(PAGES[$id]['name']), '~') . '</span></nav>~', $html)) $errs[] = "$slug: видимые крошки";
+    if (isset($g['FAQPage']) || str_contains($html, 'Вопросы и ответы')) $errs[] = "$slug: FAQ без фактов";
+}
+check('M3: ld+json декодируется, @graph Service+BreadcrumbList (1 base_url, 2 canonical), nav «Хлебные крошки», без фактов нет FAQ, нет Review/AggregateRating', !$errs, implode('; ', $errs));
+$loc0 = $sitemap();
+$want = fn() => array_merge([$s3['base_url']], array_map(fn($id) => $s3['base_url'] . PAGES[$id]['slug'] . '/', $pub()));
+check('M3: sitemap — валидный XML, <loc> = главная + rent + mat, без /asfaltirovanie/', $loc0 === $want() && count($loc0) === 3 && !in_array($s3['base_url'] . 'asfaltirovanie/', $loc0, true), json_encode($loc0));
+$set('fact_asphalt_works', 'Дворы и проезды');
+$set('fact_blago_works', 'Плитка');
+$set('fact_warranty', '2 года');
+$loc1 = $sitemap();
+check('M3: после факта /asfaltirovanie/ и /blagoustroystvo/ в sitemap', $loc1 === $want() && count($loc1) === 5 && in_array($s3['base_url'] . 'asfaltirovanie/', $loc1, true), json_encode($loc1));
+$errs = [];
+foreach (['asfaltirovanie', 'blagoustroystvo', 'arenda-spetstekhniki'] as $slug) {
+    [, $html] = req("$base/$slug/");
+    $f = $graph($html)['FAQPage'] ?? null;
+    $q = $f['mainEntity'] ?? [];
+    $vis = preg_match_all('~<h3[^>]*>Какая гарантия на работы\?</h3>\s*<p[^>]*>2 года</p>~', $html);
+    if ($slug === 'arenda-spetstekhniki') { if ($f || $vis) $errs[] = "$slug: FAQ гарантии не на своей странице"; continue; }
+    if (count($q) !== 1 || ($q[0]['@type'] ?? '') !== 'Question' || ($q[0]['acceptedAnswer']['text'] ?? '') !== '2 года' || $vis !== 1) $errs[] = "$slug: " . json_encode($f, JSON_UNESCAPED_UNICODE);
+}
+check("M3: fact_warranty='2 года' → FAQPage ровно с одним Question на asf и blago, ответ виден в HTML; на rent нет", !$errs, implode('; ', $errs));
+$set('fact_snt', '');
+[, $html] = req("$base/asfaltirovanie/");
+$noSnt = !str_contains($html, 'дороги в СНТ');
+$set('fact_snt', 'Подсыпка <b>щебнем</b>');
+[, $html] = req("$base/asfaltirovanie/");
+[, $hb] = req("$base/blagoustroystvo/");
+check('M3: секция СНТ на asf только с fact_snt, текст экранирован, на blago нет', $noSnt && str_contains($html, '>Щебёночные дороги и дороги в СНТ</h2>') && str_contains($html, 'Подсыпка &lt;b&gt;щебнем&lt;/b&gt;') && !str_contains($hb, 'дороги в СНТ'));
+foreach (['fact_asphalt_works', 'fact_blago_works', 'fact_warranty', 'fact_snt'] as $k) $set($k, '');
+foreach (['yandex' => 'yandex-verification', 'google' => 'google-site-verification'] as $k => $tag) {
+    $set("{$k}_verification", '');
+    $none = !str_contains(req("$base/")[1], $tag);
+    $set("{$k}_verification", 'Code_1-x');
+    [, $html] = req("$base/");
+    $head = explode('</head>', $html, 2)[0];
+    $land = req("$base/arenda-spetstekhniki/")[1] . req("$base/shcheben-pesok-grunt/")[1];
+    check("M3: {$k}_verification пуст → тега нет; задан → ровно один <meta name=\"$tag\"> в <head> главной, на посадочных нет",
+        $none && substr_count($html, "<meta name=\"$tag\"") === 1 && str_contains($head, "<meta name=\"$tag\" content=\"Code_1-x\">") && !str_contains($land, $tag));
+    $set("{$k}_verification", '');
+}
+
+// --- ADR-0009 M4: перелинковка
+check('M4: valid_href /arenda-spetstekhniki/ → true, //evil/x.php и /a/b/ → false', valid_href('/arenda-spetstekhniki/') && !valid_href('//evil/x.php') && !valid_href('/a/b/'));
+db()->exec("UPDATE services SET href = '/asfaltirovanie/' WHERE id = 1"); // выше тест D5 перезаписал href строки sort=1
+$t1 = e(db()->query('SELECT title FROM services WHERE id = 1')->fetchColumn()); // название меняли тесты выше
+$cut = fn(string $h, string $from, string $to) => explode($to, explode($from, $h, 2)[1] ?? '', 2)[0];
+[, $html] = req("$base/");
+$errs = [];
+foreach (['arenda-spetstekhniki', 'shcheben-pesok-grunt'] as $slug) {
+    if (substr_count($html, "href=\"/$slug/\" style=\"") !== 2) $errs[] = "$slug: меню"; // style= есть только у пунктов меню
+    if (!str_contains($cut($html, 'id="services"', '</section>'), "<a href=\"/$slug/\">")) $errs[] = "$slug: карточка";
+    if (!str_contains($cut($html, '<footer', '</footer>'), "href=\"/$slug/\"")) $errs[] = "$slug: подвал";
+}
+$f0 = $cut($html, '<footer', '</footer>');
+check('M4: на / ссылки на rent и mat в меню (2), в #services и в footer; asf (не опубл.) в подвале → #services, без ссылки в карточке', !$errs
+    && str_contains($f0, "<a href=\"#services\" style-hover=\"color:#FFC700\">$t1</a>") && !str_contains($html, '/asfaltirovanie/'), implode('; ', $errs));
+$set('fact_asphalt_works', 'Дворы и проезды');
+[, $html] = req("$base/");
+[, $ha] = req("$base/asfaltirovanie/");
+check('M4: после факта asf → /asfaltirovanie/ в подвале и в карточке', str_contains($cut($html, '<footer', '</footer>'), "<a href=\"/asfaltirovanie/\" style-hover=\"color:#FFC700\">$t1</a>")
+    && str_contains($cut($html, 'id="services"', '</section>'), "<a href=\"/asfaltirovanie/\">$t1</a>")
+    && !str_contains($cut($ha, 'id="services"', '</section>'), '<a href="/asfaltirovanie/">') && str_contains($cut($ha, 'id="services"', '</section>'), '<a href="/arenda-spetstekhniki/">'));
+$set('fact_asphalt_works', '');
+[, $hr] = req("$base/arenda-spetstekhniki/");
+$sv = $cut($hr, 'id="services"', '</section>');
+check('M4: на rent нет карточки со ссылкой на себя, есть на mat; в <select> выбрано «Аренда спецтехники» (одна)', $sv !== '' && !str_contains($sv, '/arenda-spetstekhniki/')
+    && str_contains($sv, '<a href="/shcheben-pesok-grunt/">') && substr_count($hr, ' selected>') === 1 && str_contains($hr, '<option selected>Аренда спецтехники</option>'));
+$o = new PDO("sqlite:$oldDb");
+$o->exec(file_get_contents("$root/db/schema.sql") . file_get_contents("$root/db/seed.sql")); // прод до M1: сид есть, pg_* нет
+$o->exec("UPDATE items SET href = '#why' WHERE kind = 'nav' AND title = 'Материалы'"); // правка владельца
+$o = null;
+$p = proc_open([PHP_BINARY, '-r', 'require "app/bootstrap.php"; echo implode(",", array_merge(array_column(rows("SELECT href FROM items WHERE kind = \'nav\' ORDER BY sort"), "href"), array_column(rows("SELECT href FROM services ORDER BY id"), "href")));'],
+    [0 => ['file', '/dev/null', 'r'], 1 => ['pipe', 'w'], 2 => ['file', '/dev/null', 'w']], $pp, $root, ['RDS_DB' => $oldDb] + getenv());
+$out = stream_get_contents($pp[1]);
+proc_close($p);
+array_map('unlink', glob("$oldDb*"));
+check('M4: старая БД после миграции: nav #fleet → /arenda-spetstekhniki/, nav, изменённый вручную (#why), не тронут; services 1,2,3,5 → посадочные',
+    $out === '#services,/arenda-spetstekhniki/,#why,#why,#contacts,/asfaltirovanie/,/blagoustroystvo/,/arenda-spetstekhniki/,#services,/shcheben-pesok-grunt/,#services', $out);
 
 exit($fail ? 1 : 0);

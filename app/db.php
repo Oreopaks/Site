@@ -33,6 +33,12 @@ function db(): PDO
               deleted_at TEXT NOT NULL DEFAULT (datetime('now')), user_id INTEGER REFERENCES users(id));
             CREATE INDEX IF NOT EXISTS trash_at ON trash(deleted_at);");
     }
+    if (!$pdo->query("SELECT 1 FROM settings WHERE key = 'pg_rent_title'")->fetchColumn()) {
+        // ponytail: ADR-0009 — ключи посадочных и анкеты; файл идемпотентен, на свежей БД срабатывает сразу после seed.sql
+        $pdo->beginTransaction();
+        $pdo->exec(file_get_contents(dirname(__DIR__) . '/db/seed-pages.sql'));
+        $pdo->commit();
+    }
     $pdo->exec('PRAGMA foreign_keys=ON');
     return $pdo;
 }

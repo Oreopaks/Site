@@ -1,7 +1,7 @@
 <?php
-/** @var string $g @var string[] $groups @var array $list @var string $err @var string $csrf */
-$names = ['seo' => 'SEO', 'ld' => 'Разметка (JSON-LD)', 'hero' => 'Первый экран', 'texts' => 'Тексты', 'contacts' => 'Контакты',
-    'requisites' => 'Реквизиты', 'legal' => 'Юр. документы', 'metrika' => 'Метрика', 'mail' => 'Почта'];
+/** @var string $g @var string[] $groups @var array $list @var string $err @var string $csrf @var array $status */
+$names = ['seo' => 'SEO', 'ld' => 'Разметка (JSON-LD)', 'hero' => 'Первый экран', 'texts' => 'Тексты', 'pages' => 'Посадочные', 'contacts' => 'Контакты',
+    'facts' => 'Анкета', 'requisites' => 'Реквизиты', 'legal' => 'Юр. документы', 'metrika' => 'Метрика и вебмастера', 'mail' => 'Почта'];
 ?>
 <nav class="tabs">
 <?php foreach ($groups as $k): ?>
@@ -11,6 +11,9 @@ $names = ['seo' => 'SEO', 'ld' => 'Разметка (JSON-LD)', 'hero' => 'Пе�
 <?php if ($err !== ''): ?><p class="err">Не сохранено: <?= e($err) ?></p>
 <?php elseif (isset($_GET['ok'])): ?><p class="ok">Сохранено.</p>
 <?php endif ?>
+<?php foreach ($status as $url => $gaps): ?>
+<p<?= $gaps ? '' : ' class="ok"' ?>><?= e($url) ?> <?= $gaps ? 'не опубликована — заполните: ' . e(implode('; ', $gaps)) : 'опубликована' ?></p>
+<?php endforeach ?>
 <form method="post" action="/admin/?p=settings&amp;g=<?= $g ?>&amp;a=save" class="fields settings">
   <input type="hidden" name="_csrf" value="<?= e($csrf) ?>">
 <?php foreach ($list as $r):

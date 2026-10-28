@@ -15,6 +15,8 @@
 - `bin/create-user.php`, `bin/unlock.php` — пользователи админки.
 - `tests/` — `run.php` (assert), `oracle.php` (DOM главной против тега `static-final`),
   `pw/*.js` (Playwright).
+- `docs/` — `SEO-OWNER-GUIDE.md` (Вебмастер, Бизнес, Search Console, отзывы, чек-лист после деплоя),
+  `owner-questionnaire.md` (анкета владельцу, ключи `fact_*`).
 
 Рантайму нужны расширения `pdo_sqlite`, `json`, `session`, `gd` с WebP (загрузка фото; `exif` желательно —
 поворот снимков с телефона). Проверка: `php -m`.
@@ -51,6 +53,20 @@ php bin/unlock.php owner                 # снять блокировку по�
 - Настройки (`?p=settings`) черновика не имеют — сохраняются сразу на сайт.
 - Фото: JPG, PNG или WebP до 10 МБ, до 24 Мп. Сервер перекодирует в WebP (ширина ≤ 1200)
   в `public/assets/uploads/<случайное имя>.webp`, исходный файл не хранит.
+
+## Посадочные страницы
+
+Четыре страницы услуг, список и slug — константа `PAGES` в `app/bootstrap.php` (тексты — `db/seed-pages.sql`,
+шаблон — `app/tpl/home.php` + `app/tpl/landing.php`). Маршрут решает `public/index.php`:
+
+- `/{slug}/` — 200, если страница опубликована; иначе 404. Опубликована = непусты её title, description,
+  H1 и обязательный ответ анкеты (`/asfaltirovanie/` — `fact_asphalt_works`, `/blagoustroystvo/` — `fact_blago_works`);
+- `/{slug}` без слэша — 301 на `/{slug}/` (query отбрасывается); неизвестный slug, заглавные буквы, вложенные пути — 404;
+- `/sitemap.xml` — главная и опубликованные посадочные.
+
+Тексты: «Настройки» → «Посадочные» (title, description, H1, подводка; сверху — что опубликовано и чего
+не хватает), ответы владельца — «Настройки» → «Анкета» (`docs/owner-questionnaire.md`), коды Вебмастера
+и Search Console — «Метрика и вебмастера». Сохраняются сразу, без черновика.
 
 ## Тесты
 
@@ -99,6 +115,7 @@ server {
     index index.php;
     location ~ /\. { deny all; }
     location / { try_files $uri $uri/ =404; }
+    location ~ ^/[a-z0-9-]+/?$ { try_files $uri $uri/ /index.php; }   # посадочные: /slug/, 301 и 404 — в PHP
     location = /sitemap.xml { rewrite ^ /sitemap.php last; }
     error_page 404 /404.php;
     location ~ ^/(index|send|privacy|consent|404|sitemap|admin/index)\.php$ {
@@ -128,29 +145,60 @@ server {
    Если TLS снимает прокси перед nginx — в `location` с php добавить `fastcgi_param HTTPS on;`,
    иначе cookie админки уйдёт без `Secure` (`X-Forwarded-Proto` код не читает: без доверенного прокси подделывается).
 
+www → без www на VPS — отдельным `server { listen 443 ssl; server_name www.<host>; return 301 https://<host>$request_uri; }`
+(в `.htaccess` для Apache это уже есть).
+
 Apache-хостинг: docroot → `public/` (там `.htaccess`: `ErrorDocument 404`, rewrite
-`sitemap.xml`, `Options -Indexes`). Если docroot сместить нельзя — положить в `var/`
+`sitemap.xml` и посадочных, www → без www, `Options -Indexes`). Если docroot сместить нельзя — положить в `var/`
 `.htaccess` с `Require all denied` и `chmod 0700 var`.
 
 ### Timeweb (виртуальный хостинг, развёрнуто 2026-10-27)
 
 Аккаунт `co511959`, сервер `vh460.timeweb.ru` (СПб, RU), временный адрес `https://co511959.tw1.ru/`.
-Apache (mod_php) за nginx; лимиты загрузки по умолчанию 5000M — менять не нужно.
+Apache за nginx, PHP через suEXEC; лимиты загрузки по умолчанию 5000M — менять не нужно.
 `.htaccess` переводит http → https по `%{ENV:HTTPS}` / `X-Forwarded-Proto` (`%{HTTPS}` за прокси всегда off — цикл).
 
-- Раскладка: код в `~/regiondorstroy/{app,bin,db,public}`, БД `~/regiondorstroy/var/site.sqlite`
-  (создаётся первым запросом), `~/public_html` → симлинк на `regiondorstroy/public`
-  (заглушка Timeweb сохранена в `~/public_html.orig`).
+- Раскладка (с 2026-10-28): сайт в панели — директория `regiondorstroy`; код в `~/regiondorstroy/{app,bin,db}`,
+  webroot — **обычная папка** `~/regiondorstroy/public_html` (содержимое `public/` из репозитория),
+  БД `~/regiondorstroy/var/site.sqlite` (создаётся первым запросом). Без симлинков: при изоляции сайта
+  доступ ограничен директорией сайта.
+- **Права без записи для группы** (папки 755, файлы 644): suEXEC отказывается запускать PHP из
+  group-writable файлов/папок и отдаёт пустой 500 на любой `.php` (так сайт лежал 2026-10-27…28).
+  Локально umask 002 даёт 664/775, поэтому в rsync обязателен `--chmod`.
 - PHP сайта выбирается в панели (Сайты → версия PHP): поставить **8.3**. В консоли — `/opt/php83/bin/php`
   (`php` по умолчанию 8.2).
 - Обновление с машины разработчика (БД и загруженные фото не трогаются):
   ```
-  rsync -az --delete --exclude 'public/assets/uploads/' -e "ssh -i ~/.ssh/id_ed25519_timeweb" \
-    app bin db public co511959@vh460.timeweb.ru:regiondorstroy/
+  K='ssh -i ~/.ssh/id_ed25519_timeweb'; H=co511959@vh460.timeweb.ru
+  rsync -az --delete --chmod=D755,F644 -e "$K" app bin db $H:regiondorstroy/
+  rsync -az --delete --chmod=D755,F644 --exclude 'assets/uploads/' -e "$K" public/ $H:regiondorstroy/public_html/
   ```
 - Владелец админки: `ssh co511959@vh460.timeweb.ru`, затем
   `cd regiondorstroy && /opt/php83/bin/php bin/create-user.php <логин> owner`.
 - Бэкап БД: Timeweb копирует всё ежедневно (30 дней); вручную — `~/regiondorstroy/var/site.sqlite`.
+
+### Шаги M7: выкладка посадочных (человек, после «да»)
+
+Перед rsync:
+
+1. В админке на проде черновик **опубликован или отменён** (старый черновик хранит прежние ссылки
+   `#fleet`/`#materials` и при публикации вернёт их в меню и услуги).
+2. Сертификат покрывает `www.regiondorstroy.com` (иначе 301 с www не дойдёт до браузера).
+3. «Настройки» → «SEO»: `base_url` = `https://regiondorstroy.com/` (иначе canonical и sitemap укажут на чужой адрес).
+
+Новые ключи и ссылки меню БД прода получит сама при первом запросе (`app/db.php` → `db/seed-pages.sql`).
+После выкладки:
+
+```sh
+curl -sI https://www.regiondorstroy.com/                      # 301 → https://regiondorstroy.com/
+curl -sI https://regiondorstroy.com/arenda-spetstekhniki      # 301 → …/arenda-spetstekhniki/
+curl -sI https://regiondorstroy.com/arenda-spetstekhniki/     # 200
+curl -sI https://regiondorstroy.com/asfaltirovanie/           # 404 (до ответа в анкете)
+curl -sI https://regiondorstroy.com/admin                     # 301 → /admin/
+curl -s  https://regiondorstroy.com/sitemap.xml | grep -c '<loc>'   # 3
+```
+
+Дальше — `docs/SEO-OWNER-GUIDE.md` (Вебмастер, Search Console, sitemap).
 
 ## Источник дизайна
 

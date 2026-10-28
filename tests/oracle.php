@@ -28,6 +28,14 @@ foreach ([
     '>Цены на аренду</h3>' => '>Цены на аренду (с НДС)</h3>',
     $sany . '<span style="display:inline-block;font-family:\'Oswald\';font-weight:600;font-size:13px;line-height:1.2;letter-spacing:1px;text-transform:uppercase;color:#FFC700;border:1px solid #FFC700;padding:5px 10px">договорная</span> <span style="font-size:14px;color:#a8a8a8;margin-left:4px">смена</span>'
         => $sany . '<span style="font-family:\'Oswald\';font-weight:700;font-size:20px;color:#fff">36 000 ₽</span> <span style="font-size:14px;color:#a8a8a8">/ смена</span>',
+    // решения заказчика: посадочные, 2026-10-27
+    "  [data-burger]{display:none}\n" => "  [data-svc] h3 a{text-decoration:underline;text-decoration-color:#FFC700;text-decoration-thickness:2px;text-underline-offset:5px}\n  [data-burger]{display:none}\n",
+    'href="#fleet" style=""' => 'href="/arenda-spetstekhniki/" style=""',
+    'href="#materials" style=""' => 'href="/shcheben-pesok-grunt/" style=""',
+    'href="#fleet" style="color:#fff' => 'href="/arenda-spetstekhniki/" style="color:#fff',
+    'href="#materials" style="color:#fff' => 'href="/shcheben-pesok-grunt/" style="color:#fff',
+    'color:inherit">Аренда спецтехники</h3>' => 'color:inherit"><a href="/arenda-spetstekhniki/">Аренда спецтехники</a></h3>',
+    'color:inherit">Поставка материалов</h3>' => 'color:inherit"><a href="/shcheben-pesok-grunt/">Поставка материалов</a></h3>',
 ] as $from => $to) {
     if (substr_count($expected, $from) !== 1) { fwrite(STDERR, "FAIL: правка эталона не найдена ровно один раз: $from\n"); exit(1); }
     $expected = str_replace($from, $to, $expected);

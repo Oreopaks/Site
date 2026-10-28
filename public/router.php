@@ -5,6 +5,10 @@ if ($p === '/sitemap.xml' && is_file(__DIR__ . '/sitemap.php')) {
     require __DIR__ . '/sitemap.php';
     return true;
 }
+if (preg_match('~^/[a-z0-9-]+/?$~D', $p) && !is_dir(__DIR__ . $p)) {
+    require __DIR__ . '/index.php'; // посадочные /{slug}/ — как правило .htaccess
+    return true;
+}
 $hidden = str_contains($p, '/.') || str_contains($p, '..') || $p === '/router.php';
 if (!$hidden && ($p === '/' || is_file(__DIR__ . $p) || is_file(__DIR__ . rtrim($p, '/') . '/index.php'))) {
     return false; // отдаёт встроенный сервер (статику или .php)

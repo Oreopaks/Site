@@ -153,7 +153,7 @@ function lists(): array
     return [
         'services' => ['services', null, 'Услуги', 'Блок «Услуги компании»; названия — ещё в форме заявки и в подвале', 1, 12,
             $title(40, 'Заголовок карточки услуги') + $text(200, 'Описание под заголовком карточки') + [
-            'href' => ['href', 100, 'Ссылка', 'Куда ведёт название в подвале: #раздел, https://…, tel: или mailto:'],
+            'href' => ['href', 100, 'Ссылка', 'Куда ведёт название в подвале и в карточке: #раздел, /страница/, https://…, tel: или mailto:'],
             'in_form' => ['bool', 0, 'В форме', 'Показать в списке услуг формы заявки'],
             'in_footer' => ['bool', 0, 'В подвале', 'Показать ссылкой в подвале сайта']]],
         'fleet_cards' => ['fleet_cards', null, 'Техника: карточки', 'Блок «Спецтехника в аренду» — карточки с фото', 1, 12,
@@ -166,7 +166,7 @@ function lists(): array
             $title(30, 'Заголовок карточки материала') + $text(150, 'Описание под заголовком карточки') + $photo
             + ['badge' => ['line0', 14, 'Бейдж', 'Жёлтая плашка на фото; пусто — без плашки']] + $price(8)],
         'nav' => ['items', 'nav', 'Меню', 'Меню в шапке сайта и мобильное меню', 1, 6,
-            $title(16, 'Пункт меню в шапке') + ['href' => ['href', 100, 'Ссылка', 'Куда ведёт пункт: #раздел страницы, https://… или tel:']]],
+            $title(16, 'Пункт меню в шапке') + ['href' => ['href', 100, 'Ссылка', 'Куда ведёт пункт: #раздел страницы, https://…, tel: или /страница/ (неопубликованная → 404)']]],
         'marquee' => ['items', 'marquee', 'Бегущая строка', 'Бегущая строка под первым экраном', 1, 12,
             ['title' => ['line', 40, 'Текст', 'Фраза бегущей строки, между фразами — ◆']]],
         'stat_hero' => ['items', 'stat_hero', 'Цифры в шапке', 'Первый экран — цифры под кнопками', 1, 12, $stat],
@@ -189,7 +189,7 @@ function check_row(array $fields, array $r): array
             $v === '' && in_array($type, ['line', 'area1', 'img'], true) => 'Введите ' . mb_strtolower(mb_substr($label, 0, 1)) . mb_substr($label, 1),
             $type === 'int' => preg_match("/^\\d{0,$max}$/D", $v) ? null : 'Введите целое число от 0 до ' . str_repeat('9', $max),
             $max > 0 && !preg_match("/^.{0,$max}$/suD", $v) => "Сократите до $max символов — сейчас " . mb_strlen($v),
-            $type === 'href' => valid_href($v) ? null : 'Введите ссылку вида #раздел, https://…, tel:+7… или mailto:…', // D5
+            $type === 'href' => valid_href($v) ? null : 'Введите ссылку вида #раздел, /страница/, https://…, tel:+7… или mailto:…', // D5
             $type === 'img' => !preg_match('~^assets/[a-z0-9_\-/]+\.(webp|svg)$~D', $v) ? 'Введите путь вида assets/имя.webp' // D10
                 : (is_file(__DIR__ . '/../' . $v) ? null : 'Картинка не найдена на сервере — укажите другую'),
             $type === 'pos' => preg_match('/^\d{1,3}% \d{1,3}%$/D', $v) ? null : 'Введите позицию вида «50% 50%»', // уходит в style
@@ -627,13 +627,17 @@ if ($p === 'preview') {
 
 if ($p === 'settings') {
     // §3: группа → право; trusted_html (hero_h1, why_h2) — отдельно, только owner
-    $grpPerm = ['seo' => 'content', 'ld' => 'content', 'hero' => 'content', 'texts' => 'content',
-        'contacts' => 'contacts', 'requisites' => 'contacts', 'legal' => 'contacts', 'metrika' => 'owner_settings', 'mail' => 'owner_settings'];
+    $grpPerm = ['seo' => 'content', 'ld' => 'content', 'hero' => 'content', 'texts' => 'content', 'pages' => 'content',
+        'contacts' => 'contacts', 'facts' => 'contacts', 'requisites' => 'contacts', 'legal' => 'contacts', 'metrika' => 'owner_settings', 'mail' => 'owner_settings'];
     $g = is_string($_GET['g'] ?? null) ? $_GET['g'] : 'seo';
     if (!isset($grpPerm[$g])) page('Не найдено', '<p>Группа не найдена.</p>', 404);
     if (!can($grpPerm[$g])) deny();
     $list = rows('SELECT * FROM settings WHERE grp = ? ORDER BY sort, key', [$g]);
-    $vars = ['g' => $g, 'groups' => array_keys(array_filter($grpPerm, 'can')), 'list' => $list, 'err' => ''];
+    $vars = ['g' => $g, 'groups' => array_keys(array_filter($grpPerm, 'can')), 'list' => $list, 'err' => '', 'status' => []];
+    if ($g === 'pages' || $g === 'facts') { // строка «опубликована / заполните: …» по каждой посадочной
+        $lbl = db()->query('SELECT key, label FROM settings')->fetchAll(PDO::FETCH_KEY_PAIR);
+        foreach (PAGES as $id => $pg) $vars['status']["/{$pg['slug']}/"] = array_map(fn($k) => $lbl[$k] ?? $k, page_gaps(settings(), $id));
+    }
 
     if ($a === 'save') {
         $new = [];
@@ -649,10 +653,11 @@ if ($p === 'settings') {
                 'phone_mobile', 'phone_city' => valid_href("tel:$v"),
                 'email' => valid_href("mailto:$v"),
                 'metrika_id' => preg_match('/^\d{0,12}$/D', $v),
+                'yandex_verification', 'google_verification' => preg_match('/^[A-Za-z0-9_-]{0,100}$/D', $v),
                 'notify_email' => preg_match('/^([^@\s]+@[^@\s]+\.[a-z]{2,})?$/iD', $v),
                 'ld_geo_lat', 'ld_geo_lon' => preg_match('/^-?\d{1,3}(\.\d+)?$/D', $v),
                 'ld_opens', 'ld_closes' => preg_match('/^[0-2]\d:[0-5]\d$/D', $v),
-                default => true,
+                default => !str_starts_with($k, 'fact_') || mb_strlen($v) <= 500,
             };
             if (!$ok) $err .= "Неверное значение: «{$r['label']}». ";
             if ($v !== $r['value']) $new[$k] = [$r['value'], $v];

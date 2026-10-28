@@ -55,8 +55,39 @@ function price(string $kind, $price): string
     return ($kind === 'from' ? 'от ' : '') . number_format((int)$price, 0, '', ' ') . ' ₽';
 }
 
-// D5: белый список href (якорь, своя .php, http(s), tel, mailto); иначе сохранение → 422
+// Посадочные (ADR-0009): id → slug, короткое имя (крошка и serviceType), секции главной на странице,
+// поля анкеты, без которых страница не публикуется, и FAQ: вопрос → fact_* (ответ — только текст владельца, пустой — вопрос скрыт)
+const FAQ_ZONE = ['Куда вы выезжаете и есть ли доплата за расстояние?' => 'fact_zone'];
+const FAQ_SITE = [
+    'Выезд на замер и смета — бесплатно?' => 'fact_measure',
+    'Какая гарантия на работы?' => 'fact_warranty',
+];
+const PAGES = [
+    'rent' => ['slug' => 'arenda-spetstekhniki', 'name' => 'Аренда спецтехники', 'blocks' => ['fleet', 'steps', 'services'], 'need' => [],
+        'faq' => ['Сколько часов в смене и что входит в аренду?' => 'fact_rent_shift', 'Как доставляется техника на объект и сколько это стоит?' => 'fact_rent_delivery'] + FAQ_ZONE],
+    'mat' => ['slug' => 'shcheben-pesok-grunt', 'name' => 'Щебень, песок, грунт', 'blocks' => ['materials', 'services'], 'need' => [],
+        'faq' => ['Цены на материалы указаны с НДС?' => 'fact_mat_vat', 'Сколько стоит доставка материалов?' => 'fact_mat_delivery', 'Какой минимальный заказ материалов?' => 'fact_mat_min'] + FAQ_ZONE],
+    'asf' => ['slug' => 'asfaltirovanie', 'name' => 'Асфальтирование', 'blocks' => ['steps', 'services'], 'need' => ['fact_asphalt_works'],
+        'faq' => ['Сколько стоит асфальтирование?' => 'fact_asphalt_price', 'Какая минимальная площадь асфальтирования?' => 'fact_asphalt_min'] + FAQ_SITE + FAQ_ZONE],
+    'blago' => ['slug' => 'blagoustroystvo', 'name' => 'Благоустройство', 'blocks' => ['steps', 'services'], 'need' => ['fact_blago_works'],
+        'faq' => FAQ_SITE + FAQ_ZONE],
+];
+
+// Пустые обязательные ключи страницы; [] → страница опубликована
+function page_gaps(array $s, string $id): array
+{
+    return array_values(array_filter(["pg_{$id}_title", "pg_{$id}_desc", "pg_{$id}_h1", ...PAGES[$id]['need']], fn($k) => trim($s[$k] ?? '') === ''));
+}
+
+// Опубликованная посадочная по slug → PAGES[id] + id; неизвестная или неопубликованная → null
+function landing(string $slug): ?array
+{
+    foreach (PAGES as $id => $p) if ($p['slug'] === $slug) return page_gaps(settings(), $id) ? null : $p + ['id' => $id];
+    return null;
+}
+
+// D5: белый список href (якорь, своя .php, /страница/, http(s), tel, mailto); иначе сохранение → 422
 function valid_href(string $h): bool
 {
-    return (bool)preg_match('~^(#[a-z0-9_-]+|[a-z0-9_-]+\.php|https?://\S+|tel:\+?[0-9]+|mailto:\S+)$~D', $h);
+    return (bool)preg_match('~^(#[a-z0-9_-]+|[a-z0-9_-]+\.php|/[a-z0-9-]+/|https?://\S+|tel:\+?[0-9]+|mailto:\S+)$~D', $h);
 }

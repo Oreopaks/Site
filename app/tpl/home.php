@@ -1,7 +1,13 @@
 <?php
-/** @var array $s settings; списки: $nav $marquee $statHero $statBar $services $fleet $prices $materials $why $steps */
-$ld = [
-    '@context' => 'https://schema.org',
+/** @var array $s settings; списки: $nav $marquee $statHero $statBar $services $fleet $prices $materials $why $steps; $pg — посадочная из landing() или null (главная) */
+$pg ??= null;
+$url = $s['base_url'] . ($pg ? $pg['slug'] . '/' : '');
+$pt = $pg ? $s["pg_{$pg['id']}_title"] : null; // на посадочной title/og/twitter — из pg_*
+$pd = $pg ? $s["pg_{$pg['id']}_desc"] : null;
+$show = fn(string $b): bool => !$pg || in_array($b, $pg['blocks'], true); // секция главной на этой странице
+$here = $pg ? '/' . $pg['slug'] . '/' : null;
+$live = fn(string $h): bool => preg_match('~^/([a-z0-9-]+)/$~D', $h, $m) && landing($m[1]); // href ведёт на опубликованную посадочную
+$biz = [
     '@type' => 'HomeAndConstructionBusiness',
     'name' => $s['ld_name'],
     'image' => $s['base_url'] . 'assets/logo-rds.webp',
@@ -29,6 +35,16 @@ $ld = [
         'closes' => $s['ld_closes'],
     ],
 ];
+// FAQ посадочной: только вопросы с ответом владельца; тот же список — в видимом блоке (landing.php) и в FAQPage
+$faq = [];
+foreach ($pg['faq'] ?? [] as $q => $k) if (($a = trim($s[$k] ?? '')) !== '') $faq[$q] = $a;
+$ld = !$pg ? ['@context' => 'https://schema.org'] + $biz : ['@context' => 'https://schema.org', '@graph' => array_merge([
+    ['@type' => 'Service', 'name' => $s["pg_{$pg['id']}_h1"], 'serviceType' => $pg['name'], 'description' => $pd, 'url' => $url, 'areaServed' => $s['ld_area'], 'provider' => $biz],
+    ['@type' => 'BreadcrumbList', 'itemListElement' => [
+        ['@type' => 'ListItem', 'position' => 1, 'name' => 'Главная', 'item' => $s['base_url']],
+        ['@type' => 'ListItem', 'position' => 2, 'name' => $pg['name'], 'item' => $url],
+    ]],
+], $faq ? [['@type' => 'FAQPage', 'mainEntity' => array_map(fn($q, $a) => ['@type' => 'Question', 'name' => $q, 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $a]], array_keys($faq), $faq)]] : [])];
 // значение статистики: счётчик data-count или текст
 $stat = fn(array $r): string => $r['num'] === null ? e($r['text'])
     : '<span data-count data-to="' . (int)$r['num'] . '" data-suffix="' . e($r['suffix']) . '">' . (int)$r['num'] . e($r['suffix']) . '</span>';
@@ -40,31 +56,42 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
 <html lang="ru">
 <head>
 <meta charset="utf-8">
+<?php if ($pg): ?>
+<base href="/">
+<?php endif ?>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title><?= e($s['seo_title']) ?></title>
-<meta name="description" content="<?= e($s['seo_description']) ?>">
+<title><?= e($pt ?? $s['seo_title']) ?></title>
+<meta name="description" content="<?= e($pd ?? $s['seo_description']) ?>">
 <meta name="theme-color" content="#0d0d0d">
-<link rel="canonical" href="<?= e($s['base_url']) ?>">
+<link rel="canonical" href="<?= e($url) ?>">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="РегионДорСтрой">
-<meta property="og:title" content="<?= e($s['seo_og_title']) ?>">
-<meta property="og:description" content="<?= e($s['seo_og_description']) ?>">
+<meta property="og:title" content="<?= e($pt ?? $s['seo_og_title']) ?>">
+<meta property="og:description" content="<?= e($pd ?? $s['seo_og_description']) ?>">
 <meta property="og:image" content="<?= e($s['base_url']) ?>assets/logo-rds.webp">
 <meta property="og:image:width" content="256">
 <meta property="og:image:height" content="256">
 <meta property="og:image:alt" content="Логотип ООО РегионДорСтрой">
-<meta property="og:url" content="<?= e($s['base_url']) ?>">
+<meta property="og:url" content="<?= e($url) ?>">
 <meta property="og:locale" content="ru_RU">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="<?= e($s['seo_tw_title']) ?>">
-<meta name="twitter:description" content="<?= e($s['seo_tw_description']) ?>">
+<meta name="twitter:title" content="<?= e($pt ?? $s['seo_tw_title']) ?>">
+<meta name="twitter:description" content="<?= e($pd ?? $s['seo_tw_description']) ?>">
 <meta name="twitter:image" content="<?= e($s['base_url']) ?>assets/logo-rds.webp">
+<?php if (!$pg && $s['yandex_verification'] !== ''): ?>
+<meta name="yandex-verification" content="<?= e($s['yandex_verification']) ?>">
+<?php endif ?>
+<?php if (!$pg && $s['google_verification'] !== ''): ?>
+<meta name="google-site-verification" content="<?= e($s['google_verification']) ?>">
+<?php endif ?>
 <script type="application/ld+json">
 <?= json_encode($ld, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_PRETTY_PRINT) ?>
 
 </script>
+<?php if (!$pg): ?>
 <link rel="preload" as="image" href="assets/hero-paving.webp" fetchpriority="high">
+<?php endif ?>
 <link rel="preload" as="font" type="font/woff2" href="assets/fonts/oswald-700-cyrillic.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="assets/fonts/manrope-400-cyrillic.woff2" crossorigin>
 <style>
@@ -99,6 +126,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
   ::selection{background:#FFC700;color:#111}
   a{text-decoration:none;color:inherit}
   a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid #FFC700;outline-offset:2px}
+  [data-svc] h3 a{text-decoration:underline;text-decoration-color:#FFC700;text-decoration-thickness:2px;text-underline-offset:5px}
   [data-burger]{display:none}
   @keyframes kenburns{0%{transform:scale(1.03) translate(0,0)}100%{transform:scale(1.13) translate(-2%,-1.5%)}}
   [data-kenburns]{animation:kenburns 24s ease-in-out infinite alternate;transform-origin:center}
@@ -208,6 +236,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
   </header>
 
   <main>
+<?php if ($pg): require __DIR__ . '/landing.php'; else: ?>
   <!-- ================= HERO (cinematic full-bleed) ================= -->
   <section id="top" data-herowrap style="background:#0d0d0d;position:relative;color:#fff;overflow:hidden;min-height:90vh;display:flex;align-items:flex-end">
     <!-- image layer with slow ken-burns drift -->
@@ -244,7 +273,9 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
 <?php endforeach ?>
     </div>
   </div>
+<?php endif ?>
 
+<?php if ($show('services')): ob_start(); // на посадочной services выводится после fleet/materials ?>
   <!-- ================= SERVICES ================= -->
   <section id="services" data-cine style="background:#f5f5f3;padding:90px 0">
     <div style="max-width:1240px;margin:0 auto;padding:0 32px">
@@ -260,14 +291,16 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
 <?php foreach ($services as $i => $r): ?>
           <div data-anim="rise" data-svc style="background:#fff;padding:38px 32px">
             <div data-svc-num style="font-family:'Oswald';font-weight:700;font-size:15px;color:#8a6d00;letter-spacing:1px;margin-bottom:18px;transition:color .3s ease"><?= sprintf('%02d', $i + 1) ?> /</div>
-            <h3 style="font-family:'Oswald';font-weight:600;font-size:23px;text-transform:uppercase;margin-bottom:12px;line-height:1.15;color:inherit"><?= e($r['title']) ?></h3>
+            <h3 style="font-family:'Oswald';font-weight:600;font-size:23px;text-transform:uppercase;margin-bottom:12px;line-height:1.15;color:inherit"><?= $r['href'] !== $here && $live($r['href']) ? '<a href="' . e($r['href']) . '">' . e($r['title']) . '</a>' : e($r['title']) ?></h3>
             <p style="color:#6a6a6a;font-size:14.5px;line-height:1.6"><?= e($r['text']) ?></p>
           </div>
 <?php endforeach ?>
       </div>
     </div>
   </section>
+<?php $svc = ob_get_clean(); if (!$pg) echo $svc; endif ?>
 
+<?php if ($show('fleet')): ?>
   <!-- ================= FLEET ================= -->
   <section id="fleet" data-cine style="background:#0d0d0d;color:#fff;padding:90px 0;position:relative">
     <div style="max-width:1240px;margin:0 auto;padding:0 32px">
@@ -329,7 +362,9 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
       </div>
     </div>
   </section>
+<?php endif ?>
 
+<?php if ($show('materials')): ?>
   <!-- ================= MATERIALS / CATALOG ================= -->
   <section id="materials" data-cine style="background:#fff;padding:90px 0">
     <div style="max-width:1240px;margin:0 auto;padding:0 32px">
@@ -369,7 +404,9 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
       </div>
     </div>
   </section>
+<?php endif; if ($pg) echo $svc ?? '' ?>
 
+<?php if ($show('stats')): ?>
   <!-- ================= STATS BAND ================= -->
   <section data-cine style="background:#FFC700;padding:54px 0">
     <div data-r="stats" style="max-width:1240px;margin:0 auto;padding:0 32px;display:grid;grid-template-columns:repeat(<?= $cols(count($statBar), 4) ?>,1fr);gap:24px">
@@ -381,7 +418,9 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
 <?php endforeach ?>
     </div>
   </section>
+<?php endif ?>
 
+<?php if ($show('why')): ?>
   <!-- ================= WHY US ================= -->
   <section id="why" data-cine style="background:#f5f5f3;padding:90px 0">
     <div style="max-width:1240px;margin:0 auto;padding:0 32px">
@@ -410,7 +449,9 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
       </div>
     </div>
   </section>
+<?php endif ?>
 
+<?php if ($show('steps')): ?>
   <!-- ================= PROCESS ================= -->
   <section data-cine style="background:#0d0d0d;color:#fff;padding:84px 0">
     <div style="max-width:1240px;margin:0 auto;padding:0 32px">
@@ -429,6 +470,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
       </div>
     </div>
   </section>
+<?php endif ?>
 
   <!-- ================= CONTACTS ================= -->
   <section id="contacts" data-cine style="background:#fff;padding:90px 0">
@@ -475,7 +517,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
               <input required placeholder="Телефон" aria-label="Телефон" autocomplete="tel" inputmode="tel" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
               <select aria-label="Услуга" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#cfcfcf;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
 <?php foreach ($services as $r): if ($r['in_form']): ?>
-                <option><?= e($r['title']) ?></option>
+                <option<?= $r['href'] === $here ? ' selected' : '' ?>><?= e($r['title']) ?></option>
 <?php endif; endforeach ?>
               </select>
               <textarea placeholder="Комментарий (объём, адрес, сроки)" aria-label="Комментарий" rows="3" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none;resize:vertical" style-focus="border-color:#FFC700"></textarea>
@@ -509,7 +551,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
           <div style="font-family:'Oswald';font-weight:600;font-size:15px;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px">Услуги</div>
           <div style="display:flex;flex-direction:column;gap:10px;font-size:14px">
 <?php foreach ($services as $r): if ($r['in_footer']): ?>
-            <a href="<?= e($r['href']) ?>" style-hover="color:#FFC700"><?= e($r['title']) ?></a>
+            <a href="<?= e(!preg_match('~^/[a-z0-9-]+/$~D', $r['href']) || $live($r['href']) ? $r['href'] : '#services') ?>" style-hover="color:#FFC700"><?= e($r['title']) ?></a>
 <?php endif; endforeach ?>
           </div>
         </div>
