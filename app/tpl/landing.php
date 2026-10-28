@@ -28,7 +28,7 @@ foreach (['rent' => $prices, 'mat' => $materials][$pg['id']] ?? [] as $r) {
   <!-- ================= LANDING HEAD ================= -->
   <section data-herowrap style="background:#0d0d0d;position:relative;color:#fff;overflow:hidden">
     <div style="position:relative;z-index:2;max-width:1240px;margin:0 auto;padding:96px 32px 62px;width:100%" data-hero-content data-lp-head>
-      <nav aria-label="Хлебные крошки" style="font-size:14px;color:#a8a8a8;margin-bottom:22px"><a href="/" style="color:#FFC700">Главная</a> / <span aria-current="page"><?= e($pg['name']) ?></span></nav>
+      <nav aria-label="Хлебные крошки" style="font-size:14px;color:#a8a8a8;margin-bottom:22px"><a href="/" style="color:#FFC700;text-decoration:underline">Главная</a> / <span aria-current="page"><?= e($pg['name']) ?></span></nav>
       <h1 data-anim="fade-up" style="font-family:'Oswald';font-weight:700;font-size:60px;line-height:1;letter-spacing:.5px;text-transform:uppercase;margin-bottom:24px;max-width:920px"><?= e($s["pg_{$pg['id']}_h1"]) ?></h1>
 <?php if ($lead !== ''): ?>
       <p data-anim="fade-up" data-lp-lead style="font-size:19px;line-height:1.6;color:#dcdcdc;max-width:720px;margin-bottom:38px"><?= e($lead) ?></p>

@@ -185,7 +185,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
 <body>
 
 
-<div style="overflow-x:hidden">
+<div style="overflow-x:hidden;overflow-x:clip">
 
   <div data-progress aria-hidden="true"></div>
 
@@ -262,7 +262,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
       <h1 data-anim="fade-up" style="font-family:'Oswald';font-weight:700;font-size:80px;line-height:.97;letter-spacing:.5px;text-transform:uppercase;margin-bottom:24px;max-width:920px;text-shadow:0 6px 44px rgba(0,0,0,.55)"><?= $s['hero_h1'] /* trusted_html, правит только owner */ ?></h1>
       <p data-anim="fade-up" style="font-size:19px;line-height:1.6;color:#dcdcdc;max-width:560px;margin-bottom:38px;text-shadow:0 2px 20px rgba(0,0,0,.5)"><?= e($s['hero_p']) ?></p>
       <div data-anim="fade-up" style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:54px">
-        <button onclick="openModal()" style="background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope';font-weight:800;font-size:15px;padding:17px 30px;cursor:pointer;text-transform:uppercase;letter-spacing:.3px" style-hover="background:#ffd633">Оставить заявку</button>
+        <a href="#contacts" style="background:#FFC700;color:#0d0d0d;font-family:'Manrope';font-weight:800;font-size:15px;padding:17px 30px;text-transform:uppercase;letter-spacing:.3px;display:inline-flex;align-items:center" style-hover="background:#ffd633">Оставить заявку</a>
         <a href="#services" style="background:rgba(255,255,255,.06);color:#fff;border:1.5px solid rgba(255,255,255,.28);font-weight:700;font-size:15px;padding:16px 30px;text-transform:uppercase;letter-spacing:.3px;display:inline-flex;align-items:center" style-hover="border-color:#FFC700">Наши услуги</a>
       </div>
       <div data-anim="fade-up" style="display:flex;gap:clamp(28px,5vw,56px);flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.2);padding-top:26px;max-width:680px">
@@ -533,7 +533,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
               <textarea placeholder="Комментарий (объём, адрес, сроки)" aria-label="Комментарий" rows="3" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none;resize:vertical" style-focus="border-color:#FFC700"></textarea>
               <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;cursor:pointer">
                 <input type="checkbox" required aria-label="Согласие на обработку персональных данных" style="margin-top:2px;width:16px;height:16px;accent-color:#FFC700;flex-shrink:0">
-                <span style="color:#8f8f8f;font-size:13px;line-height:1.45">Даю <a href="consent.php" target="_blank" style="text-decoration:underline">согласие на обработку персональных данных</a></span>
+                <span style="color:#8f8f8f;font-size:13px;line-height:1.45">Даю <a href="consent.php" target="_blank" style="text-decoration:underline">согласие на обработку персональных данных</a><span data-chint aria-live="polite" style="display:block;color:#FFC700;font-weight:700"></span></span>
               </label>
               <p class="pd-policy" style="margin:-8px 0 16px 25px;color:#8f8f8f;font-size:13px;line-height:1.45"><a href="privacy.php" target="_blank" style="text-decoration:underline">Политика обработки персональных данных</a></p>
               <input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
@@ -607,9 +607,10 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
             <form onsubmit="submitModal(event)">
               <input required placeholder="Ваше имя" aria-label="Ваше имя" autocomplete="name" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
               <input required placeholder="Телефон" aria-label="Телефон" autocomplete="tel" inputmode="tel" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none" style-focus="border-color:#FFC700">
+              <div id="modalTask" style="display:none"><textarea placeholder="Объём, адрес, сроки" aria-label="Объём, адрес, сроки" rows="3" maxlength="900" style="display:block;width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none;resize:vertical" style-focus="border-color:#FFC700"></textarea></div>
               <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;cursor:pointer">
                 <input type="checkbox" required aria-label="Согласие на обработку персональных данных" style="margin-top:2px;width:16px;height:16px;accent-color:#FFC700;flex-shrink:0">
-                <span style="color:#6a6a6a;font-size:13px;line-height:1.45">Даю <a href="consent.php" target="_blank" style="text-decoration:underline">согласие на обработку персональных данных</a></span>
+                <span style="color:#6a6a6a;font-size:13px;line-height:1.45">Даю <a href="consent.php" target="_blank" style="text-decoration:underline">согласие на обработку персональных данных</a><span data-chint aria-live="polite" style="display:block;color:#b00020;font-weight:700"></span></span>
               </label>
               <p class="pd-policy" style="margin:-8px 0 16px 25px;color:#6a6a6a;font-size:13px;line-height:1.45"><a href="privacy.php" target="_blank" style="text-decoration:underline">Политика обработки персональных данных</a></p>
               <input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
@@ -633,7 +634,8 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
       el.addEventListener(off, function(){ el.setAttribute('style', base); });
     });
   }
-  shim('style-hover','mouseenter','mouseleave');
+  // hover только там, где он есть: на сенсорном экране mouseenter без mouseleave оставлял «наведённый» вид
+  if(!window.matchMedia || matchMedia('(hover:hover)').matches) shim('style-hover','mouseenter','mouseleave');
   shim('style-focus','focusin','focusout');
 
   // state: mobile menu + modal + forms
@@ -649,6 +651,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
     if(T)T.textContent=t; if(D)D.textContent=d; if(B)B.textContent=b;
     if(mMat){ mMat.setAttribute('data-svc',svc||''); var L=document.getElementById('modalMatLbl'); if(L)L.textContent=svc||'Материал';
       if(mat){ mMat.style.display=''; var n=document.getElementById('modalMatName'); if(n)n.textContent=mat; } else mMat.style.display='none'; }
+    var X=document.getElementById('modalTask'); if(X)X.style.display=mat?'block':'none'; // поле задачи — только в расчёте/аренде
   }
   function show(){ if(overlay)overlay.style.display='block'; if(mForm)mForm.style.display=''; if(mOk)mOk.style.display='none'; document.body.style.overflow='hidden'; }
   window.openModal=function(){ setModal('<?= jsstr($s['modal_call_title']) ?>','<?= jsstr($s['modal_call_text']) ?>','<?= jsstr($s['modal_call_btn']) ?>',null); show(); };
@@ -657,10 +660,15 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
   // карточка техники: та же форма расчёта, услуга «Аренда спецтехники» + название из заголовка карточки
   window.openRent=function(btn){ var h=btn.closest('[data-lift]').querySelector('h3'); window.openCalc(h?h.textContent:'','Аренда спецтехники'); };
   window.closeModal=function(){ if(overlay)overlay.style.display='none'; document.body.style.overflow=''; };
+  // галочка согласия: своя русская подсказка рядом (aria-live) и в нативном сообщении; снимается при отметке
+  var HINT='Поставьте галочку согласия';
+  function cbox(b, show){ b.setCustomValidity(b.checked?'':HINT); var h=b.closest('label').querySelector('[data-chint]'); if(h&&(b.checked||show))h.textContent=b.checked?'':HINT; }
+  document.querySelectorAll('form input[type=checkbox][required]').forEach(function(b){ cbox(b);
+    b.addEventListener('change', function(){ cbox(b); }); b.addEventListener('invalid', function(){ cbox(b, true); }); });
   // заявка уходит только на свой сервер (send.php); без галочки согласия запрос не отправляется
   function send(fd, form, onOk){
     var box=form.querySelector('input[type=checkbox]');
-    if(!box||!box.checked){ if(box)box.focus(); return; }
+    if(!box||!box.checked){ if(box){ cbox(box, true); box.focus(); } return; }
     var hp=form.querySelector('[name=website]');
     fd.append('consent','1'); fd.append('website', hp?hp.value:'');
     var btn=form.querySelector('button[type=submit]'), old=btn?btn.innerHTML:'';
@@ -668,7 +676,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
     if(btn){ btn.disabled=true; btn.style.opacity='.6'; btn.textContent='Отправляем…'; }
     fetch('send.php',{ method:'POST', body:fd }).then(function(r){ return r.json(); }).then(function(d){
       reset();
-      if(d&&d.ok===true){ try{ form.reset(); }catch(_){} onOk(); }
+      if(d&&d.ok===true){ try{ form.reset(); cbox(box); }catch(_){} onOk(); }
       else { alert('<?= jsstr($s['alert_fail']) ?>'); }
     }).catch(function(){ reset(); alert('<?= jsstr($s['alert_offline']) ?>'); });
   }
@@ -676,8 +684,9 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
   window.submitModal=function(e){ e.preventDefault(); var f=e.target, fd=new FormData();
     var mEl=document.getElementById('modalMat'), mat=(mEl&&mEl.style.display!=='none')?(((document.getElementById('modalMatName')||{}).textContent)||''):'';
     var svc=(mEl&&mat&&mEl.getAttribute('data-svc'))||'';
-    if(svc){ fd.append('source','calc'); fd.append('service',svc); fd.append('comment','Техника: '+mat); }
-    else { fd.append('source', mat?'material':'call'); fd.append('material', mat); }
+    var task=mat?val(f,'#modalTask textarea'):'';
+    if(svc){ fd.append('source','calc'); fd.append('service',svc); fd.append('comment','Техника: '+mat+(task?'\n'+task:'')); }
+    else { fd.append('source', mat?'material':'call'); fd.append('material', mat); if(task)fd.append('comment', task); }
     fd.append('name', val(f,'[autocomplete=name]')); fd.append('phone', val(f,'[autocomplete=tel]'));
     send(fd, f, function(){ if(mForm)mForm.style.display='none'; if(mOk)mOk.style.display=''; });
   };

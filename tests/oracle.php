@@ -56,6 +56,20 @@ $expected = str_replace('<div style="margin-top:6px;font-size:12.5px;color:#FFC7
 if ($c !== 9) { fwrite(STDERR, "FAIL: «В АРЕНДУ» — ожидалось 9 замен, сделано $c\n"); exit(1); }
 $expected = str_replace('Материал: <span id="modalMatName">', '<span id="modalMatLbl">Материал</span>: <span id="modalMatName">', $expected, $c);
 if ($c !== 1) { fwrite(STDERR, "FAIL: подпись «Материал:» — ожидалась 1 замена, сделано $c\n"); exit(1); }
+// решение 2026-10-28 (рой): A6 — overflow-x:clip (hidden делал обёртку контейнером прокрутки, и sticky-шапка уезжала);
+// A3 — «Оставить заявку» первого экрана ведёт к #contacts, как на посадочных; B6 — «Планировка участков» в списке услуг формы;
+// A2 — необязательное поле «Объём, адрес, сроки» в окне расчёта/аренды (скрыто в «Заказать звонок»). tests/pw/tails.js
+foreach ([
+    '<div style="overflow-x:hidden">' => '<div style="overflow-x:hidden;overflow-x:clip">',
+    '<button onclick="openModal()" style="background:#FFC700;color:#0d0d0d;border:none;font-family:\'Manrope\';font-weight:800;font-size:15px;padding:17px 30px;cursor:pointer;text-transform:uppercase;letter-spacing:.3px" style-hover="background:#ffd633">Оставить заявку</button>'
+        => '<a href="#contacts" style="background:#FFC700;color:#0d0d0d;font-family:\'Manrope\';font-weight:800;font-size:15px;padding:17px 30px;text-transform:uppercase;letter-spacing:.3px;display:inline-flex;align-items:center" style-hover="background:#ffd633">Оставить заявку</a>',
+    '<option>Поставка материалов</option>' => '<option>Поставка материалов</option><option>Планировка участков</option>',
+    'margin-bottom:16px;outline:none" style-focus="border-color:#FFC700">'
+        => 'margin-bottom:16px;outline:none" style-focus="border-color:#FFC700"><div id="modalTask" style="display:none"><textarea placeholder="Объём, адрес, сроки" aria-label="Объём, адрес, сроки" rows="3" maxlength="900" style="display:block;width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:\'Manrope\';margin-bottom:16px;outline:none;resize:vertical" style-focus="border-color:#FFC700"></textarea></div>',
+] as $from => $to) {
+    $expected = str_replace($from, $to, $expected, $c);
+    if ($c !== 1) { fwrite(STDERR, "FAIL: правка роя — ожидалась 1 замена, сделано $c: $from\n"); exit(1); }
+}
 
 function load(string $html): DOMDocument
 {
