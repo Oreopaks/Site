@@ -25,7 +25,7 @@ INSERT INTO settings (key, value, grp, label, type, trusted_html, required, sort
 ('phone_city_fmt','49-11-11','contacts','Городской (как показывать)','text',0,0,40),
 ('email','Rdstroiy@yandex.ru','contacts','E-mail','text',0,1,50),
 ('whatsapp','https://wa.me/79807691111','contacts','Ссылка WhatsApp','text',0,0,60),
-('telegram','https://t.me/regiondorstroy','contacts','Ссылка Telegram','text',0,0,70),
+('telegram','','contacts','Ссылка Telegram (пусто — кнопки Telegram на сайте нет)','text',0,0,70),
 ('address_short','г. Орёл, Орловская область','contacts','Город/область','text',0,1,80),
 ('hours_text','Пн–Сб, 8:00–20:00','contacts','Режим работы','text',0,1,90),
 

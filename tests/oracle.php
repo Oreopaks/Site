@@ -44,6 +44,10 @@ foreach ([
         => "  @media (max-width:640px){\n    header>div:first-child{gap:10px!important}\n    header>div:first-child>a{gap:9px!important}\n    header>div:first-child>a img{width:40px!important;height:40px!important}\n    header>div:first-child>a div div:first-child{font-size:18px!important}\n    header>div:first-child>a div div+div{letter-spacing:1px!important}\n    header>div:first-child>div:last-child{gap:8px!important}\n    [data-burger]{width:44px!important}\n",
     '<button onclick="toggleMenu()" data-burger'
         => '<a href="tel:+79807691111" data-hcall aria-label="Позвонить 8 980 769-11-11"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h3l2 5-2.2 1.3a12 12 0 0 0 5.7 5.7L16 15l5 2v3a2 2 0 0 1-2 2A17 17 0 0 1 4 5a2 2 0 0 1 2-2Z"/></svg></a>' . "\n        " . '<button onclick="toggleMenu()" data-burger',
+    // 2026-11-03: аккаунта t.me/regiondorstroy (из макета) нет — кнопки Telegram показываются, только если ссылка задана в настройках (в сиде пусто)
+    "\n        <a href=\"https://t.me/regiondorstroy\" style=\"color:#FFC700;font-weight:600\">Telegram</a>" => '',
+    "\n            <a href=\"https://t.me/regiondorstroy\" style=\"display:inline-flex;align-items:center;gap:8px;background:#1f1f1f;color:#fff;padding:13px 20px;font-weight:700;font-size:14px\" style-hover=\"background:#FFC700;color:#0d0d0d\">Telegram</a>" => '',
+    '"sameAs": ["https://t.me/regiondorstroy", "https://wa.me/79807691111"]' => '"sameAs": ["https://wa.me/79807691111"]',
     // 2026-11-03: бургер шапки 48×42 → 48×44 (тап-зона ≥44, tests/pw/launch.js F14)
     'color:#fff;width:48px;height:42px;cursor:pointer' => 'color:#fff;width:48px;height:44px;cursor:pointer',
     // 2026-11-03: тап-зоны подвала ≥44px на телефоне и тач-планшете (tests/pw/launch.js F13)

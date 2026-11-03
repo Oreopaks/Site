@@ -973,6 +973,17 @@ check('T5: docs/OWNER-ACTIONS.md есть и упоминает все fact_* и
 [$code, $body] = req("$base/send.php", ['comment' => str_repeat("ab\r\n", 300)] + $lead + ['consent' => '1']);
 check('send.php: перенос \\r\\n считается за 1 символ (как maxlength) → 200', $code === 200, "$code $body");
 
+// Telegram: ссылка пуста (сид) → ни кнопок, ни пустого sameAs; задана → обе кнопки и sameAs
+$tg = fn(string $h) => [substr_count($h, '>Telegram</a>'), preg_match('~<script type="application/ld\+json">(.*?)</script>~s', $h, $m) ? json_encode(json_decode($m[1], true)['sameAs'] ?? null) : '?'];
+[, $h] = req("$base/");
+[$n, $same] = $tg($h);
+check("Telegram пуст → кнопок 0 (есть $n), sameAs без пустых: [$same]", $n === 0 && !str_contains($same, '""') && str_contains($same, 'wa.me'));
+$set('telegram', 'https://t.me/rds_test');
+[, $h] = req("$base/");
+[$n, $same] = $tg($h);
+check("Telegram задан → кнопок 2 (есть $n), в sameAs", $n === 2 && str_contains($same, 't.me\/rds_test'), $same);
+$set('telegram', '');
+
 // публичные HTML-страницы нельзя встроить в чужой iframe (кликджекинг формы заявки)
 foreach (['/', '/arenda-spetstekhniki/', '/privacy.php', '/consent.php'] as $u) {
     [$code, , $hs] = req("$base$u");

@@ -27,7 +27,7 @@ $biz = [
         'longitude' => (float)$s['ld_geo_lon'],
     ],
     'areaServed' => $s['ld_area'],
-    'sameAs' => [$s['telegram'], $s['whatsapp']],
+    'sameAs' => array_values(array_filter([$s['telegram'], $s['whatsapp']])),
     'openingHoursSpecification' => [
         '@type' => 'OpeningHoursSpecification',
         'dayOfWeek' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
@@ -205,7 +205,9 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
       <div style="display:flex;gap:20px;align-items:center">
         <a href="mailto:<?= e($s['email']) ?>" style="color:#cfcfcf"><?= e($s['email']) ?></a>
         <a href="<?= e($s['whatsapp']) ?>" style="color:#FFC700;font-weight:600">WhatsApp</a>
+<?php if ($s['telegram'] !== ''): ?>
         <a href="<?= e($s['telegram']) ?>" style="color:#FFC700;font-weight:600">Telegram</a>
+<?php endif ?>
       </div>
     </div>
   </div>
@@ -513,7 +515,9 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
 
           <div style="display:flex;gap:12px;flex-wrap:wrap">
             <a href="<?= e($s['whatsapp']) ?>" style="display:inline-flex;align-items:center;gap:8px;background:#1f1f1f;color:#fff;padding:13px 20px;font-weight:700;font-size:14px" style-hover="background:#FFC700;color:#0d0d0d">WhatsApp</a>
+<?php if ($s['telegram'] !== ''): ?>
             <a href="<?= e($s['telegram']) ?>" style="display:inline-flex;align-items:center;gap:8px;background:#1f1f1f;color:#fff;padding:13px 20px;font-weight:700;font-size:14px" style-hover="background:#FFC700;color:#0d0d0d">Telegram</a>
+<?php endif ?>
           </div>
         </div>
 
