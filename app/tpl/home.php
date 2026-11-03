@@ -179,6 +179,12 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
     div[style*="80px 32px 90px"]{padding-left:18px!important;padding-right:18px!important}
     div[style*="padding:9px 32px"]{padding-left:18px!important;padding-right:18px!important}
   }
+  /* подвал на телефоне и тач-планшете: ссылки 17–19px по высоте → тап-зона ≥44px, ПК (мышь) без изменений */
+  @media (max-width:640px),(pointer:coarse){
+    footer [style*="flex-direction:column"]{gap:0!important}
+    footer [style*="flex-direction:column"]>*{display:flex;align-items:center;min-height:44px}
+    footer span>a{display:inline-flex;align-items:center;min-height:44px}
+  }
 
 </style>
 </head>
