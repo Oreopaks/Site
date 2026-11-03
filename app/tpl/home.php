@@ -144,7 +144,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
     [data-r="g4"]{grid-template-columns:repeat(2,1fr)!important}
     [data-r="g5"]{grid-template-columns:repeat(3,1fr)!important}
   }
-  [data-hcall]{display:none;width:44px;height:42px;border:1.5px solid #3a3a3a;align-items:center;justify-content:center}
+  [data-hcall]{display:none;width:44px;height:44px;border:1.5px solid #3a3a3a;align-items:center;justify-content:center}
   @media (max-width:1120px){
     [data-hphone]{display:none!important}
     [data-hcall]{display:inline-flex!important}
@@ -233,7 +233,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
         <a href="tel:<?= e($s['phone_mobile']) ?>" data-hphone style="font-family:'Oswald';font-weight:600;font-size:18px;color:#fff;letter-spacing:.3px"><?= e($s['phone_mobile_fmt']) ?></a>
         <button onclick="openModal()" data-desknav style="background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope';font-weight:800;font-size:13.5px;padding:13px 22px;cursor:pointer;letter-spacing:.3px;text-transform:uppercase" style-hover="background:#ffd633">Заказать звонок</button>
         <a href="tel:<?= e($s['phone_mobile']) ?>" data-hcall aria-label="Позвонить <?= e($s['phone_mobile_fmt']) ?>"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h3l2 5-2.2 1.3a12 12 0 0 0 5.7 5.7L16 15l5 2v3a2 2 0 0 1-2 2A17 17 0 0 1 4 5a2 2 0 0 1 2-2Z"/></svg></a>
-        <button onclick="toggleMenu()" data-burger aria-label="Открыть меню" style="background:none;border:1.5px solid #3a3a3a;color:#fff;width:48px;height:42px;cursor:pointer;align-items:center;justify-content:center;flex-direction:column;gap:5px" style-hover="border-color:#FFC700">
+        <button onclick="toggleMenu()" data-burger aria-label="Открыть меню" style="background:none;border:1.5px solid #3a3a3a;color:#fff;width:48px;height:44px;cursor:pointer;align-items:center;justify-content:center;flex-direction:column;gap:5px" style-hover="border-color:#FFC700">
           <span aria-hidden="true" style="display:block;width:20px;height:2px;background:#FFC700"></span>
           <span aria-hidden="true" style="display:block;width:20px;height:2px;background:#FFC700"></span>
           <span aria-hidden="true" style="display:block;width:20px;height:2px;background:#FFC700"></span>

@@ -1,7 +1,8 @@
 // Playwright: фиксы перед запуском (план 2026-11-03, F1–F12). F1 «Сохранить» без правок → «Изменений нет»; F2 тосты editor без отсылки к «Опубликовать»;
 // F3 «Восстановить» из корзины → на прежнее место; F4 «Заявка удалена.»; F5 заявки карточками на 390; F6 «Сайт ↗» и ссылка на опубликованную посадочную;
 // F7 подсказка у «Режим работы»; F8 maxlength=1000 у комментария нижней формы; F9 favicon в админке; F10 заявки без горизонтальной прокрутки страницы на 390 и 768;
-// F11 кнопки ≥44×44 на 390; F12 плашка с раскрытым «Что изменено» ≤40% экрана на 390; F13 ссылки подвала сайта ≥44px на телефоне и тач-планшете.
+// F11 кнопки ≥44×44 на 390; F12 плашка с раскрытым «Что изменено» ≤40% экрана на 390; F13 ссылки подвала сайта ≥44px на телефоне и тач-планшете;
+// F14 «Позвонить» и бургер шапки сайта ≥44×44.
 // Стенд: RDS_DB=<db> php -S 127.0.0.1:8080 -t public public/router.php
 // Запуск: RDS_DB=<db> NODE_PATH=/home/oleg/traning/web/node_modules node tests/pw/launch.js
 const { chromium } = require('playwright-core');
@@ -170,6 +171,15 @@ for (const i of [1, 2]) sql('INSERT INTO leads (source, name, phone, service, co
       check(`F13 @${w}${touch ? ' тач' : ''} /${url} подвал: высоты ссылок ${hs.join(' ')}`, hs.length >= 9 && hs.every((h) => big ? h >= 44 : h < 44));
       await p.context().close();
     }
+
+  // F14: «Позвонить» и бургер в шапке ≥44×44 везде, где видны
+  for (const w of [360, 390, 768, 1024]) {
+    const p = await (await browser.newContext({ viewport: { width: w, height: 800 }, reducedMotion: 'reduce' })).newPage();
+    await p.goto(BASE);
+    const r = await p.$$eval('[data-hcall], [data-burger]', (els) => els.filter((e) => e.getClientRects().length).map((e) => { const b = e.getBoundingClientRect(); return [Math.round(b.width), Math.round(b.height)]; }));
+    check(`F14 @${w} кнопки шапки ${r.map((x) => x.join('×')).join(' ')}`, r.length === 2 && r.every(([bw, bh]) => bw >= 44 && bh >= 44));
+    await p.context().close();
+  }
 
   await browser.close();
   process.exit(fail ? 1 : 0);

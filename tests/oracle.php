@@ -39,11 +39,13 @@ foreach ([
     // мобильный первый экран, 2026-10-28: иконка tel: в шапке перед бургером (<=1120px, где скрыт data-hphone);
     // при <=640px шапка ужата, чтобы иконка и бургер влезали в 360px (tests/pw/call.js)
     "  @media (max-width:1120px){\n    [data-hphone]{display:none!important}\n  }"
-        => "  [data-hcall]{display:none;width:44px;height:42px;border:1.5px solid #3a3a3a;align-items:center;justify-content:center}\n  @media (max-width:1120px){\n    [data-hphone]{display:none!important}\n    [data-hcall]{display:inline-flex!important}\n  }",
+        => "  [data-hcall]{display:none;width:44px;height:44px;border:1.5px solid #3a3a3a;align-items:center;justify-content:center}\n  @media (max-width:1120px){\n    [data-hphone]{display:none!important}\n    [data-hcall]{display:inline-flex!important}\n  }",
     "  @media (max-width:640px){\n"
         => "  @media (max-width:640px){\n    header>div:first-child{gap:10px!important}\n    header>div:first-child>a{gap:9px!important}\n    header>div:first-child>a img{width:40px!important;height:40px!important}\n    header>div:first-child>a div div:first-child{font-size:18px!important}\n    header>div:first-child>a div div+div{letter-spacing:1px!important}\n    header>div:first-child>div:last-child{gap:8px!important}\n    [data-burger]{width:44px!important}\n",
     '<button onclick="toggleMenu()" data-burger'
         => '<a href="tel:+79807691111" data-hcall aria-label="Позвонить 8 980 769-11-11"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h3l2 5-2.2 1.3a12 12 0 0 0 5.7 5.7L16 15l5 2v3a2 2 0 0 1-2 2A17 17 0 0 1 4 5a2 2 0 0 1 2-2Z"/></svg></a>' . "\n        " . '<button onclick="toggleMenu()" data-burger',
+    // 2026-11-03: бургер шапки 48×42 → 48×44 (тап-зона ≥44, tests/pw/launch.js F14)
+    'color:#fff;width:48px;height:42px;cursor:pointer' => 'color:#fff;width:48px;height:44px;cursor:pointer',
     // 2026-11-03: тап-зоны подвала ≥44px на телефоне и тач-планшете (tests/pw/launch.js F13)
     "  }\n\n</style>"
         => "  }\n  /* подвал на телефоне и тач-планшете: ссылки 17–19px по высоте → тап-зона ≥44px, ПК (мышь) без изменений */\n  @media (max-width:640px),(pointer:coarse){\n    footer [style*=\"flex-direction:column\"]{gap:0!important}\n    footer [style*=\"flex-direction:column\"]>*{display:flex;align-items:center;min-height:44px}\n    footer span>a{display:inline-flex;align-items:center;min-height:44px}\n  }\n\n</style>",

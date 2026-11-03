@@ -973,4 +973,10 @@ check('T5: docs/OWNER-ACTIONS.md есть и упоминает все fact_* и
 [$code, $body] = req("$base/send.php", ['comment' => str_repeat("ab\r\n", 300)] + $lead + ['consent' => '1']);
 check('send.php: перенос \\r\\n считается за 1 символ (как maxlength) → 200', $code === 200, "$code $body");
 
+// публичные HTML-страницы нельзя встроить в чужой iframe (кликджекинг формы заявки)
+foreach (['/', '/arenda-spetstekhniki/', '/privacy.php', '/consent.php'] as $u) {
+    [$code, , $hs] = req("$base$u");
+    check("$u: Content-Security-Policy: frame-ancestors 'self'", $code === 200 && in_array("Content-Security-Policy: frame-ancestors 'self'", $hs, true), "$code " . implode(' | ', preg_grep('/^Content-Security/i', $hs)));
+}
+
 exit($fail ? 1 : 0);
