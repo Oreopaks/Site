@@ -982,7 +982,12 @@ $set('telegram', 'https://t.me/rds_test');
 [, $h] = req("$base/");
 [$n, $same] = $tg($h);
 check("Telegram задан → кнопок 2 (есть $n), в sameAs", $n === 2 && str_contains($same, 't.me\/rds_test'), $same);
-$set('telegram', '');
+$set('telegram', 'https://t.me/regiondorstroy');
+[$code] = req("$base/admin/?p=settings&g=contacts&a=save", ['_csrf' => $csrfOf($boss), 'telegram' => ''], $boss);
+$tv = db()->query("SELECT value FROM settings WHERE key = 'telegram'")->fetchColumn();
+check("owner очищает «Ссылка Telegram» в админке → $code, сохранено пусто", $code === 302 && $tv === '', "$code [$tv]");
+[$code] = req("$base/admin/?p=settings&g=contacts&a=save", ['_csrf' => $csrfOf($boss), 'telegram' => 'javascript:alert(1)'], $boss);
+check("«Ссылка Telegram» javascript: → 422", $code === 422, (string)$code);
 
 // публичные HTML-страницы нельзя встроить в чужой iframe (кликджекинг формы заявки)
 foreach (['/', '/arenda-spetstekhniki/', '/privacy.php', '/consent.php'] as $u) {

@@ -652,7 +652,8 @@ if ($p === 'settings') {
             $v = $in($k);
             $ok = preg_match('/^.{0,4000}$/suD', $v) && match ($k) {
                 'base_url' => preg_match('~^https?://\S+/$~D', $v),
-                'whatsapp', 'telegram' => valid_href($v),
+                'whatsapp' => valid_href($v),
+                'telegram' => $v === '' || valid_href($v), // пусто — кнопок Telegram на сайте нет
                 'phone_mobile', 'phone_city' => valid_href("tel:$v"),
                 'email' => valid_href("mailto:$v"),
                 'metrika_id' => preg_match('/^\d{0,12}$/D', $v),
