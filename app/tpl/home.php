@@ -530,7 +530,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
                 <option<?= $r['href'] === $here ? ' selected' : '' ?>><?= e($r['title']) ?></option>
 <?php endif; endforeach ?>
               </select>
-              <textarea placeholder="Комментарий (объём, адрес, сроки)" aria-label="Комментарий" rows="3" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none;resize:vertical" style-focus="border-color:#FFC700"></textarea>
+              <textarea placeholder="Комментарий (объём, адрес, сроки)" aria-label="Комментарий" rows="3" maxlength="1000" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none;resize:vertical" style-focus="border-color:#FFC700"></textarea>
               <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;cursor:pointer">
                 <input type="checkbox" required aria-label="Согласие на обработку персональных данных" style="margin-top:2px;width:16px;height:16px;accent-color:#FFC700;flex-shrink:0">
                 <span style="color:#8f8f8f;font-size:13px;line-height:1.45">Даю <a href="consent.php" target="_blank" style="text-decoration:underline">согласие на обработку персональных данных</a><span data-chint aria-live="polite" style="display:block;color:#FFC700;font-weight:700"></span></span>

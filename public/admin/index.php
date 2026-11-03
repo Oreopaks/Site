@@ -427,8 +427,9 @@ if ($p === 'content') {
         foreach ($new as $f => $v) {
             if (($old[$f] === null ? null : (string)$old[$f]) !== $v) $n[$f] = $v;
         }
+        if (!$n) go("content&t=$t&ok=same"); // ничего не изменилось — черновик не трогаем и «Сохранено» не пишем
         // в черновик пишутся только изменённые поля — параллельная правка других полей той же строки не затирается
-        $rev = !$n ? 0 : draft_write(function (array $d) use ($t, $id, $n, $fit) {
+        $rev = draft_write(function (array $d) use ($t, $id, $n, $fit) {
             foreach ($d[$t] as $k => $r) if ((int)$r['id'] === $id) { $d[$t][$k] = $n + $r; return $fit(by($d, $t, $id)); }
             return null;
         });
@@ -583,17 +584,19 @@ if ($p === 'trash') {
         if ($in('t') !== '') { // удалено в черновике, не опубликовано → строка из живой таблицы обратно в черновик
             if (!isset(lists()[$in('t')])) page('Не найдено', '<p>Список не найден.</p>', 404);
             $rev = revert($in('t'), (int)$in('id'));
-        } else { // из корзины → в конец черновика; строка trash остаётся до «Опубликовать» (после «Отменить всё» её можно восстановить снова)
+        } else { // из корзины → на прежнее место (sort из строки корзины); строка trash остаётся до «Опубликовать» (после «Отменить всё» её можно восстановить снова)
             $id = (int)$in('id');
             $full = false;
             $rev = draft_write(function (array $d) use ($id, $json, &$full) {
                 $tr = rows('SELECT * FROM trash WHERE id = ?', [$id])[0] ?? null;
                 $row = $tr ? json_decode($tr['row'], true) : null;
                 if (!is_array($row) || !isset($d[$tr['t']]) || in_array((int)$row['id'], array_map('intval', array_column($d[$tr['t']], 'id')), true)) return null;
-                $new = append($d, $tr['t'], $row);
-                if ($new === null) { $full = true; return null; }
-                audit('trash', 'restore', null, $json(['t' => $tr['t']] + $row));
-                return by($new, $tr['t'], (int)$row['id']);
+                $t = $tr['t'];
+                if (count($d[$t]) >= lists()[$t][5]) { $full = true; return null; }
+                $d[$t][] = $row;
+                usort($d[$t], fn($x, $y) => [(int)$x['sort'], (int)$x['id']] <=> [(int)$y['sort'], (int)$y['id']]); // как ORDER BY sort, id на сайте
+                audit('trash', 'restore', null, $json(['t' => $t] + $row));
+                return by($d, $t, (int)$row['id']);
             });
             if ($full) page('Корзина', '<p class="err">Не восстановлено: список уже полон — удалите лишнее.</p><p><a href="/admin/?p=trash">В корзину</a></p>', 422);
         }
@@ -790,7 +793,7 @@ if ($p === 'leads') {
         db()->commit();
         // ponytail: best-effort — secure_delete затирает страницы в файле БД, но старые кадры с ПДн живут в -wal до checkpoint
         db()->query('PRAGMA wal_checkpoint(TRUNCATE)')->fetchAll();
-        go("leads&$qs&ok=1");
+        go("leads&$qs&ok=deleted");
     }
     if ($post) page('Не найдено', '<p>Действие не найдено.</p>', 404);
 

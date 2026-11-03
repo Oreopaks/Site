@@ -969,4 +969,8 @@ $oa = @file_get_contents("$root/docs/OWNER-ACTIONS.md") ?: '';
 $miss = array_filter($facts, fn($k) => !str_contains($oa, "`$k`"));
 check('T5: docs/OWNER-ACTIONS.md есть и упоминает все fact_* из app/ и db/seed-pages.sql', $oa !== '' && count($facts) >= 13 && !$miss, implode(', ', $miss));
 
+// F8: 300 строк «ab» с \r\n — 1200 байт, но 900 символов по счёту maxlength формы → принимается
+[$code, $body] = req("$base/send.php", ['comment' => str_repeat("ab\r\n", 300)] + $lead + ['consent' => '1']);
+check('send.php: перенос \\r\\n считается за 1 символ (как maxlength) → 200', $code === 200, "$code $body");
+
 exit($fail ? 1 : 0);

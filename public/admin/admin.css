@@ -44,6 +44,7 @@ button:disabled{opacity:.35;cursor:default}
 .grid .st-new td:first-child{border-left:4px solid #FFC700}
 .grid .st-spam{opacity:.6}
 @media (max-width:760px){.grid{display:block;overflow-x:auto}} /* узкий экран: таблица прокручивается сама, страница — нет */
+.hscroll{overflow-x:auto} /* таблица заявок шире экрана (761–830px) прокручивается сама, страница — нет */
 .stat{max-width:700px}
 .stat meter{width:200px;max-width:30vw}
 .inline{display:flex;gap:4px;align-items:center;margin-bottom:4px}
@@ -114,9 +115,19 @@ button.danger{background:#b00020;color:#fff}
   input[type=checkbox]{width:24px;height:24px;min-height:0}
   .fields label.chk{min-height:44px}
   .sort{gap:8px}
-  .sort button{min-width:44px}
+  button{min-width:44px}
   a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px}
   /* ponytail: fixed + запас снизу под высоту плашки (~170px на 390); sticky внизу не работает — плашка стоит в начале страницы */
-  .draft{position:fixed;left:0;right:0;bottom:0;z-index:10;margin:0;padding:8px 16px;gap:4px 12px;font-size:14px;box-shadow:0 -2px 8px rgba(0,0,0,.25)}
+  /* открытый «Что изменено» — не больше 40% экрана: плашка прокручивается сама (одна прокрутка, без вложенной у списка) */
+  .draft{position:fixed;left:0;right:0;bottom:0;z-index:10;margin:0;padding:8px 16px;gap:4px 12px;font-size:14px;box-shadow:0 -2px 8px rgba(0,0,0,.25);max-height:40vh;overflow-y:auto}
+  .changes ul{max-height:none}
   body:has(.draft){padding-bottom:200px}
+  /* заявки: строка — карточка, подпись колонки у каждой ячейки из data-l; статус, OK и «Удалить» без горизонтальной прокрутки */
+  .leads,.leads tbody,.leads tr,.leads td{display:block}
+  .leads thead{display:none}
+  .leads tr{border:1px solid #ddd;margin-bottom:10px}
+  .leads td{border:0}
+  .leads td+td{border-top:1px solid #eee}
+  .leads .pre{max-width:none}
+  .leads td::before{content:attr(data-l);display:block;color:#666;font-size:12px}
 }

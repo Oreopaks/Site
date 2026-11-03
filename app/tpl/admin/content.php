@@ -16,11 +16,12 @@ $kinds = ['fixed' => 'фиксированная', 'from' => 'от …', 'contra
 <?php endforeach ?>
   </ul>
 </div>
-<?php elseif (isset($_GET['ok'])): $rev = (int)($_GET['rev'] ?? 0); ?>
+<?php elseif (isset($_GET['ok'])): $rev = (int)($_GET['rev'] ?? 0);
+    $when = can('publish') ? ' после «Опубликовать»' : ', когда опубликует владелец или менеджер'; // у editor кнопки «Опубликовать» нет ?>
 <div class="toast">
   <p class="ok"><?= match ($_GET['ok']) { 'published' => 'Опубликовано — изменения уже на сайте.', 'discarded' => 'Изменения отменены — на сайте всё как было.',
-    'deleted' => 'Удалено из черновика. С сайта исчезнет после «Опубликовать».', 'reverted' => 'Строка возвращена как на сайте.',
-    'undone' => 'Последнее изменение отменено.', default => 'Сохранено в черновик. На сайте появится после «Опубликовать».' } ?></p>
+    'deleted' => "Удалено из черновика. С сайта исчезнет$when.", 'reverted' => 'Строка возвращена как на сайте.',
+    'undone' => 'Последнее изменение отменено.', 'same' => 'Изменений нет — сохранять нечего.', default => "Сохранено в черновик. На сайте появится$when." } ?></p>
 <?php if ($rev > 0): ?>
   <form method="post" action="/admin/?p=content&amp;t=<?= $t ?>&amp;a=undo">
     <input type="hidden" name="_csrf" value="<?= e($csrf) ?>"><input type="hidden" name="rev" value="<?= $rev ?>"><button>Отменить</button>

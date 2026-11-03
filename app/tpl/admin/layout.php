@@ -11,6 +11,7 @@ $nav = ['home' => ['Обзор', null], 'content' => ['Контент', 'content
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title><?= $code === 422 ? 'Ошибка: ' : '' /* П6: экранный диктор сразу слышит ошибку */ ?><?= e($title) ?> — админка РегионДорСтрой</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/admin/admin.css">
 <script src="/admin/admin.js" defer></script>
 </head>
@@ -22,6 +23,7 @@ $nav = ['home' => ['Обзор', null], 'content' => ['Контент', 'content
 <?php foreach ($nav as $k => [$label, $perm]): if ($perm !== null && !can($perm)) continue; ?>
     <a href="/admin/?p=<?= $k ?>"<?= ($_GET['p'] ?? 'home') === $k ? ' class="on"' : '' ?>><?= e($label) ?></a>
 <?php endforeach ?>
+    <a href="/" target="_blank" rel="noopener">Сайт ↗</a>
   </nav>
   <form method="post" action="/admin/?p=logout" class="logout">
     <input type="hidden" name="_csrf" value="<?= e($csrf) ?>">

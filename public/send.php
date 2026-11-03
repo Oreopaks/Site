@@ -26,7 +26,9 @@ if (($_POST['consent'] ?? null) !== '1') out(400, ['ok' => false, 'error' => 'co
 
 $lead = [
     'source' => $f('source'), 'name' => $f('name'), 'phone' => $f('phone'),
-    'service' => $f('service'), 'material' => $f('material'), 'comment' => $f('comment'),
+    'service' => $f('service'), 'material' => $f('material'),
+    // браузер шлёт перенос как \r\n, а maxlength="1000" формы считает его за 1 символ
+    'comment' => str_replace("\r\n", "\n", $f('comment')),
 ];
 $ok = in_array($lead['source'], ['calc', 'call', 'material'], true)
     && preg_match('/^.{1,80}$/suD', $lead['name'])

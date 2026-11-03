@@ -66,6 +66,8 @@ foreach ([
     '<option>Поставка материалов</option>' => '<option>Поставка материалов</option><option>Планировка участков</option>',
     'margin-bottom:16px;outline:none" style-focus="border-color:#FFC700">'
         => 'margin-bottom:16px;outline:none" style-focus="border-color:#FFC700"><div id="modalTask" style="display:none"><textarea placeholder="Объём, адрес, сроки" aria-label="Объём, адрес, сроки" rows="3" maxlength="900" style="display:block;width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:\'Manrope\';margin-bottom:16px;outline:none;resize:vertical" style-focus="border-color:#FFC700"></textarea></div>',
+    // 2026-11-03: комментарий нижней формы — maxlength как лимит send.php (1000), иначе 400 и заявка теряется. tests/pw/launch.js
+    'aria-label="Комментарий" rows="3" style=' => 'aria-label="Комментарий" rows="3" maxlength="1000" style=',
 ] as $from => $to) {
     $expected = str_replace($from, $to, $expected, $c);
     if ($c !== 1) { fwrite(STDERR, "FAIL: правка роя — ожидалась 1 замена, сделано $c: $from\n"); exit(1); }

@@ -12,7 +12,7 @@ $names = ['seo' => 'SEO', 'ld' => 'Разметка (JSON-LD)', 'hero' => 'Пе�
 <?php elseif (isset($_GET['ok'])): ?><p class="ok">Сохранено.</p>
 <?php endif ?>
 <?php foreach ($status as $url => $gaps): ?>
-<p<?= $gaps ? '' : ' class="ok"' ?>><?= e($url) ?> <?= $gaps ? 'не опубликована — заполните: ' . e(implode('; ', $gaps)) : 'опубликована' ?></p>
+<p<?= $gaps ? '' : ' class="ok"' ?>><?= $gaps ? e($url) . ' не опубликована — заполните: ' . e(implode('; ', $gaps)) : '<a href="' . e($url) . '" target="_blank" rel="noopener">' . e($url) . ' опубликована</a>' ?></p>
 <?php endforeach ?>
 <form method="post" action="/admin/?p=settings&amp;g=<?= $g ?>&amp;a=save" class="fields settings">
   <input type="hidden" name="_csrf" value="<?= e($csrf) ?>">
@@ -26,6 +26,9 @@ $names = ['seo' => 'SEO', 'ld' => 'Разметка (JSON-LD)', 'hero' => 'Пе�
     <input name="<?= e($r['key']) ?>" value="<?= e($r['value']) ?>"<?= $ro ? ' disabled' : '' ?>>
 <?php endif ?>
   </label>
+<?php if ($r['key'] === 'hours_text'): /* те же часы — в жёлтой полосе (items stat_bar): правятся отдельно */ ?>
+  <p class="hint">Часы также показаны в жёлтой полосе под первым экраном: <a href="/admin/?p=content&amp;t=stat_bar">Контент → Цифры под шапкой</a></p>
+<?php endif ?>
 <?php endforeach ?>
   <button>Сохранить</button>
 </form>

@@ -1,7 +1,7 @@
 <?php
 /** @var array $gone [[t, строка]] — удалено в черновике @var array $list строки trash + login @var array $titles t => заголовок списка @var array $drafted t => id строк черновика @var string $csrf */
 ?>
-<?php if (isset($_GET['ok'])): ?><p class="ok">Возвращено в черновик. На сайте появится после «Опубликовать».</p>
+<?php if (isset($_GET['ok'])): ?><p class="ok">Возвращено в черновик. На сайте появится<?= can('publish') ? ' после «Опубликовать»' : ', когда опубликует владелец или менеджер' ?>.</p>
 <?php endif ?>
 <h2>Удалено в черновике (ещё на сайте)</h2>
 <?php if (!$gone): ?><p>Нет.</p>
