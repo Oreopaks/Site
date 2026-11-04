@@ -27,7 +27,9 @@ session_set_cookie_params([
     'path' => '/admin/',
     'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
     'httponly' => true,
-    'samesite' => 'Strict',
+    // Lax, не Strict: iOS Safari, открытый ссылкой из другого приложения (Telegram, почта), не шлёт Strict-cookie
+    // во всей вкладке → сессия теряется, вход по кругу. Действия только POST+_csrf; Lax cookie на чужой POST не шлёт
+    'samesite' => 'Lax',
 ]);
 session_start();
 $_SESSION['csrf'] ??= bin2hex(random_bytes(32));

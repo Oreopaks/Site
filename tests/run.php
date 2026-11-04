@@ -137,8 +137,8 @@ check('curl -I / → нет Set-Cookie', $setCookie($hdr) === '', $setCookie($hd
 
 [$code, $boss, $pre, $h0] = $login('boss', $pw);
 $sc = $setCookie($h0);
-check('Set-Cookie админки: path=/admin/, HttpOnly, SameSite=Strict',
-    stripos($sc, 'path=/admin/') !== false && stripos($sc, 'HttpOnly') !== false && stripos($sc, 'SameSite=Strict') !== false, $sc);
+check('Set-Cookie админки: path=/admin/, HttpOnly, SameSite=Lax (Strict ломает вход в iOS Safari из других приложений)',
+    stripos($sc, 'path=/admin/') !== false && stripos($sc, 'HttpOnly') !== false && stripos($sc, 'SameSite=Lax') !== false, $sc);
 check('owner login → 302, session id regenerated', $code === 302 && $boss !== '' && $boss !== $pre, "$code $pre → $boss");
 [$code, , $hdr] = req("$base/admin/?p=leads", null, $boss);
 $csp = implode("\n", preg_grep('~^Content-Security-Policy:~i', $hdr));
