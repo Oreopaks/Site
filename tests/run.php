@@ -995,4 +995,12 @@ foreach (['/', '/arenda-spetstekhniki/', '/privacy.php', '/consent.php'] as $u) 
     check("$u: Content-Security-Policy: frame-ancestors 'self'", $code === 200 && in_array("Content-Security-Policy: frame-ancestors 'self'", $hs, true), "$code " . implode(' | ', preg_grep('/^Content-Security/i', $hs)));
 }
 
+// вход с устаревшим токеном (старая вкладка, без сессии) → форма заново с новым токеном, повтор входит
+[$code, $html, $h] = req("$base/admin/?p=login", ['_csrf' => str_repeat('0', 64), 'login' => 'boss', 'password' => $pw]);
+$c1 = $sid($h);
+preg_match('~name="_csrf" value="([0-9a-f]+)"~', $html, $m);
+check('вход с устаревшим токеном → 403 с формой и подсказкой, не голый «Доступ запрещён»', $code === 403 && str_contains($html, 'Страница входа устарела') && isset($m[1]) && $c1 !== '', (string)$code);
+[$code] = req("$base/admin/?p=login", ['_csrf' => $m[1] ?? '', 'login' => 'boss', 'password' => $pw], $c1);
+check('повтор с формы-подсказки → 302, вошёл', $code === 302, (string)$code);
+
 exit($fail ? 1 : 0);
