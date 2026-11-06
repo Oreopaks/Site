@@ -3,6 +3,7 @@
 require dirname(__DIR__) . '/app/bootstrap.php';
 
 const SEND_PER_MIN = 20; // ponytail: общий лимит на сайт за минуту; первая линия — honeypot + согласие
+const MAIL_FROM = 'zayavki@regiondorstroy.com'; // отправитель уведомлений: свой домен (SPF include:_spf.timeweb.ru) вместо технического адреса хостинга — меньше спама
 
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
@@ -63,7 +64,8 @@ if ($to !== '') {
     foreach (['source' => 'Форма', 'name' => 'Имя', 'phone' => 'Телефон', 'service' => 'Услуга', 'material' => 'Материал', 'comment' => 'Комментарий'] as $k => $label)
         if ($lead[$k] !== '') $body .= "$label: {$lead[$k]}\n";
     $subj = '=?UTF-8?B?' . base64_encode("Заявка №$n") . '?=';
-    if (!@mail($to, $subj, $body, "Content-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit")) {
+    $from = 'From: =?UTF-8?B?' . base64_encode('Сайт РегионДорСтрой') . '?= <' . MAIL_FROM . '>';
+    if (!@mail($to, $subj, $body, "$from\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit", '-f' . MAIL_FROM)) {
         try { db()->prepare('UPDATE leads SET mail_error = ? WHERE id = ?')->execute([gmdate('c') . ' mail() failed', $n]); }
         catch (Throwable $e) { error_log('send.php mail_error: ' . $e->getMessage()); }
     }
