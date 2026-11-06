@@ -53,6 +53,27 @@ foreach ([
     // 2026-11-03: тап-зоны подвала ≥44px на телефоне и тач-планшете (tests/pw/launch.js F13)
     "  }\n\n</style>"
         => "  }\n  /* подвал на телефоне и тач-планшете: ссылки 17–19px по высоте → тап-зона ≥44px, ПК (мышь) без изменений */\n  @media (max-width:640px),(pointer:coarse){\n    footer [style*=\"flex-direction:column\"]{gap:0!important}\n    footer [style*=\"flex-direction:column\"]>*{display:flex;align-items:center;min-height:44px}\n    footer span>a{display:inline-flex;align-items:center;min-height:44px}\n  }\n\n</style>",
+    // 2026-11-06: лок-апы «лого + название» (tests/pw/brand.js): разрядка капса .06em/.08em, подпись = .525 кегля названия → ширины
+    // названия и 1-й строки подписи равны; ритм и оптический центр; шапка не переполняется на 320–1920 (<360 — ужатый лок-ап, 1025–1170 — плотнее меню);
+    // карточка «Почему мы» — тот же набор названия (капс, .06em, шкала 20/18.5/14.8), лого 48 на <=1024; контакты — одна строка
+    // или ровно две «г. Орёл · телефон» / почта (container query по текстовому блоку, второй « · » скрыт визуально, в DOM остаётся)
+    '<div style="line-height:1.05">' => '<div style="line-height:1.35">',
+    'font-size:20px;letter-spacing:.5px;color:#fff">РЕГИОНДОРСТРОЙ' => 'font-size:20px;letter-spacing:.06em;color:#fff;line-height:1;margin-bottom:.2em">РЕГИОНДОРСТРОЙ',
+    "{$tag}ДОРОГИ · БЛАГОУСТРОЙСТВО</div>{$tag}" => str_replace('letter-spacing:3px', 'letter-spacing:.08em', "{$tag}ДОРОГИ · БЛАГОУСТРОЙСТВО</div>{$tag}"),
+    "    [data-r=\"g5\"]{grid-template-columns:repeat(3,1fr)!important}\n  }\n"
+        => "    [data-r=\"g5\"]{grid-template-columns:repeat(3,1fr)!important}\n    #why [style*=\"gap:23px\"]{gap:13px!important;padding-left:16px!important;padding-right:16px!important}\n    #why img{width:48px!important;height:48px!important}\n  }\n",
+    "    [data-hcall]{display:inline-flex!important}\n  }\n"
+        => "    [data-hcall]{display:inline-flex!important}\n  }\n  /* шапка 1025–1170: лок-ап + 5 пунктов + кнопка + телефон не влезают при gap 28/24 — плотнее, пункты не переносятся (tests/pw/brand.js) */\n  @media (max-width:1170px){\n    header>div:first-child{gap:14px!important}\n    nav[data-desknav]{gap:18px!important}\n  }\n",
+    "    header>div:first-child>a{gap:9px!important}\n    header>div:first-child>a img{width:40px!important;height:40px!important}\n    header>div:first-child>a div div:first-child{font-size:18px!important}\n    header>div:first-child>a div div+div{letter-spacing:1px!important}\n    header>div:first-child>div:last-child{gap:8px!important}\n    [data-burger]{width:44px!important}\n"
+        => "    header>div:first-child>a{gap:11px!important}\n    header>div:first-child>a img{width:40px!important;height:40px!important}\n    header>div:first-child>a div div:first-child{font-size:18.5px!important}\n    header>div:first-child>a div div+div{font-size:9.7px!important}\n    header>div:first-child>div:last-child{gap:8px!important}\n    [data-burger]{width:44px!important}\n    #why img+div>div:first-child{font-size:18.5px!important}\n",
+    "    div[style*=\"padding:9px 32px\"]{padding-left:18px!important;padding-right:18px!important}\n  }\n"
+        => "    div[style*=\"padding:9px 32px\"]{padding-left:18px!important;padding-right:18px!important}\n  }\n  /* шапка <360: лок-ап ужат, чтобы рядом влезали иконка звонка и бургер; подпись = .525 кегля названия (ширины строк равны) */\n  @media (max-width:359px){\n    header>div:first-child>a{gap:10px!important}\n    header>div:first-child>a img{width:36px!important;height:36px!important}\n    header>div:first-child>a div div:first-child{font-size:14.8px!important}\n    header>div:first-child>a div div+div{font-size:7.8px!important}\n    #why img+div>div:first-child{font-size:14.8px!important}\n  }\n  /* контакты карточки «Почему мы»: одна строка или ровно две — «г. Орёл · телефон» / почта (294 = ширина строки при 14px + 2px) */\n  @container (max-width:294px){\n    #why [data-csep]{display:none}\n    #why [data-cmail]{display:block}\n  }\n",
+    'padding:22px 24px;display:flex;align-items:center;gap:20px">' => 'padding:22px 24px;display:flex;align-items:center;gap:23px">',
+    "font-weight:700;font-size:19px\">ООО" => "font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:.06em;line-height:1;padding-top:.1em\">ООО",
+    "alt=\"ООО РегионДорСтрой\" style=\"width:84px;height:84px;object-fit:contain;flex-shrink:0\">\n            <div>\n"
+        => "alt=\"ООО РегионДорСтрой\" style=\"width:84px;height:84px;object-fit:contain;flex-shrink:0\">\n            <div style=\"flex:1;min-width:0;container-type:inline-size\">\n",
+    'color:#6a6a6a;font-size:14px;margin-top:3px">г. Орёл · 8 980 769-11-11 · Rdstroiy@yandex.ru</div>'
+        => 'color:#6a6a6a;font-size:14px;margin-top:6px"><span style="white-space:nowrap">г. Орёл · 8 980 769-11-11</span><span data-csep> · </span><span data-cmail>Rdstroiy@yandex.ru</span></div>',
 ] as $from => $to) {
     if (substr_count($expected, $from) !== 1) { fwrite(STDERR, "FAIL: правка эталона не найдена ровно один раз: $from\n"); exit(1); }
     $expected = str_replace($from, $to, $expected);

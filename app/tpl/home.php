@@ -143,11 +143,18 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
   @media (max-width:1024px){
     [data-r="g4"]{grid-template-columns:repeat(2,1fr)!important}
     [data-r="g5"]{grid-template-columns:repeat(3,1fr)!important}
+    #why [style*="gap:23px"]{gap:13px!important;padding-left:16px!important;padding-right:16px!important}
+    #why img{width:48px!important;height:48px!important}
   }
   [data-hcall]{display:none;width:44px;height:44px;border:1.5px solid #3a3a3a;align-items:center;justify-content:center}
   @media (max-width:1120px){
     [data-hphone]{display:none!important}
     [data-hcall]{display:inline-flex!important}
+  }
+  /* шапка 1025–1170: лок-ап + 5 пунктов + кнопка + телефон не влезают при gap 28/24 — плотнее, пункты не переносятся (tests/pw/brand.js) */
+  @media (max-width:1170px){
+    header>div:first-child{gap:14px!important}
+    nav[data-desknav]{gap:18px!important}
   }
   @media (max-width:1024px){
     [data-desknav]{display:none!important}
@@ -166,18 +173,32 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
   }
   @media (max-width:640px){
     header>div:first-child{gap:10px!important}
-    header>div:first-child>a{gap:9px!important}
+    header>div:first-child>a{gap:11px!important}
     header>div:first-child>a img{width:40px!important;height:40px!important}
-    header>div:first-child>a div div:first-child{font-size:18px!important}
-    header>div:first-child>a div div+div{letter-spacing:1px!important}
+    header>div:first-child>a div div:first-child{font-size:18.5px!important}
+    header>div:first-child>a div div+div{font-size:9.7px!important}
     header>div:first-child>div:last-child{gap:8px!important}
     [data-burger]{width:44px!important}
+    #why img+div>div:first-child{font-size:18.5px!important}
     [data-r="g3"],[data-r="g4"],[data-r="g5"],[data-r="g2"],[data-r="foot"]{grid-template-columns:1fr!important}
     h1{font-size:33px!important}
     h2{font-size:32px!important}
     div[style*="padding:0 32px"]{padding-left:18px!important;padding-right:18px!important}
     div[style*="80px 32px 90px"]{padding-left:18px!important;padding-right:18px!important}
     div[style*="padding:9px 32px"]{padding-left:18px!important;padding-right:18px!important}
+  }
+  /* шапка <360: лок-ап ужат, чтобы рядом влезали иконка звонка и бургер; подпись = .525 кегля названия (ширины строк равны) */
+  @media (max-width:359px){
+    header>div:first-child>a{gap:10px!important}
+    header>div:first-child>a img{width:36px!important;height:36px!important}
+    header>div:first-child>a div div:first-child{font-size:14.8px!important}
+    header>div:first-child>a div div+div{font-size:7.8px!important}
+    #why img+div>div:first-child{font-size:14.8px!important}
+  }
+  /* контакты карточки «Почему мы»: одна строка или ровно две — «г. Орёл · телефон» / почта (294 = ширина строки при 14px + 2px) */
+  @container (max-width:294px){
+    #why [data-csep]{display:none}
+    #why [data-cmail]{display:block}
   }
   /* подвал на телефоне и тач-планшете: ссылки 17–19px по высоте → тап-зона ≥44px, ПК (мышь) без изменений */
   @media (max-width:640px),(pointer:coarse){
@@ -218,10 +239,10 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
       <a href="#top" style="display:flex;align-items:center;gap:13px;flex-shrink:0">
         <img src="assets/logo-rds.webp" alt="Логотип ООО «РегионДорСтрой»" style="width:48px;height:48px;object-fit:contain;flex-shrink:0">
 
-        <div style="line-height:1.05">
-          <div style="font-family:'Oswald';font-weight:700;font-size:20px;letter-spacing:.5px;color:#fff">РЕГИОНДОРСТРОЙ</div>
-          <div style="font-size:10.5px;letter-spacing:3px;color:#FFC700;font-weight:600">ДОРОГИ · БЛАГОУСТРОЙСТВО</div>
-          <div style="font-size:10.5px;letter-spacing:3px;color:#FFC700;font-weight:600">АРЕНДА СПЕЦТЕХНИКИ</div>
+        <div style="line-height:1.35">
+          <div style="font-family:'Oswald';font-weight:700;font-size:20px;letter-spacing:.06em;color:#fff;line-height:1;margin-bottom:.2em">РЕГИОНДОРСТРОЙ</div>
+          <div style="font-size:10.5px;letter-spacing:.08em;color:#FFC700;font-weight:600">ДОРОГИ · БЛАГОУСТРОЙСТВО</div>
+          <div style="font-size:10.5px;letter-spacing:.08em;color:#FFC700;font-weight:600">АРЕНДА СПЕЦТЕХНИКИ</div>
         </div>
       </a>
 
@@ -447,11 +468,11 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
           <div style="font-family:'Oswald';font-weight:600;font-size:14px;letter-spacing:3px;color:#8a6d00;margin-bottom:10px"><?= e($s['why_label']) ?></div>
           <h2 style="font-family:'Oswald';font-weight:700;font-size:44px;text-transform:uppercase;line-height:1.06;letter-spacing:.5px;margin-bottom:20px"><?= $s['why_h2'] /* trusted_html, правит только owner */ ?></h2>
           <p style="color:#5a5a5a;font-size:16px;line-height:1.65;margin-bottom:28px"><?= e($s['why_p']) ?></p>
-          <div style="background:#fff;border:1px solid #e6e6e2;padding:22px 24px;display:flex;align-items:center;gap:20px">
+          <div style="background:#fff;border:1px solid #e6e6e2;padding:22px 24px;display:flex;align-items:center;gap:23px">
             <img src="assets/logo-rds.webp" alt="ООО РегионДорСтрой" style="width:84px;height:84px;object-fit:contain;flex-shrink:0">
-            <div>
-              <div style="font-family:'Oswald';font-weight:700;font-size:19px"><?= e($s['org_name']) ?></div>
-              <div style="color:#6a6a6a;font-size:14px;margin-top:3px">г. Орёл · <?= e($s['phone_mobile_fmt']) ?> · <?= e($s['email']) ?></div>
+            <div style="flex:1;min-width:0;container-type:inline-size">
+              <div style="font-family:'Oswald';font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:.06em;line-height:1;padding-top:.1em"><?= e($s['org_name']) ?></div>
+              <div style="color:#6a6a6a;font-size:14px;margin-top:6px"><span style="white-space:nowrap">г. Орёл · <?= e($s['phone_mobile_fmt']) ?></span><span data-csep> · </span><span data-cmail><?= e($s['email']) ?></span></div>
             </div>
           </div>
         </div>
@@ -561,9 +582,9 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
     <div style="max-width:1240px;margin:0 auto;padding:0 32px">
       <div data-r="foot" style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px;padding-bottom:36px;border-bottom:1px solid #1c1c1c">
         <div>
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:15px;margin-bottom:16px">
             <img src="assets/logo-rds.webp" alt="" style="width:54px;height:54px;object-fit:contain">
-            <div style="font-family:'Oswald';font-weight:700;font-size:20px;color:#fff;letter-spacing:.5px">РЕГИОНДОРСТРОЙ</div>
+            <div style="font-family:'Oswald';font-weight:700;font-size:20px;color:#fff;letter-spacing:.06em">РЕГИОНДОРСТРОЙ</div>
           </div>
           <p style="font-size:14px;line-height:1.65;max-width:340px"><?= e($s['footer_about']) ?></p>
         </div>
