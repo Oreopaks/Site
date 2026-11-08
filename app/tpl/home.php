@@ -51,6 +51,17 @@ $stat = fn(array $r): string => $r['num'] === null ? e($r['text'])
 // колонок сетки: n ≤ max → n, иначе минимум рядов и ряды поровну (5 при max 4 → 3+2, а не 4+1)
 $cols = fn(int $n, int $max): int => $n <= $max ? $n : (int)ceil($n / ceil($n / $max));
 $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:600;font-size:13px;line-height:1.2;letter-spacing:1px;text-transform:uppercase;color:#FFC700;border:1px solid #FFC700;padding:5px 10px">договорная</span>';
+// «Позвонить + WhatsApp» на экранах «Спасибо» и в блоке ошибки связи; WhatsApp — только если ссылка задана; ≥44 px, на узком — столбиком
+$rb = 'flex:1 1 auto;padding:12px 18px;line-height:20px;text-align:center;font-family:\'Manrope\';font-weight:800;font-size:14px;letter-spacing:.3px;text-transform:uppercase;';
+$reach = fn(bool $dark): string => '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">'
+    . '<a href="tel:' . e($s['phone_mobile']) . '" style="' . $rb . 'background:#FFC700;color:#0d0d0d">Позвонить <span style="white-space:nowrap">' . e($s['phone_mobile_fmt']) . '</span></a>'
+    . ($s['whatsapp'] !== '' ? '<a href="' . e($s['whatsapp']) . '" style="' . $rb . ($dark ? 'border:1.5px solid rgba(255,255,255,.35);color:#fff' : 'background:#1f1f1f;color:#fff') . '">WhatsApp</a>' : '')
+    . '</div>';
+$urgent = 'Срочно? Позвоните' . ($s['whatsapp'] !== '' ? ' или напишите' : '') . ':';
+// блок ошибки отправки над кнопкой: тексты печатает сервер, JS берёт текст по коду и вставляет через textContent; tel/WhatsApp — при ошибке связи
+$errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-invalid="В номере меньше 10 цифр. Проверьте, например: 8&nbsp;980&nbsp;000-00-00" data-fail="' . e($s['alert_fail']) . '" data-offline="' . e($s['alert_offline']) . '"'
+    . ' style="margin-bottom:16px;padding:14px 16px;font-size:14px;line-height:1.5;' . ($dark ? 'background:#1a1608;border:1px solid #FFC700;color:#fff' : 'background:#fdf1f2;border:1px solid #b00020;color:#111') . '">'
+    . '<p data-msg></p><div data-conn>' . $reach($dark) . '</div></div>';
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -245,7 +256,9 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
       <div style="display:flex;gap:20px;align-items:center">
         <a href="tel:<?= e($s['phone_mobile']) ?>" data-tbtel style="display:none;align-items:center;min-height:44px;font-family:'Oswald';font-weight:600;font-size:17px;letter-spacing:.3px;color:#FFC700;white-space:nowrap"><?= e($s['phone_mobile_fmt']) ?></a>
         <a href="mailto:<?= e($s['email']) ?>" style="color:#cfcfcf"><?= e($s['email']) ?></a>
+<?php if ($s['whatsapp'] !== ''): ?>
         <a href="<?= e($s['whatsapp']) ?>" style="color:#FFC700;font-weight:600">WhatsApp</a>
+<?php endif ?>
 <?php if ($s['telegram'] !== ''): ?>
         <a href="<?= e($s['telegram']) ?>" style="color:#FFC700;font-weight:600">Telegram</a>
 <?php endif ?>
@@ -559,7 +572,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
             </a>
             <a href="mailto:<?= e($s['email']) ?>" style="display:flex;align-items:center;gap:14px">
               <span style="width:46px;height:46px;background:#0d0d0d;color:#FFC700;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="m3.5 7 8.5 6 8.5-6"/></svg></span>
-              <span><span style="display:block;font-family:'Oswald';font-weight:600;font-size:18px"><?= e($s['email']) ?></span><span style="font-size:13px;color:#5f5f5f">ответим в течение дня</span></span>
+              <span><span style="display:block;font-family:'Oswald';font-weight:600;font-size:18px"><?= e($s['email']) ?></span><span style="font-size:13px;color:#5f5f5f">ответим <?= e(stub($s, 'reply_promise', 'в течение рабочего дня')) ?></span></span>
             </a>
             <div style="display:flex;align-items:center;gap:14px">
               <span style="width:46px;height:46px;background:#0d0d0d;color:#FFC700;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg></span>
@@ -568,7 +581,9 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
           </div>
 
           <div style="display:flex;gap:12px;flex-wrap:wrap">
+<?php if ($s['whatsapp'] !== ''): ?>
             <a href="<?= e($s['whatsapp']) ?>" style="display:inline-flex;align-items:center;gap:8px;background:#1f1f1f;color:#fff;padding:13px 20px;font-weight:700;font-size:14px" style-hover="background:#FFC700;color:#0d0d0d">WhatsApp</a>
+<?php endif ?>
 <?php if ($s['telegram'] !== ''): ?>
             <a href="<?= e($s['telegram']) ?>" style="display:inline-flex;align-items:center;gap:8px;background:#1f1f1f;color:#fff;padding:13px 20px;font-weight:700;font-size:14px" style-hover="background:#FFC700;color:#0d0d0d">Telegram</a>
 <?php endif ?>
@@ -579,8 +594,9 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
           <div id="formSuccess" style="display:none">
             <div style="height:100%;min-height:360px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px">
               <div style="width:64px;height:64px;background:#FFC700;color:#0d0d0d;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px">✓</div>
-              <h3 style="font-family:'Oswald';font-weight:600;font-size:26px;text-transform:uppercase"><?= e($s['form_ok_title']) ?></h3>
+              <h3 tabindex="-1" style="font-family:'Oswald';font-weight:600;font-size:26px;text-transform:uppercase"><?= e($s['form_ok_title']) ?></h3>
               <p style="color:#a8a8a8;font-size:15px;max-width:300px;line-height:1.6"><?= e($s['form_ok_text']) ?></p>
+              <div style="width:100%;max-width:420px;margin-top:10px"><p style="font-weight:700;font-size:14px"><?= e($urgent) ?></p><?= $reach(true) ?></div>
             </div>
           </div>
           <div id="formBox">
@@ -588,7 +604,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
               <h3 style="font-family:'Oswald';font-weight:600;font-size:24px;text-transform:uppercase;margin-bottom:8px"><?= e($s['form_title']) ?></h3>
               <p style="color:#9a9a9a;font-size:14px;margin-bottom:24px"><?= e($s['form_lead']) ?></p>
               <input required placeholder="Ваше имя" aria-label="Ваше имя" autocomplete="name" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
-              <input required placeholder="Телефон" aria-label="Телефон" autocomplete="tel" inputmode="tel" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
+              <input required type="tel" placeholder="Телефон" aria-label="Телефон" autocomplete="tel" inputmode="tel" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
               <select aria-label="Услуга" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#cfcfcf;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
 <?php foreach ($services as $r): if ($r['in_form']): ?>
                 <option<?= $r['href'] === $here ? ' selected' : '' ?>><?= e($r['title']) ?></option>
@@ -601,6 +617,8 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
               </label>
               <p class="pd-policy" style="margin:-8px 0 16px 25px;color:#8f8f8f;font-size:13px;line-height:1.45"><a href="privacy.php" target="_blank" style="text-decoration:underline">Политика обработки персональных данных</a></p>
               <input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+              <?= $errBox(true) ?>
+
               <button type="submit" style="width:100%;background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope';font-weight:800;font-size:15px;padding:16px;cursor:pointer;text-transform:uppercase;letter-spacing:.4px" style-hover="background:#ffd633">Отправить заявку</button>
             </form>
           </div>
@@ -658,16 +676,20 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
 
   <!-- ================= CALL MODAL ================= -->
   <div id="modalOverlay" style="display:none">
-    <div onclick="closeModal()" style="position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:24px">
-      <div onclick="event.stopPropagation()" style="background:#fff;max-width:440px;width:100%;padding:0;position:relative">
+    <div onclick="closeModal()" style="position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto">
+      <div onclick="event.stopPropagation()" style="background:#fff;max-width:440px;width:100%;padding:0;position:relative;margin:auto">
         <div style="height:10px;background-image:repeating-linear-gradient(45deg,#FFC700 0 16px,#0d0d0d 16px 32px)"></div>
         <button onclick="closeModal()" style="position:absolute;top:20px;right:18px;background:none;border:none;font-size:24px;cursor:pointer;color:#888;line-height:1">×</button>
         <div style="padding:36px 36px 40px">
           <div id="modalSuccess" style="display:none">
             <div style="text-align:center;padding:20px 0">
               <div style="width:60px;height:60px;background:#FFC700;color:#0d0d0d;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 16px">✓</div>
-              <h3 style="font-family:'Oswald';font-weight:600;font-size:24px;text-transform:uppercase;margin-bottom:8px"><?= e($s['modal_ok_title']) ?></h3>
+              <h3 tabindex="-1" style="font-family:'Oswald';font-weight:600;font-size:24px;text-transform:uppercase;margin-bottom:8px"><?= e($s['modal_ok_title']) ?></h3>
               <p style="color:#6a6a6a;font-size:15px;line-height:1.55"><?= e($s['modal_ok_text']) ?></p>
+              <p style="margin-top:22px;font-weight:700;font-size:14px;color:#111"><?= e($urgent) ?></p>
+              <?= $reach(false) ?>
+
+              <button type="button" onclick="closeModal()" style="margin-top:8px;width:100%;min-height:44px;background:none;border:1px solid #d6d6d2;color:#3a3a3a;font-family:'Manrope';font-weight:700;font-size:14px;cursor:pointer;text-transform:uppercase;letter-spacing:.3px" style-hover="border-color:#0d0d0d">Закрыть</button>
             </div>
           </div>
           <div id="modalForm">
@@ -678,7 +700,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
             </div>
             <form onsubmit="submitModal(event)">
               <input required placeholder="Ваше имя" aria-label="Ваше имя" autocomplete="name" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
-              <input required placeholder="Телефон" aria-label="Телефон" autocomplete="tel" inputmode="tel" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none" style-focus="border-color:#FFC700">
+              <input required type="tel" placeholder="Телефон" aria-label="Телефон" autocomplete="tel" inputmode="tel" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none" style-focus="border-color:#FFC700">
               <div id="modalTask" style="display:none"><textarea placeholder="Объём, адрес, сроки" aria-label="Объём, адрес, сроки" rows="3" maxlength="900" style="display:block;width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none;resize:vertical" style-focus="border-color:#FFC700"></textarea></div>
               <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;cursor:pointer">
                 <input type="checkbox" required aria-label="Согласие на обработку персональных данных" style="margin-top:2px;width:16px;height:16px;accent-color:#FFC700;flex-shrink:0">
@@ -686,6 +708,8 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
               </label>
               <p class="pd-policy" style="margin:-8px 0 16px 25px;color:#6a6a6a;font-size:13px;line-height:1.45"><a href="privacy.php" target="_blank" style="text-decoration:underline">Политика обработки персональных данных</a></p>
               <input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+              <?= $errBox(false) ?>
+
               <button type="submit" style="width:100%;background:#0d0d0d;color:#fff;border:none;font-family:'Manrope';font-weight:800;font-size:15px;padding:16px;cursor:pointer;text-transform:uppercase;letter-spacing:.4px" style-hover="background:#FFC700;color:#0d0d0d"><span id="modalBtn"><?= e($s['modal_call_btn']) ?></span></button>
             </form>
           </div>
@@ -736,7 +760,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
       if(mat){ mMat.style.display=''; var n=document.getElementById('modalMatName'); if(n)n.textContent=mat; } else mMat.style.display='none'; }
     var X=document.getElementById('modalTask'); if(X)X.style.display=mat?'block':'none'; // поле задачи — только в расчёте/аренде
   }
-  function show(){ if(overlay)overlay.style.display='block'; if(mForm)mForm.style.display=''; if(mOk)mOk.style.display='none'; document.body.style.overflow='hidden'; cbarSync(); }
+  function show(){ if(overlay)overlay.style.display='block'; if(mForm){ mForm.style.display=''; var f=mForm.querySelector('form'); if(f)clearErr(f); } if(mOk)mOk.style.display='none'; document.body.style.overflow='hidden'; cbarSync(); }
   window.openModal=function(){ setModal('<?= jsstr($s['modal_call_title']) ?>','<?= jsstr($s['modal_call_text']) ?>','<?= jsstr($s['modal_call_btn']) ?>',null); show(); };
   window.openModalMobile=function(){ closeMenu(); window.openModal(); };
   window.openCalc=function(name,svc){ setModal('<?= jsstr($s['modal_calc_title']) ?>','<?= jsstr($s['modal_calc_text']) ?>','<?= jsstr($s['modal_calc_btn']) ?>',name,svc); show(); };
@@ -748,20 +772,40 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
   function cbox(b, show){ b.setCustomValidity(b.checked?'':HINT); var h=b.closest('label').querySelector('[data-chint]'); if(h&&(b.checked||show))h.textContent=b.checked?'':HINT; }
   document.querySelectorAll('form input[type=checkbox][required]').forEach(function(b){ cbox(b);
     b.addEventListener('change', function(){ cbox(b); }); b.addEventListener('invalid', function(){ cbox(b, true); }); });
-  // заявка уходит только на свой сервер (send.php); без галочки согласия запрос не отправляется
+  // блок ошибки над кнопкой (role=alert): текст по коду — из data-атрибута (печатает сервер), в DOM только через textContent;
+  // invalid — подсказка и фокус на телефон; rate/server/offline — ещё «Позвонить» и WhatsApp. Введённое в форме не трогаем
+  function showErr(form, code){
+    var b=form.querySelector('[data-err]'); if(!b) return;
+    b.setAttribute('data-code', code);
+    b.querySelector('[data-msg]').textContent=b.getAttribute('data-'+(code==='invalid'||code==='offline'?code:'fail'));
+    b.querySelector('[data-conn]').hidden=code==='invalid';
+    b.hidden=false;
+    if(code==='invalid'){ var t=form.querySelector('[autocomplete=tel]'); if(t){ t.setAttribute('aria-invalid','true'); t.focus(); } }
+    else if(b.scrollIntoView) b.scrollIntoView({block:'nearest'});
+    window.goal&&goal('lead_error',{code:code});
+  }
+  function clearErr(form){ var b=form.querySelector('[data-err]'), t=form.querySelector('[autocomplete=tel]'); if(b)b.hidden=true; if(t)t.removeAttribute('aria-invalid'); }
+  // заявка уходит только на свой сервер (send.php); без галочки согласия и без 10 цифр в номере запрос не отправляется
   function send(fd, form, onOk){
     var box=form.querySelector('input[type=checkbox]');
     if(!box||!box.checked){ if(box){ cbox(box, true); box.focus(); } return; }
+    clearErr(form);
+    if(val(form,'[autocomplete=tel]').replace(/\D/g,'').length<10) return showErr(form,'invalid');
     var hp=form.querySelector('[name=website]');
     fd.append('consent','1'); fd.append('website', hp?hp.value:'');
     var btn=form.querySelector('button[type=submit]'), old=btn?btn.innerHTML:'';
     function reset(){ if(btn){ btn.disabled=false; btn.style.opacity=''; btn.innerHTML=old; } }
     if(btn){ btn.disabled=true; btn.style.opacity='.6'; btn.textContent='Отправляем…'; }
-    fetch('send.php',{ method:'POST', body:fd }).then(function(r){ return r.json(); }).then(function(d){
+    // обрыв сети → offline; затем статус (429 → rate, 5xx → server); затем JSON (invalid; не JSON и прочее → server)
+    fetch('send.php',{ method:'POST', body:fd }).then(function(r){
+      if(r.status===429) return 'rate';
+      if(r.status>=500) return 'server';
+      return r.json().then(function(d){ return d&&d.ok===true ? d : (d&&d.error==='invalid' ? 'invalid' : 'server'); }, function(){ return 'server'; });
+    }, function(){ return 'offline'; }).then(function(d){
       reset();
-      if(d&&d.ok===true){ try{ form.reset(); cbox(box); }catch(_){} onOk(); }
-      else { alert('<?= jsstr($s['alert_fail']) ?>'); }
-    }).catch(function(){ reset(); alert('<?= jsstr($s['alert_offline']) ?>'); });
+      if(typeof d==='string') return showErr(form, d);
+      try{ form.reset(); cbox(box); }catch(_){} onOk();
+    });
   }
   function val(f,sel){ var el=f.querySelector(sel); return el?el.value.trim():''; }
   window.submitModal=function(e){ e.preventDefault(); var f=e.target, fd=new FormData();
@@ -771,12 +815,12 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
     if(svc){ fd.append('source','calc'); fd.append('service',svc); fd.append('comment','Техника: '+mat+(task?'\n'+task:'')); }
     else { fd.append('source', mat?'material':'call'); fd.append('material', mat); if(task)fd.append('comment', task); }
     fd.append('name', val(f,'[autocomplete=name]')); fd.append('phone', val(f,'[autocomplete=tel]'));
-    send(fd, f, function(){ if(mForm)mForm.style.display='none'; if(mOk)mOk.style.display=''; });
+    send(fd, f, function(){ if(mForm)mForm.style.display='none'; if(mOk){ mOk.style.display=''; mOk.querySelector('h3').focus(); } });
   };
   window.submitForm=function(e){ e.preventDefault(); var f=e.target, fd=new FormData();
     fd.append('source','calc'); fd.append('name', val(f,'[autocomplete=name]')); fd.append('phone', val(f,'[autocomplete=tel]'));
     fd.append('service', val(f,'select')); fd.append('comment', val(f,'textarea'));
-    send(fd, f, function(){ var box=document.getElementById('formBox'),ok=document.getElementById('formSuccess'); if(box)box.style.display='none'; if(ok)ok.style.display=''; });
+    send(fd, f, function(){ var box=document.getElementById('formBox'),ok=document.getElementById('formSuccess'); if(box)box.style.display='none'; if(ok){ ok.style.display=''; ok.querySelector('h3').focus(); } });
   };
   document.addEventListener('keydown', function(e){ if(e.key==='Escape') window.closeModal(); });
 

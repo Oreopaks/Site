@@ -177,9 +177,10 @@
    "settings.form_ok_text",
    "settings.modal_ok_text"
   ],
-  "status": "todo",
-  "rounds": 0,
-  "strategy_ref": "§2 Р2.6"
+  "status": "done",
+  "rounds": 4,
+  "strategy_ref": "§2 Р2.6",
+  "note": "outcome уточнён: тексты «Спасибо» без «Заявка принята.» (повтор заголовка), см. notes R3"
  },
  {
   "id": "T09",
@@ -204,8 +205,8 @@
    "settings.alert_fail",
    "settings.alert_offline"
   ],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 4,
   "strategy_ref": "§2 Р2.5, Р2.4 (телефон); CRO #5"
  },
  {
