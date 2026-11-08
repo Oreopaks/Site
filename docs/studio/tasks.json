@@ -408,7 +408,8 @@
   ],
   "status": "todo",
   "rounds": 0,
-  "strategy_ref": "§3 Р3.2; §4 V6; утверждение (б)"
+  "strategy_ref": "§3 Р3.2; §4 V6; утверждение (б)",
+  "note": "M3 порядок: R9, отдельно — риск сгиба (H1 в 4 строки + полоса T07 + пути T06 + скрытая при видимом CTA панель T39)."
  },
  {
   "id": "T16",
@@ -435,7 +436,8 @@
   ],
   "status": "todo",
   "rounds": 0,
-  "strategy_ref": "§1 Р1.4"
+  "strategy_ref": "§1 Р1.4",
+  "note": "M3 порядок: R8 = батч T16+T18 (только сид, seed-pages и манифест; шаблон не трогается). Общий гейт — класс C снят по сиду и HTML (stat_hero 1 «15+» снимает T16, stat_bar и тексты — T18), grid.js, fold.js, критерий Э1 К5, humanness ×2 на все новые строки батча."
  },
  {
   "id": "T17",
@@ -462,7 +464,11 @@
   ],
   "status": "todo",
   "rounds": 0,
-  "strategy_ref": "§1 Р1.5, Р1.3 (класс D)"
+  "strategy_ref": "§1 Р1.5, Р1.3 (класс D)",
+  "depends_on": [
+   "T40"
+  ],
+  "note": "M3 порядок: R10. Карточка «Реквизиты на сайте» правдива только после T40 (сид = реквизиты прода, без [УКАЗАТЬ]). Новичок M2 прямо назвал «отличная репутация / высокое качество / большой опыт» без доказательств."
  },
  {
   "id": "T18",
@@ -474,7 +480,7 @@
    "db/seed-pages.sql",
    "docs/studio/content-manifest.json"
   ],
-  "check": "`grep -rnE '15\\+|более 15|Более 15|5–10|Свой карьер' db/*.sql app/tpl` = 0, то же по HTML всех публичных страниц стенда; grid.js, seo.js, price.js, rent.js — exit 0 (если тест утверждал старый текст — правка в том же коммите с причиной в notes.md); длина pg_rent_desc ≤160; ВИД-протокол; ps-humanness-judge ×2 ≥6/7. Манифест: 2 строки stat_bar, fleet_lead, services «Аренда спецтехники».text, materials «Песок».badge, pg_rent_desc. Критик vs Э1 (К5) на 390 и 1440.",
+  "check": "`grep -rnE '15\\+|более 15|Более 15|5–10|Свой карьер' db/*.sql app/tpl` = 0, то же по HTML всех публичных страниц стенда; сид хранит счётчик раздельно (num=15, suffix='+', seed.sql:140,143) — grep его не видит, поэтому дополнительно на свежей БД `SELECT count(*) FROM items WHERE num=15 AND suffix='+'` = 0 и document.body.innerText всех публичных страниц (после прокрутки, счётчики доиграли) без «15+»; grid.js, seo.js, price.js, rent.js — exit 0 (если тест утверждал старый текст — правка в том же коммите с причиной в notes.md); длина pg_rent_desc ≤160; ВИД-протокол; ps-humanness-judge ×2 ≥6/7. Манифест: 2 строки stat_bar, fleet_lead, services «Аренда спецтехники».text, materials «Песок».badge, pg_rent_desc. Критик vs Э1 (К5) на 390 и 1440.",
   "reference": "Э1 plutos57 (К5)",
   "axis": [
    "доверие",
@@ -492,7 +498,8 @@
   ],
   "status": "todo",
   "rounds": 0,
-  "strategy_ref": "§1 Р1.3 (класс C), Р1.5, Р1.6; утверждение (в)"
+  "strategy_ref": "§1 Р1.3 (класс C), Р1.5, Р1.6; утверждение (в)",
+  "note": "R8 = батч с T16: проверка по HTML зелёная только вместе с T16 (stat_hero 1 тоже «15+»). Новичок M2 принял «15+», «свой карьер» за доводы доверия, а «5–10 заказов в неделю» назвал странной метрикой: снимаем до «да» владельца."
  },
  {
   "id": "T19",
@@ -517,7 +524,35 @@
   ],
   "status": "todo",
   "rounds": 0,
-  "strategy_ref": "§4 V8 (а, г); утверждение (г)"
+  "strategy_ref": "§4 V8 (а, г); утверждение (г)",
+  "note": "M3 порядок: R11 = батч T19+T42. Оба добавляют ключи settings с фолбэком в шаблоне (home.php + seed + манифест old null + add), общая проверка: DELETE ключа → 200, дефолт, нет Warning; humanness ×2."
+ },
+ {
+  "id": "T42",
+  "milestone": "M3",
+  "title": "Окно аренды: свой заголовок и подводка вместо «рассчитаем объём, стоимость и доставку»",
+  "outcome": "Режим аренды (карточка «В АРЕНДУ →» и строка прайса — openCalc с service «Аренда спецтехники») берёт новые ключи modal_rent_title и modal_rent_text (grp texts, фолбэк в шаблоне). Режим материала остаётся на modal_calc_title/modal_calc_text, режим «Заявка» (T39) — на form_title/form_lead, оба без изменений. Текст аренды говорит про технику, день и место подачи, без «объём… доставку». Срок ответа — только через reply_promise. Наличие техники и цену не обещать (только классы A/B). Кнопку «Запросить расчёт» у материалов не трогать (tails.js:57).",
+  "files": [
+   "app/tpl/home.php",
+   "db/seed.sql",
+   "docs/studio/content-manifest.json",
+   "tests/pw/funnel.js"
+  ],
+  "check": "Сначала метка в funnel.js (красная): окно из карточки и из строки прайса показывает modal_rent_title, окно материала — modal_calc_title; затем зелёная. funnel.js целиком, tails.js, rent.js, lead.js — exit 0. Фолбэк: DELETE обоих ключей из стенд-БД → 200, тексты по умолчанию, в логе php -S нет Warning. ps-humanness-judge ×2 ≥6/7 на оба текста. ВИД: заголовок окна аренды без переполнения на 320–1920 и в эмуляции iPhone/Android. Манифест: 2 записи, old null + add.",
+  "reference": null,
+  "axis": [
+   "тексты",
+   "конверсия"
+  ],
+  "size": "S",
+  "kind": "copy",
+  "db_keys": [
+   "settings.modal_rent_title (новый)",
+   "settings.modal_rent_text (новый)"
+  ],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "notes R5 (modal_calc_text в режиме аренды → M3); новичок M2, задача 1 («Запросить расчёт» для аренды на завтра; подводка про объём и доставку)"
  },
  {
   "id": "T20",
@@ -589,6 +624,52 @@
   "status": "todo",
   "rounds": 0,
   "strategy_ref": "§3 Р3.4"
+ },
+ {
+  "id": "T43",
+  "milestone": "M4",
+  "title": "Строки прайса: «→» не должна читаться как переход на страницу модели",
+  "outcome": "В 14 кнопках строк прайса (#fleet dl, home.php:457–459) стрелку «→» заменить знаком действия «заявка в окне» в мире сайта (aria-hidden). Доступные имена «В аренду: …» остаются прежними, <dd> не меняется (price.js:34–35). Карточки с «В АРЕНДУ →» не трогаются (rent.js:56). Наезд цены на 320–375, исправленный в R5 (home.php:161), не должен вернуться.",
+  "files": [
+   "app/tpl/home.php"
+  ],
+  "check": "price.js, rent.js, overflow.js, a11y.js — exit 0; funnel.js A3, B2 pass; textContent кнопок прайса без «→»; на 320/360/375/390 bbox цены каждой строки не пересекает bbox кнопки. ВИД-протокол на 8 ширинах + iPhone/Android: тап по строке открывает окно аренды. Критик: vs кроп Sunbelt на 390 (К3 — строка как цель с различимым именем) и vs Э1 на 1440.",
+  "reference": "ориентир Sunbelt (К3); Э1 plutos57",
+  "axis": [
+   "дизайн",
+   "конверсия"
+  ],
+  "size": "S",
+  "kind": "code",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "новичок M2, п. 7 (стрелки «→» в прайсе выглядят как переход); §4 V7",
+  "note": "Батч с T20 допустим: один файл, блок #fleet, общий критик Sunbelt и общие price.js/rent.js."
+ },
+ {
+  "id": "T44",
+  "milestone": "M5",
+  "title": "base_url в сиде → https://regiondorstroy.com/ (canonical, og:url, sitemap и JSON-LD свежей установки — на живой домен)",
+  "outcome": "db/seed.sql:10: base_url 'https://oreopaks.github.io/Site/' (Pages отключены 2026-11-03) → 'https://regiondorstroy.com/'. Запись в манифест: old = сид main, new = домен прода; на проде скрипт должен дать «уже новое». Шаблон не меняется: тесты берут base_url из settings, github.io нигде не утверждают.",
+  "files": [
+   "db/seed.sql",
+   "docs/studio/content-manifest.json"
+  ],
+  "check": "`grep -rn 'github.io' db app public tests` = 0; на свежей БД canonical на / и обеих посадочных, og:url, <loc> sitemap и @id/url в JSON-LD начинаются с https://regiondorstroy.com/; run.php (M2 canonical, M3 sitemap и крошки) и seo.js — exit 0; `curl -s https://regiondorstroy.com/ | grep -o 'rel=\"canonical\"[^>]*'` — тот же домен (только GET).",
+  "reference": null,
+  "axis": [
+   "техническое SEO"
+  ],
+  "size": "S",
+  "kind": "seo",
+  "db_keys": [
+   "settings.base_url"
+  ],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "scores.md, оговорка панели M2: canonical на github.io из сида",
+  "note": "Батч с T23 допустим (@id = base_url#org). Дельту в панели эта задача не получает: на проде домен уже верный, а стенды панели выравниваются процедурой из plan.md."
  },
  {
   "id": "T23",
@@ -726,13 +807,14 @@
   "db_keys": [],
   "status": "todo",
   "rounds": 0,
-  "strategy_ref": "§4 V4; design D11, D12"
+  "strategy_ref": "§4 V4; design D11, D12",
+  "note": "Сделано попутно, повторно не делать: кольцо фокуса на всех фокусируемых (R4, home.php:140), axe region (R1, aside из T07), reduced-motion для kenburns/marquee/cookie-бара (home.php:175, 252). Осталось: skip-link и id=\"main\" у существующего <main> (home.php:343), aria-expanded и aria-controls у бургера, при reduce — scroll-behavior:auto (сейчас smooth, home.php:135) и transition:none у [data-lift] (home.php:170)."
  },
  {
   "id": "T29",
   "milestone": "M6",
   "title": "Тап-цели: меню/подвал/крошки ≥24 px на десктопе, ссылки услуг и все CTA/каналы ≥44 px на 320–430",
-  "outcome": "На 320–430 все CTA, каналы связи и ссылки услуг ≥44 px; на ≥1024 пункты меню, ссылки подвала и крошек ≥24×24; лок-апы не сдвинуты.",
+  "outcome": "На 320–430 все CTA, каналы связи и ссылки услуг ≥44 px; на ≥1024 пункты меню, ссылки подвала и крошек ≥24×24; лок-апы не сдвинуты. Большая часть мобильной половины сделана в M2: каталог (T13), полоса tel (T07), панель (T05/T39), подвал на тач ≥44 (home.php:260). Замер панели M2 — тап-целей <44 вне текста стало 12 → 1. Остаток задачи: найти и исправить эту одну цель + десктопная половина (≥24).",
   "files": [
    "app/tpl/home.php",
    "app/tpl/landing.php"
@@ -743,7 +825,7 @@
    "мобайл",
    "доступность"
   ],
-  "size": "M",
+  "size": "S",
   "kind": "code",
   "db_keys": [],
   "status": "todo",
@@ -776,7 +858,7 @@
   "id": "T31",
   "milestone": "M6",
   "title": "Сквозной axe + контраст: все публичные страницы × 390/1440 и состояния (окно, ошибка, меню, панель, «Спасибо») — 0 serious/critical",
-  "outcome": "axe-core через Playwright (npx -y, без следов в репо) на /, аренде, материалах, asf/blago (с фактами), privacy, consent, 404 × 390/1440 + состояния: окно звонка, окно аренды с ошибкой, мобильное меню, видимая панель, экран «Спасибо». Мелкие находки правятся здесь; если правка шире 3 файлов — отдельные задачи.",
+  "outcome": "axe-core через Playwright (npx -y, без следов в репо) на /, аренде, материалах, asf/blago (с фактами), privacy, consent, 404 × 390/1440 + состояния: окно звонка, окно аренды с ошибкой, мобильное меню, видимая панель, экран «Спасибо». Мелкие находки правятся здесь; если правка шире 3 файлов — отдельные задачи. Уже сделано: плейсхолдер AA в #contacts (R4, home.php:144: 3.93 → 5.6) — проверить плейсхолдеры окна. Хвост R3: после ошибки связи фокус остаётся на body — проверить, что T12 его закрыл.",
   "files": [
    "app/tpl/home.php",
    "app/tpl/landing.php"
@@ -802,7 +884,7 @@
    "app/tpl/home.php (только при LCP > 2.5 с)",
    "public/assets/hero-paving-*.webp (там же)"
   ],
-  "check": "`npx -y lighthouse … --chrome-path=/home/oleg/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome`, mobile, 3 прогона, медиана, /, аренда, материалы на стенде: Performance ≥90, LCP <2.5 с, CLS <0.1, TBT <200 мс; сравнение со стендом M0 (var/studio/m0) — не хуже; php -S без gzip завышает время — оговорка в notes.md, при сомнении замер базлайн-коммита в той же конфигурации; при srcset — fold.js, overflow.js — exit 0. Критик vs Э2 (К4).",
+  "check": "`npx -y lighthouse … --chrome-path=/home/oleg/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome`, mobile, 3 прогона, медиана, /, аренда, материалы на стенде: Performance ≥90, LCP <2.5 с, CLS <0.1, TBT <200 мс; сравнение со стендом M0 (var/studio/m0) — не хуже; php -S без gzip завышает время (панель M2: стенд p1 mobile 82 / LCP 4.2 с, прод 96 / 2.5 с) — стенд поднимать как в процедуре панели (`php -d zlib.output_compression=On -S`), базлайн-коммит мерить в той же конфигурации, прод-Lighthouse main — справочно; при srcset — fold.js, overflow.js — exit 0. Критик vs Э2 (К4).",
   "reference": "Э2 orel.blago-s (К4)",
   "axis": [
    "скорость"
@@ -888,7 +970,7 @@
    "bin/studio-content.php",
    "tests/run.php"
   ],
-  "check": "Тест в run.php через $cli: (1) свежая БД, значения из манифеста откачены к old, новые ключи удалены → сухой прогон показывает N изменений, файл БД не изменился (хеш); --apply → все new и ключи добавлены; повторный --apply → 0 изменений; (2) один ключ изменён вручную → конфликт с обоими текстами, ключ не тронут, остальные применены; `php -l bin/studio-content.php`; сверка: каждое изменённое значение `git diff main -- db/seed.sql db/seed-pages.sql` есть в манифесте и наоборот; `RDS_DB=<несуществующий> php tests/run.php` → exit 0.",
+  "check": "Тест в run.php через $cli: (1) свежая БД, значения из манифеста откачены к old, новые ключи удалены → сухой прогон показывает N изменений, файл БД не изменился (хеш); --apply → все new и ключи добавлены; повторный --apply → 0 изменений; (2) один ключ изменён вручную → конфликт с обоими текстами, ключ не тронут, остальные применены; `php -l bin/studio-content.php`; сверка: каждое изменённое значение `git diff main -- db/seed.sql db/seed-pages.sql` есть в манифесте и наоборот — включая реквизиты T40 (org_inn, org_ogrn, org_address; old '' → факты прода) и base_url T44; на БД-копии с прод-значениями они дают «уже новое», а не «применено» (дописать записи, если R7 их не добавил); `RDS_DB=<несуществующий> php tests/run.php` → exit 0.",
   "reference": null,
   "axis": [
    "тексты",
@@ -905,7 +987,7 @@
   "id": "T37",
   "milestone": "M8",
   "title": "README и OWNER-ACTIONS — финальная сверка",
-  "outcome": "README: funnel.js в списке тестов и запуск (ONLY=…), маркер-гейт в run.php, bin/studio-content.php (сухой прогон и --apply) и content-manifest.json, раскладка docs/studio/. OWNER-ACTIONS: перечислены все [ПРОВЕРИТЬ] из docs/studio/copy/, имена целей Метрики совпадают с кодом, статусы §7–8 совпадают с сайтом, обновлена дата проверки.",
+  "outcome": "README: funnel.js в списке тестов и запуск (ONLY=…), маркер-гейт в run.php, bin/studio-content.php (сухой прогон и --apply) и content-manifest.json, раскладка docs/studio/. OWNER-ACTIONS: перечислены все [ПРОВЕРИТЬ] из docs/studio/copy/, имена целей Метрики совпадают с кодом, статусы §7–8 совпадают с сайтом, обновлена дата проверки. Вычитка за T03 (stalled, humanness 4.5): слабейшие строки по двум судьям правятся без смены формата ЧТО · ГДЕ · ЧТО ОТКРОЕТ. Балл информативный: формат чек-листа задан task.md. Добавить вопрос новичка M2, которого ещё нет: цены щебня по фракциям и породе (гранит/известняк). Цена рейса, объём кузова и минимальный заказ уже есть (OWNER-ACTIONS 6.5, 6.6).",
   "files": [
    "README.md",
    "docs/OWNER-ACTIONS.md"
@@ -926,7 +1008,7 @@
   "id": "T38",
   "milestone": "M8",
   "title": "Финал, шаг 13: «Готово, когда» + ps-gate-reviewer",
-  "outcome": "Вывод всех проверок «Не сломать» в транскрипте: php -l, run.php, каждый tests/pw/*.js (включая funnel.js) на своей свежей БД. Последняя панель ×3: либо ≥9 по каждой оси, либо stalled по осям доверие/тексты/локальное SEO с главным разрывом. Критик против Э1 и Э2 на 390 и 1440. Гейт по чек-листу: git status чист, OWNER-ACTIONS в формате, [ПРОВЕРИТЬ] перечислены, README обновлён. При HOLD — причина в notes.md, задачи возвращаются в петлю.",
+  "outcome": "Вывод всех проверок «Не сломать» в транскрипте: php -l, run.php, каждый tests/pw/*.js (включая funnel.js) на своей свежей БД. Последняя панель ×3 по процедуре панели из plan.md (выравнивание стендов под прод, gzip): либо ≥9 по каждой оси, либо stalled по осям доверие/тексты/локальное SEO с главным разрывом. Критик против Э1 и Э2 на 390 и 1440. Гейт по чек-листу: git status чист, OWNER-ACTIONS в формате, [ПРОВЕРИТЬ] перечислены, README обновлён. При HOLD — причина в notes.md, задачи возвращаются в петлю.",
   "files": [],
   "check": "ps-gate-reviewer (sonnet) — PASS; иначе HOLD с причиной.",
   "reference": "Э1 plutos57; Э2 orel.blago-s",
