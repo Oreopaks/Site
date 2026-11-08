@@ -1,5 +1,5 @@
 // Playwright: воронка заявки (studio M2, strategy §2 Р2.2–Р2.7, §8). Тест написан до правок: метки задач, которые ещё
-// не закрыты, красные. Метка → задача: A1, A2 → T06; A3 → T13 (и T06); B1–B4, B7 — регрессия; B2p → T13; B5 → T08;
+// не закрыты, красные. Метка → задача: A1, A2 → T06; A3 → T13 (и T06); A4 → T07; B1–B4, B7 — регрессия; B2p → T13; B5 → T08;
 // B6 → T11; C1–C4 → T09; D1, D2, E1 → T14; F1–F4 → T05.
 // Контракт разметки: окно — #modalForm form / #modalSuccess, нижняя форма — #contacts form / #formSuccess,
 // блок ошибки — #contacts [role=alert][data-code=invalid|rate|server|offline], панель — nav[aria-label="Связаться"],
@@ -154,6 +154,47 @@ const add = (m, k, where) => m.set(k, [...(m.get(k) || []), where]);
       mark('A1', !a1.size, group(a1) || 'hero /: «Оставить заявку» → #contacts с формой, «Позвонить» → ' + tel + ' на 360/390/768/1440');
       mark('A2', !a2.size, group(a2) || `[data-paths] → ${WANT.join(', ')} на 360/390/768/1440`);
       mark('A3', !a3.size, group(a3) || 'все CTA шапки, main и панели на 3 страницах × 4 ширины → форма, tel: или wa.me');
+
+      // A4 (T07): на ≤640 верхняя полоса aside[aria-label="Контакты"] — одна строка 44±1 px без переполнения, в ней tel: с номером
+      // цифрами (Oswald) в верхних 120 px, тап-цель ≥44; e-mail и WhatsApp из полосы — в мобильном меню
+      await run('A4', async () => {
+        const bad = new Map();
+        for (const w of [320, 360, 390, 430, 640]) {
+          const page = await open(w, 800);
+          for (const u of PAGES) {
+            const at = `/${u}@${w}`;
+            await page.goto(BASE + u);
+            const m = await page.evaluate(() => {
+              const bar = document.querySelector('aside[aria-label="Контакты"]');
+              if (!bar) return null;
+              const d = (s) => s.replace(/\D/g, '');
+              const a = [...bar.querySelectorAll('a[href^="tel:"]')].find((x) => x.getClientRects().length && d(x.textContent).length >= 10);
+              const r = a && a.getBoundingClientRect(), row = bar.firstElementChild;
+              return { h: bar.getBoundingClientRect().height, ovf: row.scrollWidth - row.clientWidth,
+                tel: a && { txt: a.textContent.trim(), same: d(a.getAttribute('href')).endsWith(d(a.textContent).slice(-10)),
+                  bottom: r.bottom + scrollY, w: r.width, h: r.height, ff: getComputedStyle(a).fontFamily } };
+            });
+            if (!m) { add(bad, 'нет aside[aria-label="Контакты"]', at); continue; }
+            if (Math.abs(m.h - 44) > 1) add(bad, `высота полосы ${m.h}`, at);
+            if (m.ovf > 0) add(bad, `переполнение полосы ${m.ovf} px`, at);
+            if (!m.tel) { add(bad, 'в полосе нет видимой tel: с номером цифрами', at); continue; }
+            if (!m.tel.same) add(bad, `«${m.tel.txt}» не совпадает с href`, at);
+            if (m.tel.bottom > 120) add(bad, `номер ниже 120 px (низ ${m.tel.bottom})`, at);
+            if (m.tel.w < 44 || m.tel.h < 44) add(bad, `тап-цель ${m.tel.w}×${m.tel.h}`, at);
+            if (!/Oswald/.test(m.tel.ff)) add(bad, `шрифт ${m.tel.ff}`, at);
+          }
+          await page.close();
+        }
+        const page = await open(390, 844);
+        await page.goto(BASE);
+        await page.locator('[data-burger]').click();
+        const menu = await page.evaluate(() => [...document.querySelectorAll('#mobileMenu a')].filter((a) => a.getClientRects().length).map((a) => a.getAttribute('href')));
+        const wa = setting('whatsapp'), mail = 'mailto:' + setting('email');
+        if (!menu.includes(mail)) add(bad, `в меню нет ${mail}`, '/@390');
+        if (wa && !menu.some((h) => h.startsWith(wa))) add(bad, `в меню нет ${wa}`, '/@390');
+        await page.close();
+        return [!bad.size, group(bad) || '320/360/390/430/640 × 3 страницы: полоса 44±1, tel: Oswald в верхних 120 px, ≥44; e-mail и WhatsApp в меню на 390'];
+      });
     }
 
     // ================= B: отправка заявок, «Спасибо», галочка =================
@@ -434,7 +475,7 @@ const add = (m, k, where) => m.set(k, [...(m.get(k) || []), where]);
 
       await run('F1', async () => {
         const bad = new Map();
-        for (const [w, h] of MOBILE) {
+        for (const [w, h] of [[320, 640], ...MOBILE]) { // 320×640: CTA hero ниже первого экрана, прыжок через hero (R1)
           const page = await open(w, h);
           for (const u of PAGES) {
             await page.goto(BASE + u);
@@ -448,7 +489,7 @@ const add = (m, k, where) => m.set(k, [...(m.get(k) || []), where]);
           }
           await page.close();
         }
-        return [!bad.size, group(bad) || '360/390/768 × 3 страницы: fixed, видна после hero, tel: и wa.me?text='];
+        return [!bad.size, group(bad) || '320/360/390/768 × 3 страницы: fixed, видна после hero, tel: и wa.me?text='];
       });
 
       await run('F2', async () => {

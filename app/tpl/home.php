@@ -186,6 +186,11 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
     div[style*="padding:0 32px"]{padding-left:18px!important;padding-right:18px!important}
     div[style*="80px 32px 90px"]{padding-left:18px!important;padding-right:18px!important}
     div[style*="padding:9px 32px"]{padding-left:18px!important;padding-right:18px!important}
+    /* верхняя полоса — одна строка 44px: адрес + номер (тап-цель 44); e-mail и WhatsApp — в мобильном меню, все каналы — в #contacts */
+    [data-topbar]>div{padding-top:0!important;padding-bottom:0!important;flex-wrap:nowrap!important}
+    [data-topbar]>div>div:last-child{margin-left:auto}
+    [data-topbar] a:not([data-tbtel]){display:none!important}
+    [data-tbtel]{display:inline-flex!important}
   }
   /* шапка <360: лок-ап ужат, чтобы рядом влезали иконка звонка и бургер; подпись = .525 кегля названия (ширины строк равны) */
   @media (max-width:359px){
@@ -194,7 +199,18 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
     header>div:first-child>a div div:first-child{font-size:14.8px!important}
     header>div:first-child>a div div+div{font-size:7.8px!important}
     #why img+div>div:first-child{font-size:14.8px!important}
+    [data-topbar]>div>div:first-child{display:none!important} /* адрес (193px) + номер (111px) не влезают в 284px — остаётся номер */
   }
+  /* липкая панель «Позвонить + WhatsApp» (≤768): видна без JS; JS ставит data-off, пока на экране CTA первого экрана, #contacts,
+     окно или меню (CTA ниже экрана — тоже). z-index 80: под cookie-баром (90) и окном (100). Подвал удлинён на высоту панели — последняя строка не под ней */
+  [data-cbar]{display:none}
+  @media (max-width:768px){
+    [data-cbar]{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:80;background:#0d0d0d;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -6px 20px rgba(0,0,0,.28);transition:transform .25s cubic-bezier(.22,.61,.36,1),visibility .25s}
+    [data-cbar] a{flex:1;min-width:0;height:56px;display:flex;align-items:center;justify-content:center;gap:10px;font-family:'Manrope';font-weight:800;font-size:15px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
+    [data-cbar][data-off]{transform:translateY(100%);visibility:hidden}
+    footer{padding-bottom:calc(84px + env(safe-area-inset-bottom))!important}
+  }
+  @media (prefers-reduced-motion:reduce){[data-cbar]{transition:none}}
   /* контакты карточки «Почему мы»: одна строка или ровно две — «г. Орёл · телефон» / почта (294 = ширина строки при 14px + 2px) */
   @container (max-width:294px){
     #why [data-csep]{display:none}
@@ -217,13 +233,14 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
   <div data-progress aria-hidden="true"></div>
 
   <!-- ================= TOP BAR ================= -->
-  <div style="background:#0a0a0a;color:#b8b8b8;font-size:13px;border-bottom:1px solid #1c1c1c">
+  <aside aria-label="Контакты" data-topbar style="background:#0a0a0a;color:#b8b8b8;font-size:13px;border-bottom:1px solid #1c1c1c">
     <div style="max-width:1240px;margin:0 auto;padding:9px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
       <div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap">
         <span style="display:flex;align-items:center;gap:8px;white-space:nowrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg><?= e($s['address_short']) ?></span>
         <span data-tbhours style="display:flex;align-items:center;gap:8px;white-space:nowrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg><?= e($s['hours_text']) ?></span>
       </div>
       <div style="display:flex;gap:20px;align-items:center">
+        <a href="tel:<?= e($s['phone_mobile']) ?>" data-tbtel style="display:none;align-items:center;min-height:44px;font-family:'Oswald';font-weight:600;font-size:17px;letter-spacing:.3px;color:#FFC700;white-space:nowrap"><?= e($s['phone_mobile_fmt']) ?></a>
         <a href="mailto:<?= e($s['email']) ?>" style="color:#cfcfcf"><?= e($s['email']) ?></a>
         <a href="<?= e($s['whatsapp']) ?>" style="color:#FFC700;font-weight:600">WhatsApp</a>
 <?php if ($s['telegram'] !== ''): ?>
@@ -231,7 +248,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
 <?php endif ?>
       </div>
     </div>
-  </div>
+  </aside>
 
   <!-- ================= HEADER ================= -->
   <header style="position:sticky;top:0;z-index:50;background:#0d0d0d;border-bottom:3px solid #FFC700">
@@ -269,6 +286,12 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
           <a onclick="closeMenu()" href="<?= e($n['href']) ?>" style="color:#fff;font-weight:600;font-size:16px;padding:14px 4px;border-bottom:1px solid #1c1c1c" style-hover="color:#FFC700"><?= e($n['title']) ?></a>
 <?php endforeach ?>
           <a href="tel:<?= e($s['phone_mobile']) ?>" style="color:#FFC700;font-family:'Oswald';font-weight:600;font-size:22px;padding:16px 4px 6px"><?= e($s['phone_mobile_fmt']) ?></a>
+          <div style="display:flex;flex-wrap:wrap;column-gap:24px">
+            <a href="mailto:<?= e($s['email']) ?>" style="display:inline-flex;align-items:center;min-height:44px;padding:0 4px;color:#cfcfcf;font-size:15px"><?= e($s['email']) ?></a>
+<?php if ($s['whatsapp'] !== ''): ?>
+            <a href="<?= e($s['whatsapp']) ?>" style="display:inline-flex;align-items:center;min-height:44px;padding:0 4px;color:#FFC700;font-weight:700;font-size:15px">WhatsApp</a>
+<?php endif ?>
+          </div>
           <button onclick="openModalMobile()" style="margin-top:10px;background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope';font-weight:800;font-size:15px;padding:15px;cursor:pointer;text-transform:uppercase;letter-spacing:.3px">Заказать звонок</button>
         </div>
       </div>
@@ -615,6 +638,14 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
     </div>
   </footer>
 
+  <!-- ================= STICKY CONTACT BAR (≤768) ================= -->
+  <nav aria-label="Связаться" data-cbar>
+    <a href="tel:<?= e($s['phone_mobile']) ?>" style="background:#FFC700;color:#0d0d0d"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0d0d0d" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h3l2 5-2.2 1.3a12 12 0 0 0 5.7 5.7L16 15l5 2v3a2 2 0 0 1-2 2A17 17 0 0 1 4 5a2 2 0 0 1 2-2Z"/></svg>Позвонить</a>
+<?php if ($s['whatsapp'] !== ''): ?>
+    <a href="<?= e($s['whatsapp'] . (str_contains($s['whatsapp'], '?') ? '&' : '?') . 'text=' . rawurlencode('Здравствуйте! Пишу с сайта regiondorstroy.com.')) ?>" style="background:#1f1f1f;color:#fff"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.4-4.1A8 8 0 1 1 8.3 18.7Z"/></svg>WhatsApp</a>
+<?php endif ?>
+  </nav>
+
   <!-- ================= CALL MODAL ================= -->
   <div id="modalOverlay" style="display:none">
     <div onclick="closeModal()" style="position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:24px">
@@ -675,8 +706,19 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
       mForm=document.getElementById('modalForm'),
       mOk=document.getElementById('modalSuccess'),
       mMat=document.getElementById('modalMat');
-  window.toggleMenu=function(){ if(menu) menu.style.display=(menu.style.display==='none'?'block':'none'); };
-  window.closeMenu=function(){ if(menu) menu.style.display='none'; };
+  window.toggleMenu=function(){ if(menu) menu.style.display=(menu.style.display==='none'?'block':'none'); cbarSync(); };
+  window.closeMenu=function(){ if(menu) menu.style.display='none'; cbarSync(); };
+  // липкая панель: прячется, пока CTA первого экрана не пройден, пока на экране #contacts и пока открыто окно или меню; без IO — видна всегда
+  var cbar=document.querySelector('[data-cbar]'), cin={};
+  function cbarSync(){ if(cbar) cbar.toggleAttribute('data-off', !!(cin.cta || cin.ct || (overlay&&overlay.style.display==='block') || (menu&&menu.style.display==='block'))); }
+  if(cbar && 'IntersectionObserver' in window){
+    var cta=document.querySelector('[data-herowrap] a[href$="#contacts"]'), ct=document.getElementById('contacts');
+    cin.cta=!!cta; cbarSync(); // до первого ответа IO считаем CTA видимым — без мигания панели при загрузке
+    // CTA: зона наблюдения продлена вниз без конца — «на экране или ниже» (320×640: CTA ниже первого экрана); выход из неё = CTA пройден,
+    // и событие приходит даже при прыжке по якорю через весь hero (без продления прыжок «ниже → выше» IO не замечает)
+    var io1=function(k,m){ return new IntersectionObserver(function(es){ cin[k]=es[es.length-1].isIntersecting; cbarSync(); }, {rootMargin:m}); };
+    if(cta) io1('cta','0px 0px 100000px 0px').observe(cta); if(ct) io1('ct','0px').observe(ct);
+  }
   function setModal(t,d,b,mat,svc){
     var T=document.getElementById('modalTitle'),D=document.getElementById('modalDesc'),B=document.getElementById('modalBtn');
     if(T)T.textContent=t; if(D)D.textContent=d; if(B)B.textContent=b;
@@ -684,13 +726,13 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
       if(mat){ mMat.style.display=''; var n=document.getElementById('modalMatName'); if(n)n.textContent=mat; } else mMat.style.display='none'; }
     var X=document.getElementById('modalTask'); if(X)X.style.display=mat?'block':'none'; // поле задачи — только в расчёте/аренде
   }
-  function show(){ if(overlay)overlay.style.display='block'; if(mForm)mForm.style.display=''; if(mOk)mOk.style.display='none'; document.body.style.overflow='hidden'; }
+  function show(){ if(overlay)overlay.style.display='block'; if(mForm)mForm.style.display=''; if(mOk)mOk.style.display='none'; document.body.style.overflow='hidden'; cbarSync(); }
   window.openModal=function(){ setModal('<?= jsstr($s['modal_call_title']) ?>','<?= jsstr($s['modal_call_text']) ?>','<?= jsstr($s['modal_call_btn']) ?>',null); show(); };
   window.openModalMobile=function(){ closeMenu(); window.openModal(); };
   window.openCalc=function(name,svc){ setModal('<?= jsstr($s['modal_calc_title']) ?>','<?= jsstr($s['modal_calc_text']) ?>','<?= jsstr($s['modal_calc_btn']) ?>',name,svc); show(); };
   // карточка техники: та же форма расчёта, услуга «Аренда спецтехники» + название из заголовка карточки
   window.openRent=function(btn){ var h=btn.closest('[data-lift]').querySelector('h3'); window.openCalc(h?h.textContent:'','Аренда спецтехники'); };
-  window.closeModal=function(){ if(overlay)overlay.style.display='none'; document.body.style.overflow=''; };
+  window.closeModal=function(){ if(overlay)overlay.style.display='none'; document.body.style.overflow=''; cbarSync(); };
   // галочка согласия: своя русская подсказка рядом (aria-live) и в нативном сообщении; снимается при отметке
   var HINT='Поставьте галочку согласия';
   function cbox(b, show){ b.setCustomValidity(b.checked?'':HINT); var h=b.closest('label').querySelector('[data-chint]'); if(h&&(b.checked||show))h.textContent=b.checked?'':HINT; }
