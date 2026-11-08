@@ -67,7 +67,7 @@ check('порядок /shcheben-pesok-grunt/: materials < services', $at($mat0, 
 // --- studio T01: маркер-гейт — в отрендеренном HTML публичных страниц (сид, asf/blago опубликованы фактом-заглушкой) нет маркеров черновика
 $set = fn(string $k, string $v) => db()->prepare('UPDATE settings SET value = ? WHERE key = ?')->execute([$v, $k]);
 $get = fn(string $k) => db()->query('SELECT value FROM settings WHERE key = ' . db()->quote($k))->fetchColumn();
-$marks = fn(string $h): array => preg_match_all('~\[ПРОВЕРИТЬ|\[NEED|TODO|(?i:lorem)|XXX~u', $h, $m) ? array_values(array_unique($m[0])) : [];
+$marks = fn(string $h): array => preg_match_all('~\[ПРОВЕРИТЬ|\[УКАЗАТЬ|\[NEED|TODO|(?i:lorem)|XXX~u', $h, $m) ? array_values(array_unique($m[0])) : [];
 $f0 = [$get('fact_asphalt_works'), $get('fact_blago_works')];
 $set('fact_asphalt_works', 'Дворы и проезды');
 $set('fact_blago_works', 'Плитка');
@@ -77,7 +77,7 @@ foreach (['/' => 200, '/arenda-spetstekhniki/' => 200, '/shcheben-pesok-grunt/' 
     [$code, $h] = req("$base$u");
     if ($code !== $want || $marks($h)) $bad[] = "$u $code " . implode(',', $marks($h));
 }
-check('маркер-гейт: /, обе посадочные, /asfaltirovanie/, /blagoustroystvo/, /privacy.php, /consent.php, 404 — без [ПРОВЕРИТЬ, [NEED, TODO, lorem, XXX', !$bad, implode('; ', $bad));
+check('маркер-гейт: /, обе посадочные, /asfaltirovanie/, /blagoustroystvo/, /privacy.php, /consent.php, 404 — без [ПРОВЕРИТЬ, [УКАЗАТЬ, [NEED, TODO, lorem, XXX', !$bad && $marks('[УКАЗАТЬ ИНН]') === ['[УКАЗАТЬ'], implode('; ', $bad));
 $hp = $get('hero_p');
 $set('hero_p', "$hp [ПРОВЕРИТЬ: тест]");
 $caught = $marks(req("$base/")[1]);
@@ -85,6 +85,29 @@ $set('hero_p', $hp);
 check('маркер-гейт: самопроверка — детектор поймал [ПРОВЕРИТЬ в hero_p, значение возвращено', $caught === ['[ПРОВЕРИТЬ'] && $get('hero_p') === $hp && !$marks(req("$base/")[1]), json_encode($caught, JSON_UNESCAPED_UNICODE));
 $set('fact_asphalt_works', $f0[0]);
 $set('fact_blago_works', $f0[1]);
+
+// --- studio T40: реквизиты — заполненное выводится (подвал, privacy, consent); пустое — строки нет, заглушки нет, оператор ПДн назван
+$rk = ['org_inn', 'org_ogrn', 'org_address', 'retention'];
+$r0 = array_map($get, $rk);
+$org = $get('org_name');
+$legal = fn() => array_map(fn($u) => req("$base$u")[1], ['/' => '/', 'privacy' => '/privacy.php', 'consent' => '/consent.php']);
+$set('retention', '1 год');
+$full = $legal();
+foreach ($rk as $k) $set($k, '');
+$empty = $legal();
+foreach ($rk as $i => $k) $set($k, $r0[$i]);
+$bad = [];
+foreach ($full as $u => $h) foreach (['5754023520', '1165749053689', 'Россия, 302023, г. Орёл, Силикатный пер., д. 1'] as $v) if (!str_contains($h, $v)) $bad[] = "сид $u: нет «{$v}»";
+if (!str_contains($full['privacy'], 'хранятся 1 год, но не дольше')) $bad[] = 'privacy: срок хранения не выведен';
+if (!str_contains($full['consent'], 'Согласие действует 1 год либо до его отзыва')) $bad[] = 'consent: срок не выведен';
+foreach ($empty as $u => $h) {
+    if ($m = $marks($h)) $bad[] = "пусто $u: " . implode(',', $m);
+    foreach (['ИНН', 'ОГРН', 'Силикатный', 'дрес:'] as $v) if (str_contains($h, $v)) $bad[] = "пусто $u: есть «{$v}»";
+}
+if (!str_contains($empty['privacy'], "<strong>Оператор:</strong> $org<br>") || !str_contains($empty['privacy'], 'хранятся не дольше, чем')) $bad[] = 'пусто privacy: оператор не назван или фраза о сроке сломана';
+if (!str_contains($empty['consent'], "<strong>$org</strong><br>") || !str_contains($empty['consent'], 'Согласие действует до достижения целей обработки либо до его отзыва')) $bad[] = 'пусто consent: оператор не назван или фраза о сроке сломана';
+if (!str_contains($empty['/'], e($org))) $bad[] = 'пусто /: в подвале нет наименования';
+check('T40 реквизиты: сид → ИНН/ОГРН/юр. адрес на /, privacy, consent; пустые ИНН/ОГРН/адрес/срок → строк нет, «[УКАЗАТЬ» нет, оператор назван; значения возвращены', !$bad && array_map($get, $rk) === $r0, implode('; ', $bad));
 
 // --- send.php
 [$code, $body] = req("$base/send.php", $lead);
@@ -169,7 +192,14 @@ check('owner login → 302, session id regenerated', $code === 302 && $boss !== 
 $csp = implode("\n", preg_grep('~^Content-Security-Policy:~i', $hdr));
 check("owner GET ?p=leads → 200, CSP default-src 'self'; frame-ancestors 'none'",
     $code === 200 && str_contains($csp, "default-src 'self'") && str_contains($csp, "frame-ancestors 'none'"), "$code $csp");
-check('admin: баннер «Реквизиты не заполнены»', str_contains(req("$base/admin/", null, $boss)[1], 'Реквизиты не заполнены'));
+// T40: сид = прод, обязательные поля заполнены → баннера нет; пустой ИНН → баннер с «ИНН» и текстом «строки скрыты»
+$inn0 = $get('org_inn');
+$noBanner = !str_contains(req("$base/admin/", null, $boss)[1], 'Реквизиты не заполнены');
+$set('org_inn', '');
+$banner = req("$base/admin/", null, $boss)[1];
+$set('org_inn', $inn0);
+check('admin: баннер «Реквизиты не заполнены» — нет на полном сиде, есть при пустом ИНН (с «ИНН» и «строки с пустыми полями скрыты»)',
+    $noBanner && preg_match('~Реквизиты не заполнены:</b> ИНН\.~u', $banner) && str_contains($banner, 'строки с пустыми полями скрыты') && $get('org_inn') === $inn0);
 
 [, $ed] = $login('redactor', $pw);
 [$code] = req("$base/admin/?p=leads", null, $ed);
@@ -237,8 +267,9 @@ check('сессия со started −8 ч −1 с → 302 на login', $n === 1 &
 $audits = fn() => (int)db()->query('SELECT COUNT(*) FROM audit_log')->fetchColumn();
 $val = fn(string $k) => db()->query('SELECT value FROM settings WHERE key = ' . db()->quote($k))->fetchColumn();
 
+$inn0 = $val('org_inn');
 [$code] = req("$base/admin/?p=settings&g=requisites&a=save", ['_csrf' => $csrfOf($ed), 'org_inn' => '1234567890'], $ed);
-check('editor POST requisites → 403', $code === 403 && $val('org_inn') === '', (string)$code);
+check('editor POST requisites → 403', $code === 403 && $val('org_inn') === $inn0, (string)$code);
 [$code] = req("$base/admin/?p=settings&g=requisites", null, $ed);
 check('editor GET requisites → 403', $code === 403, (string)$code);
 
@@ -738,7 +769,10 @@ check('смена пароля → старая сессия 302 на login', $n
 check('owner toggle → newbie не входит', $code === 302 && $login('newbie', $np)[0] === 200, (string)$code);
 [$code] = req("$base/admin/?p=users&a=toggle", ['_csrf' => $csrfOf($boss), 'id' => $uid], $boss);
 check('отключение + включение → старая сессия 302', $code === 302 && req("$base/admin/", null, $nb)[0] === 302 && $login('newbie', $np)[0] === 302, (string)$code);
-check('admin: баннер виден на ?p=content', str_contains(req("$base/admin/?p=content", null, $ed)[1], 'Реквизиты не заполнены'));
+$inn0 = $get('org_inn');
+$set('org_inn', '');
+check('admin: баннер виден на ?p=content (пустой ИНН)', str_contains(req("$base/admin/?p=content", null, $ed)[1], 'Реквизиты не заполнены'));
+$set('org_inn', $inn0);
 
 // --- M5: заявки, CSV, статистика
 [$code, $body] = req("$base/send.php", ['comment' => '=1+1', 'name' => 'Формула'] + $lead + ['consent' => '1']);

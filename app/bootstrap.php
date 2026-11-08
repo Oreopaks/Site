@@ -35,10 +35,19 @@ function settings(): array
     return $s ??= db()->query('SELECT key, value FROM settings')->fetchAll(PDO::FETCH_KEY_PAIR);
 }
 
-// Обязательное поле без значения → видимая заглушка, а не выдуманные данные
+// Пустое поле → подстановка по умолчанию, а не выдуманные данные
 function stub(array $s, string $key, string $placeholder): string
 {
     return trim($s[$key] ?? '') === '' ? $placeholder : $s[$key];
+}
+
+// ИНН и ОГРН для вывода — только заполненные: «ИНН{$sep}… · ОГРН{$sep}…» или '' (пустое поле — ни подписи, ни заглушки)
+function ids(array $s, string $sep): string
+{
+    return implode(' · ', array_filter([
+        trim($s['org_inn'] ?? '') === '' ? '' : 'ИНН' . $sep . trim($s['org_inn']),
+        trim($s['org_ogrn'] ?? '') === '' ? '' : 'ОГРН' . $sep . trim($s['org_ogrn']),
+    ]));
 }
 
 // Строки списка по порядку

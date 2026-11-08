@@ -189,6 +189,25 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
     header>div:first-child{gap:14px!important}
     nav[data-desknav]{gap:18px!important}
   }
+  /* WhatsApp в липкой шапке ≥1024: ≥1121 — строкой под номером (шапку не расширяет); 1024 — с подписью рядом со значком звонка;
+     1025–1120 — квадрат рядом со значком звонка (запас строки ~24 px, подпись не влезает), промежутки плотнее. ≤768 — нижняя панель, 769–1023 — меню */
+  [data-hcontact]{display:flex;flex-direction:column;align-items:flex-start}
+  [data-hwa]{display:none;align-items:center;gap:6px;min-height:24px;color:#FFC700;font-weight:700;font-size:13px;letter-spacing:.2px;white-space:nowrap}
+  @media (min-width:1024px){[data-hwa]{display:inline-flex}}
+  @media (max-width:1120px){
+    [data-hcontact]{display:contents}
+    [data-hwa]{min-height:44px;gap:8px;font-size:14.5px}
+  }
+  @media (min-width:1025px) and (max-width:1120px){
+    header>div:first-child{gap:10px!important}
+    header>div:first-child>div:last-child{gap:10px!important}
+    nav[data-desknav]{gap:12px!important}
+    button[data-desknav]{padding-left:15px!important;padding-right:15px!important}
+    [data-hwa]{order:1;width:44px;justify-content:center;border:1.5px solid #3a3a3a}
+    [data-hwa] svg{width:20px;height:20px}
+    [data-hwa] span{display:none}
+    [data-hcall]{order:2}
+  }
   @media (max-width:1024px){
     [data-desknav]{display:none!important}
     [data-burger]{display:inline-flex!important}
@@ -313,7 +332,12 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
       </nav>
 
       <div style="display:flex;align-items:center;gap:18px;flex-shrink:0">
-        <a href="tel:<?= e($s['phone_mobile']) ?>" data-hphone style="font-family:'Oswald';font-weight:600;font-size:18px;color:#fff;letter-spacing:.3px"><?= e($s['phone_mobile_fmt']) ?></a>
+        <div data-hcontact>
+          <a href="tel:<?= e($s['phone_mobile']) ?>" data-hphone style="font-family:'Oswald';font-weight:600;font-size:18px;color:#fff;letter-spacing:.3px"><?= e($s['phone_mobile_fmt']) ?></a>
+<?php if ($s['whatsapp'] !== ''): ?>
+          <a href="<?= e($s['whatsapp']) ?>" data-hwa aria-label="Написать в WhatsApp" style-hover="color:#fff"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.4-4.1A8 8 0 1 1 8.3 18.7Z"/></svg><span>WhatsApp</span></a>
+<?php endif ?>
+        </div>
         <button onclick="openModal()" data-desknav style="background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope';font-weight:800;font-size:13.5px;padding:13px 22px;cursor:pointer;letter-spacing:.3px;text-transform:uppercase" style-hover="background:#ffd633">Заказать звонок</button>
         <a href="tel:<?= e($s['phone_mobile']) ?>" data-hcall aria-label="Позвонить <?= e($s['phone_mobile_fmt']) ?>"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h3l2 5-2.2 1.3a12 12 0 0 0 5.7 5.7L16 15l5 2v3a2 2 0 0 1-2 2A17 17 0 0 1 4 5a2 2 0 0 1 2-2Z"/></svg></a>
         <button onclick="toggleMenu()" data-burger aria-label="Открыть меню" style="background:none;border:1.5px solid #3a3a3a;color:#fff;width:48px;height:44px;cursor:pointer;align-items:center;justify-content:center;flex-direction:column;gap:5px" style-hover="border-color:#FFC700">
@@ -697,7 +721,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
       </div>
       <div style="padding-top:22px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:12.5px;color:#8f8f8f">
         <span><?= e($s['copyright']) ?></span>
-        <span><?= e($s['org_name']) ?> · ИНН <?= e(stub($s, 'org_inn', '[УКАЗАТЬ ИНН]')) ?> · ОГРН <?= e(stub($s, 'org_ogrn', '[УКАЗАТЬ ОГРН]')) ?> · <?= e(stub($s, 'org_address', '[УКАЗАТЬ ЮР. АДРЕС]')) ?></span>
+        <span><?= e(implode(' · ', array_filter([$s['org_name'], ids($s, ' '), trim($s['org_address'])]))) ?></span>
         <span><a href="privacy.php" style-hover="color:#FFC700">Политика конфиденциальности</a> · <a href="consent.php" style-hover="color:#FFC700">Согласие на обработку ПДн</a><?php if (trim($s['metrika_id']) !== ''): ?> · <a href="#" onclick="cookieSettings();return false" style-hover="color:#FFC700">Настройки cookie</a><?php endif ?></span>
       </div>
     </div>

@@ -30,9 +30,9 @@ INSERT INTO settings (key, value, grp, label, type, trusted_html, required, sort
 ('hours_text','Пн–Сб, 8:00–20:00','contacts','Режим работы','text',0,1,90),
 
 ('org_name','ООО «РегионДорСтрой»','requisites','Наименование','text',0,1,10),
-('org_inn','','requisites','ИНН','text',0,1,20),
-('org_ogrn','','requisites','ОГРН','text',0,1,30),
-('org_address','','requisites','Юридический адрес','text',0,1,40),
+('org_inn','5754023520','requisites','ИНН','text',0,1,20),
+('org_ogrn','1165749053689','requisites','ОГРН','text',0,1,30),
+('org_address','Россия, 302023, г. Орёл, Силикатный пер., д. 1','requisites','Юридический адрес','text',0,1,40),
 
 ('hero_badge','ДОРОЖНО-СТРОИТЕЛЬНАЯ КОМПАНИЯ · ОРЁЛ','hero','Плашка над заголовком','text',0,0,10),
 ('hero_h1','Строим дороги.<br>Благоустраиваем <span style="color:#FFC700">территории.</span>','hero','Заголовок H1 (HTML, только владелец)','textarea',1,1,20),
@@ -77,7 +77,7 @@ INSERT INTO settings (key, value, grp, label, type, trusted_html, required, sort
 ('privacy_rev','2026-10-26','legal','Редакция политики','text',0,1,10),
 ('consent_rev','2026-10-26','legal','Редакция согласия','text',0,1,20),
 ('cookie_text_rev','2026-10-26','legal','Редакция текста cookie-баннера','text',0,1,30),
-('retention','','legal','Срок хранения заявок','text',0,1,40),
+('retention','1 год','legal','Срок хранения заявок','text',0,1,40),
 
 ('metrika_id','','metrika','ID счётчика Яндекс Метрики (пусто — выключена)','text',0,0,10),
 ('notify_email','','mail','E-mail для уведомлений о заявках. Только почтовый ящик на хостинге в РФ (B3/B7). Иностранные ящики (gmail и т.п.) запрещены — ПДн заявок уйдут за рубеж','text',0,0,10);

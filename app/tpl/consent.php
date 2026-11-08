@@ -14,7 +14,7 @@
   body{font-family:'Manrope',sans-serif;color:#222;background:#f5f5f3;line-height:1.6}
   a{color:#8a6d00}
   .wrap{max-width:860px;margin:0 auto;padding:48px 24px 80px}
-  h1{font-family:'Oswald',sans-serif;font-weight:700;font-size:34px;text-transform:uppercase;color:#0d0d0d;margin-bottom:8px}
+  h1{font-family:'Oswald',sans-serif;font-weight:700;font-size:clamp(22px,7.4vw,34px);text-transform:uppercase;color:#0d0d0d;margin-bottom:8px}
   h2{font-family:'Oswald',sans-serif;font-weight:600;font-size:21px;text-transform:uppercase;margin:30px 0 10px;color:#0d0d0d}
   p,li{font-size:15px;color:#444;margin-bottom:10px}
   ul{padding-left:22px}
@@ -31,8 +31,12 @@
   <p>Отмечая галочку «Даю согласие на обработку персональных данных» в форме на сайте, я свободно, своей волей и в своём интересе даю согласие оператору:</p>
   <div class="req">
     <strong><?= e($s['org_name']) ?></strong><br>
-    ИНН: <?= e(stub($s, 'org_inn', '[УКАЗАТЬ ИНН]')) ?> · ОГРН: <?= e(stub($s, 'org_ogrn', '[УКАЗАТЬ ОГРН]')) ?><br>
-    Адрес: <?= e(stub($s, 'org_address', '[УКАЗАТЬ ЮР. АДРЕС]')) ?><br>
+<?php if (ids($s, ': ') !== ''): ?>
+    <?= e(ids($s, ': ')) ?><br>
+<?php endif ?>
+<?php if (trim($s['org_address']) !== ''): ?>
+    Адрес: <?= e($s['org_address']) ?><br>
+<?php endif ?>
     E-mail: <?= e($s['email']) ?> · Тел.: <?= e($s['phone_mobile_fmt']) ?>
   </div>
 
@@ -57,7 +61,7 @@
   <p>Персональные данные записываются и хранятся в базе данных на сервере, расположенном на территории Российской Федерации. Трансграничная передача не осуществляется.</p>
 
   <h2>5. Срок действия и отзыв</h2>
-  <p>Согласие действует <?= e(stub($s, 'retention', '[УКАЗАТЬ СРОК ХРАНЕНИЯ]')) ?> либо до его отзыва. Согласие может быть отозвано в любой момент письменным обращением на e-mail оператора <?= e($s['email']) ?>. После отзыва персональные данные уничтожаются, если иное не предусмотрено законом.</p>
+  <p>Согласие действует <?= e(stub($s, 'retention', 'до достижения целей обработки')) ?> либо до его отзыва. Согласие может быть отозвано в любой момент письменным обращением на e-mail оператора <?= e($s['email']) ?>. После отзыва персональные данные уничтожаются, если иное не предусмотрено законом.</p>
 
   <p>Порядок обработки описан в <a href="privacy.php">Политике конфиденциальности</a>.</p>
 

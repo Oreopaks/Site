@@ -1,4 +1,4 @@
-// Playwright: нет горизонтального переполнения (scrollWidth <= clientWidth) на 390 и 1440.
+// Playwright: нет горизонтального переполнения (scrollWidth <= clientWidth) на 320, 360, 390 и 1440.
 // Стенд: RDS_DB=<db> php -S 127.0.0.1:8080 -t public public/router.php
 // Запуск: RDS_DB=<db> NODE_PATH=/home/oleg/traning/web/node_modules node tests/pw/overflow.js
 // Создаёт владельца в RDS_DB (страницы админки после входа); на время «/ с баннером» ставит metrika_id=12345, потом ''.
@@ -29,7 +29,7 @@ const ADMIN = ['home', 'content', 'content&t=fleet_prices', 'settings', 'leads',
     if (!ok) fail++;
   };
   try {
-    for (const w of [390, 1440]) {
+    for (const w of [320, 360, 390, 1440]) {
       const page = await browser.newPage({ viewport: { width: w, height: 900 }, reducedMotion: 'reduce' });
       await page.route(/mc\.yandex\./, (r) => r.fulfill({ status: 200, contentType: 'application/javascript', body: '' }));
       for (const u of PUBLIC) await probe(page, u, w);

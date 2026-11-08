@@ -14,7 +14,7 @@
   body{font-family:'Manrope',sans-serif;color:#222;background:#f5f5f3;line-height:1.6}
   a{color:#8a6d00}
   .wrap{max-width:860px;margin:0 auto;padding:48px 24px 80px}
-  h1{font-family:'Oswald',sans-serif;font-weight:700;font-size:34px;text-transform:uppercase;color:#0d0d0d;margin-bottom:8px}
+  h1{font-family:'Oswald',sans-serif;font-weight:700;font-size:clamp(22px,7.4vw,34px);text-transform:uppercase;color:#0d0d0d;margin-bottom:8px}
   h2{font-family:'Oswald',sans-serif;font-weight:600;font-size:21px;text-transform:uppercase;margin:30px 0 10px;color:#0d0d0d}
   p,li{font-size:15px;color:#444;margin-bottom:10px}
   ul{padding-left:22px}
@@ -30,8 +30,12 @@
 
   <div class="req">
     <strong>Оператор:</strong> <?= e($s['org_name']) ?><br>
-    ИНН: <?= e(stub($s, 'org_inn', '[УКАЗАТЬ ИНН]')) ?> · ОГРН: <?= e(stub($s, 'org_ogrn', '[УКАЗАТЬ ОГРН]')) ?><br>
-    Юридический адрес: <?= e(stub($s, 'org_address', '[УКАЗАТЬ ЮР. АДРЕС]')) ?><br>
+<?php if (ids($s, ': ') !== ''): ?>
+    <?= e(ids($s, ': ')) ?><br>
+<?php endif ?>
+<?php if (trim($s['org_address']) !== ''): ?>
+    Юридический адрес: <?= e($s['org_address']) ?><br>
+<?php endif ?>
     E-mail: <?= e($s['email']) ?> · Тел.: <?= e($s['phone_mobile_fmt']) ?>
   </div>
 
@@ -71,7 +75,7 @@
   <p>Пользователь вправе запросить сведения об обработке своих данных, потребовать их уточнения, блокирования или удаления, а также отозвать согласие, направив обращение на e-mail Оператора <?= e($s['email']) ?>.</p>
 
   <h2>8. Сроки хранения</h2>
-  <p>Персональные данные хранятся <?= e(stub($s, 'retention', '[УКАЗАТЬ СРОК ХРАНЕНИЯ]')) ?>, но не дольше, чем этого требуют цели обработки, либо до отзыва согласия пользователем, после чего уничтожаются.</p>
+  <p>Персональные данные хранятся <?php if (trim($s['retention']) !== ''): ?><?= e($s['retention']) ?>, но <?php endif ?>не дольше, чем этого требуют цели обработки, либо до отзыва согласия пользователем, после чего уничтожаются.</p>
 
   <h2>9. Изменения политики</h2>
   <p>Оператор вправе вносить изменения в настоящую Политику. Актуальная редакция размещается на данной странице.</p>
