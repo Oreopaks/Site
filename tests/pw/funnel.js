@@ -1,13 +1,13 @@
 // Playwright: воронка заявки (studio M2, strategy §2 Р2.2–Р2.7, §8). Тест написан до правок: метки задач, которые ещё
 // не закрыты, красные. Метка → задача: A1, A2 → T06; A3 → T13 (и T06); A4 → T07; B1–B4, B7 — регрессия; B2p → T13; B5 → T08;
-// B6 → T11; C1–C4 → T09; D1, D2, E1 → T14; F1–F4 → T05.
+// B6 → T11; C1–C4 → T09; D1, D2, E1 → T14; F1–F4 → T05; G1–G3 → T10; G4–G6 → T12; G7 → T11.
 // Контракт разметки: окно — #modalForm form / #modalSuccess, нижняя форма — #contacts form / #formSuccess,
 // блок ошибки — #contacts [role=alert][data-code=invalid|rate|server|offline], панель — nav[aria-label="Связаться"],
 // три пути — [data-paths], цели — window.goal + ym(ID,'reachGoal',цель,параметры), чип — radio «Завтра», строка прайса — #fleet dl button.
 // Стенд: RDS_DB=<свежая db> php -S 127.0.0.1:8080 -t public public/router.php
 // Запуск: RDS_DB=<та же db> NODE_PATH=/home/oleg/traning/web/node_modules node tests/pw/funnel.js   (ONLY=<буква> — одна секция)
 // Пишет в БД стенда (заявки, metrika_id, whatsapp) — только тестовая БД; metrika_id и whatsapp в конце возвращаются.
-const { chromium } = require('playwright-core');
+const { chromium, devices } = require('playwright-core');
 const { execFileSync } = require('child_process');
 
 const BASE = process.env.BASE || 'http://127.0.0.1:8080/';
@@ -557,6 +557,254 @@ const add = (m, k, where) => m.set(k, [...(m.get(k) || []), where]);
           return [!bad.size, group(bad) || 'whatsapp пуст: одна tel:-кнопка во всю ширину на 3 страницах'];
         });
       } finally { setSetting('whatsapp', wa0); }
+    }
+
+    // ================= G: поля и окно — доступность (T10, T11, T12) =================
+    if (!ONLY || ONLY === 'G') {
+      // режимы окна → чем открыть (в странице); нижняя форма — #contacts form
+      const MODES = [['звонок', 'call'], ['аренда', '#fleet [data-lift] button'], ['материал', '#materials [data-lift] button']];
+      const FIELDS = 'input:not([type=checkbox]):not([type=radio]):not([name=website]), select, textarea';
+      const openIn = (page, how) => page.evaluate((how) => {
+        if (window.closeModal) closeModal();
+        if (how === 'call') { openModal(); return true; }
+        const b = document.querySelector(how);
+        if (!b) return false;
+        b.click();
+        return true;
+      }, how);
+      const opener = (page, how) => how === 'call' ? page.getByRole('button', { name: /заказать звонок/i }).filter({ visible: true }).first() : page.locator(how).first();
+      // контраст WCAG цвета a к цвету b ('rgb(…)'); кольцо фокуса — outline ≥2px и/или сплошная box-shadow со spread ≥2px
+      const RING = () => {
+        const rgb = (s) => (s.match(/[\d.]+/g) || []).map(Number);
+        const lum = ([r, g, b]) => { const f = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+        window.__cr = (a, b) => { const x = lum(rgb(a)), y = lum(rgb(b)); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+        window.__bg = (el) => { for (; el; el = el.parentElement) { const c = rgb(getComputedStyle(el).backgroundColor); if (c.length < 4 || c[3] > 0) return `rgb(${c.slice(0, 3).join(',')})`; } return 'rgb(255,255,255)'; };
+        window.__ring = (el) => {
+          const c = getComputedStyle(el), out = [];
+          if (c.outlineStyle !== 'none' && parseFloat(c.outlineWidth) >= 2) out.push(c.outlineColor);
+          for (const s of c.boxShadow === 'none' ? [] : c.boxShadow.split(/,(?![^(]*\))/)) {
+            const col = (s.match(/rgba?\([^)]*\)/) || [''])[0], n = s.replace(col, '').trim().split(/\s+/).map(parseFloat);
+            if (!/inset/.test(s) && n[0] === 0 && n[1] === 0 && n[2] === 0 && n[3] >= 2) out.push(col);
+          }
+          return out;
+        };
+      };
+
+      // G1 (T10): поля ≥16px, над каждым — видимая <label> ≥13px; чекбокс согласия ≥22×22, не отмечен, строка согласия ≥44
+      await run('G1', async () => {
+        const bad = new Map();
+        for (const w of [320, 390, 1440]) {
+          const page = await open(w, 800);
+          for (const u of PAGES) {
+            await page.goto(BASE + u);
+            for (const [k, how] of [['нижняя', null], ...MODES]) {
+              if (how && !(await openIn(page, how))) continue;
+              const at = `/${u}@${w}`;
+              const r = await page.evaluate(([sel, FIELDS]) => {
+                const f = document.querySelector(sel), out = [];
+                const vis = (e) => e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden';
+                for (const el of f.querySelectorAll(FIELDS)) {
+                  if (!vis(el)) continue;
+                  const n = el.getAttribute('autocomplete') || el.tagName.toLowerCase(), fs = parseFloat(getComputedStyle(el).fontSize);
+                  if (fs < 16) out.push(`${n} ${fs}px`);
+                  const lb = [...el.labels].find(vis);
+                  if (!lb || !lb.innerText.trim()) { out.push(`${n} без видимой <label>`); continue; }
+                  const lfs = parseFloat(getComputedStyle(lb).fontSize);
+                  if (lfs < 13) out.push(`подпись ${n} ${lfs}px`);
+                  if (lb.getBoundingClientRect().bottom > el.getBoundingClientRect().top + 1) out.push(`подпись ${n} не над полем`);
+                }
+                const b = f.querySelector('input[type=checkbox]'), br = b.getBoundingClientRect(), row = b.closest('label').getBoundingClientRect();
+                if (br.width < 22 || br.height < 22) out.push(`чекбокс ${Math.round(br.width)}×${Math.round(br.height)}`);
+                if (row.height < 44) out.push(`строка согласия ${Math.round(row.height)}px`);
+                if (b.checked) out.push('согласие предотмечено');
+                return out;
+              }, [how ? '#modalForm form' : '#contacts form', FIELDS]);
+              r.forEach((x) => add(bad, `${k}: ${x}`, at));
+            }
+          }
+          await page.close();
+        }
+        return [!bad.size, group(bad) || '320/390/1440 × 3 страницы × (нижняя + 3 режима окна): поля ≥16px, подписи ≥13px над полями, чекбокс ≥22, строка согласия ≥44, не отмечен'];
+      });
+
+      // G2 (T10): iPhone 390×844 и Android 360×800 (isMobile, hasTouch, DPR 3) — тап в каждое поле → фокус в нём, visualViewport.scale = 1.
+      // ponytail: Chromium-эмуляция не воспроизводит iOS-зум полей <16px; сам критерий кегля — в G1, здесь — тап доходит и масштаб не меняется
+      await run('G2', async () => {
+        const bad = new Map(); let n = 0;
+        for (const [dn, dev, vp] of [['iphone', devices['iPhone 13'], { width: 390, height: 844 }], ['android', devices['Pixel 5'], { width: 360, height: 800 }]]) {
+          const ctx = await browser.newContext({ ...dev, viewport: vp, deviceScaleFactor: 3, isMobile: true, hasTouch: true, reducedMotion: 'reduce' });
+          const page = await ctx.newPage();
+          page.setDefaultTimeout(5000);
+          for (const [k, how] of [['нижняя', null], ...MODES]) {
+            await page.goto(BASE);
+            if (how === 'call') await openIn(page, how);
+            else if (how) await opener(page, how).tap();
+            const fields = page.locator(`${how ? '#modalForm form' : '#contacts form'} :is(${FIELDS})`).filter({ visible: true });
+            for (let i = 0, c = await fields.count(); i < c; i++) {
+              const f = fields.nth(i);
+              await f.tap();
+              await until(page, 300);
+              const m = await f.evaluate((el) => ({ s: visualViewport.scale, me: document.activeElement === el, n: el.getAttribute('autocomplete') || el.tagName.toLowerCase() }));
+              n++;
+              if (m.s !== 1) add(bad, `${k}: ${m.n} → scale ${m.s}`, dn);
+              if (!m.me) add(bad, `${k}: тап не дал фокус ${m.n}`, dn);
+            }
+          }
+          await ctx.close();
+        }
+        return [!bad.size && n > 0, group(bad) || `iPhone/Android: ${n} тапов по полям (нижняя + 3 режима окна) — фокус в поле, scale = 1`];
+      });
+
+      // G3 (T10): фокус с клавиатуры на полях и галочке — кольцо (outline/box-shadow ≥2px), контраст ≥3:1 к фону поля
+      // (#f4f4f2 в окне, #161616 внизу; у галочки — к фону вокруг неё)
+      await run('G3', async () => {
+        const bad = new Map(), seen = [];
+        const page = await open(1440, 900);
+        await page.goto(BASE);
+        await page.evaluate(RING);
+        for (const [k, how] of [['нижняя', null], ['аренда', MODES[1][1]]]) {
+          if (how) await openIn(page, how);
+          const sel = how ? '#modalForm form' : '#contacts form';
+          await page.locator(`${sel} [autocomplete=name]`).focus();
+          for (let i = 0; i < 14; i++) {
+            const m = await page.evaluate(([sel, FIELDS]) => {
+              const a = document.activeElement, f = document.querySelector(sel);
+              if (!f.contains(a)) return null;
+              if (!a.matches(FIELDS + ', input[type=checkbox]')) return { skip: true };
+              const bg = a.type === 'checkbox' ? __bg(a.parentElement) : __bg(a), ring = __ring(a);
+              return { n: a.getAttribute('autocomplete') || a.type || a.tagName.toLowerCase(), bg, ring: ring.map((c) => [c, +__cr(c, bg).toFixed(2)]) };
+            }, [sel, FIELDS]);
+            if (!m) break;
+            if (!m.skip) {
+              const best = Math.max(0, ...m.ring.map((x) => x[1]));
+              seen.push(`${k}:${m.n} ${best}`);
+              if (best < 3) add(bad, `${k}: ${m.n} — кольцо ${m.ring.length ? JSON.stringify(m.ring) : 'нет'} на ${m.bg}`, '/@1440');
+            }
+            await page.keyboard.press('Tab');
+          }
+        }
+        await page.close();
+        return [!bad.size && seen.length >= 7, group(bad) || `контраст кольца (лучший слой): ${seen.join(', ')}`];
+      });
+
+      // T12: окно — диалог. Состояние: видимый [role=dialog], aria-modal, aria-labelledby → текст, фокус внутри (в первом поле), фон inert
+      const dlg = (page) => page.evaluate(() => {
+        const d = [...document.querySelectorAll('[role=dialog]')].find((x) => x.getClientRects().length), a = document.activeElement;
+        const lb = d && document.getElementById(d.getAttribute('aria-labelledby') || '');
+        return { d: !!d, modal: d ? d.getAttribute('aria-modal') : null, label: lb ? lb.textContent.trim() : null, inside: !!(d && a && d.contains(a)),
+          first: !!(a && a.matches('[autocomplete=name]')), on: a ? a.tagName + (a.getAttribute('autocomplete') ? `[${a.getAttribute('autocomplete')}]` : '') + (a.getAttribute('aria-label') ? `«${a.getAttribute('aria-label')}»` : '') : 'null',
+          live: ['header', 'main', 'footer', 'nav[aria-label="Связаться"]'].filter((s) => { const e = document.querySelector(s); return e && !e.closest('[inert]'); }),
+          dInert: !!(d && d.closest('[inert]')), open: getComputedStyle(document.getElementById('modalOverlay')).display !== 'none' };
+      });
+      const clickOpen = async (page, k, how) => { if (how === 'call') await openCall(page); else await page.locator(how).first().click(); await until(page, 150); };
+
+      // G4 (T12): открытие кликом (3 режима, 390 и 1440) → диалог объявлен, фокус в первом поле, фон inert
+      await run('G4', async () => {
+        const bad = new Map();
+        for (const w of [390, 1440]) {
+          const page = await open(w, 900);
+          for (const [k, how] of MODES) {
+            await page.goto(BASE);
+            await clickOpen(page, k, how);
+            const s = await dlg(page), at = `${k}@${w}`;
+            if (!s.d) { add(bad, 'нет видимого [role=dialog]', at); continue; }
+            if (s.modal !== 'true') add(bad, `aria-modal=${s.modal}`, at);
+            if (!s.label) add(bad, 'aria-labelledby не ведёт к тексту', at);
+            if (!s.inside || !s.first) add(bad, `фокус на ${s.on}, а не в первом поле окна`, at);
+            if (s.live.length) add(bad, `фон не inert: ${s.live.join(', ')}`, at);
+            if (s.dInert) add(bad, 'окно само внутри [inert]', at);
+          }
+          await page.close();
+        }
+        return [!bad.size, group(bad) || '3 режима × 390/1440: role=dialog, aria-modal, aria-labelledby, фокус в имени, фон inert'];
+      });
+
+      // G5 (T12): 12×Tab и 12×Shift+Tab не выводят фокус из окна (звонок, аренда; 390 и 1440)
+      await run('G5', async () => {
+        const bad = new Map();
+        for (const w of [390, 1440]) {
+          const page = await open(w, 900);
+          for (const [k, how] of MODES.slice(0, 2)) {
+            await page.goto(BASE);
+            await clickOpen(page, k, how);
+            for (const key of ['Tab', 'Shift+Tab']) {
+              const out = [];
+              for (let i = 1; i <= 12; i++) { await page.keyboard.press(key); const s = await dlg(page); if (!s.inside) out.push(`${i}:${s.on}`); }
+              if (out.length) add(bad, `${key} вне окна: ${out.slice(0, 4).join(' ')}${out.length > 4 ? ` …(${out.length})` : ''}`, `${k}@${w}`);
+            }
+          }
+          await page.close();
+        }
+        return [!bad.size, group(bad) || 'звонок и аренда × 390/1440: 12×Tab и 12×Shift+Tab — фокус в окне'];
+      });
+
+      // G6 (T12): Esc и «×» закрывают окно и возвращают фокус на открывашку; «×» ≥44×44 с aria-label «Закрыть»; фон снова не inert
+      await run('G6', async () => {
+        const bad = new Map();
+        for (const [w, k, how] of [[1440, 'звонок', 'call'], [390, 'аренда', MODES[1][1]]]) {
+          const page = await open(w, 900), at = `${k}@${w}`;
+          await page.goto(BASE);
+          const o = opener(page, how);
+          for (const close of ['Escape', '×']) {
+            await o.evaluate((e) => { document.querySelectorAll('[data-pw-op]').forEach((x) => x.removeAttribute('data-pw-op')); e.setAttribute('data-pw-op', ''); });
+            await o.click();
+            await until(page, 150);
+            if (close === 'Escape') await page.keyboard.press('Escape');
+            else {
+              const x = page.locator('[role=dialog] button[aria-label="Закрыть"]');
+              if (!(await x.count())) { add(bad, 'нет [role=dialog] button[aria-label="Закрыть"]', at); await page.keyboard.press('Escape'); continue; }
+              const b = await x.boundingBox();
+              if (!b || b.width < 44 || b.height < 44) add(bad, `«×» ${b ? `${Math.round(b.width)}×${Math.round(b.height)}` : 'не видна'}`, at);
+              await x.click();
+            }
+            await until(page, 150);
+            const s = await dlg(page), back = await page.evaluate(() => !!(document.activeElement && document.activeElement.matches('[data-pw-op]')));
+            if (s.open) add(bad, `${close}: окно не закрылось`, at);
+            if (!back) add(bad, `${close}: фокус на ${s.on}, а не на открывашке`, at);
+            if (s.live.length < 4) add(bad, `${close}: фон остался inert`, at);
+          }
+          await page.close();
+        }
+        return [!bad.size, group(bad) || 'Esc и «×» (≥44×44, «Закрыть») закрывают, фокус на открывашке, inert снят — звонок@1440, аренда@390'];
+      });
+
+      // G7 (T11): чипы «Сегодня / Завтра / Позже» — радиогруппа с подписью, тап-цель ≥44, стрелка → следующий, видимое кольцо фокуса;
+      // на 360×640 оверлей прокручивается до кнопки отправки (аренда — самое высокое окно)
+      await run('G7', async () => {
+        const bad = [];
+        let page = await open(390, 844);
+        try {
+          await page.goto(BASE);
+          await page.evaluate(RING);
+          await clickOpen(page, 'аренда', MODES[1][1]);
+          const f = modal(page), radios = f.getByRole('radio');
+          const names = await radios.evaluateAll((rs) => rs.map((r) => r.labels[0] ? r.labels[0].innerText.trim() : ''));
+          if (JSON.stringify(names) !== JSON.stringify(['Сегодня', 'Завтра', 'Позже'])) return [false, `радио в окне аренды: ${JSON.stringify(names)}`];
+          const g = await radios.first().evaluate((r) => { const fs = r.closest('fieldset'), lg = fs && fs.querySelector('legend');
+            return { group: !!(lg && lg.innerText.trim()), legend: lg && lg.innerText.trim(), same: new Set([...fs.querySelectorAll('input[type=radio]')].map((x) => x.name)).size === 1,
+              boxes: [...fs.querySelectorAll('label')].map((l) => { const b = l.getBoundingClientRect(); return [Math.round(b.width), Math.round(b.height)]; }) }; });
+          if (!g.group || !g.same) bad.push(`группа: legend «${g.legend}», одно name — ${g.same}`);
+          if (g.boxes.some(([w, h]) => w < 44 || h < 44)) bad.push(`чипы ${JSON.stringify(g.boxes)}`);
+          await f.locator('[autocomplete=tel]').focus();
+          await page.keyboard.press('Tab');
+          const r1 = await page.evaluate(() => document.activeElement.type + ':' + (document.activeElement.labels[0] || {}).innerText);
+          await page.keyboard.press('ArrowRight');
+          const r2 = await page.evaluate(() => { const a = document.activeElement, l = a.closest('label'), bg = __bg(l.parentElement);
+            const ring = [l, ...l.children].filter((x) => x !== a).flatMap((x) => __ring(x)).map((c) => +__cr(c, bg).toFixed(2));
+            return { on: a.type + ':' + (a.labels[0] || {}).innerText, checked: a.checked, ring }; });
+          if (r1 !== 'radio:Сегодня') bad.push(`Tab после телефона → ${r1}`);
+          if (r2.on !== 'radio:Завтра' || !r2.checked) bad.push(`ArrowRight → ${r2.on} checked=${r2.checked}`);
+          if (!(Math.max(0, ...r2.ring) >= 3)) bad.push(`кольцо фокуса чипа ${JSON.stringify(r2.ring)}`);
+          await page.close();
+          page = await open(360, 640);
+          await page.goto(BASE);
+          await clickOpen(page, 'аренда', MODES[1][1]);
+          const rch = await page.evaluate(() => { const o = document.querySelector('#modalOverlay > div'); o.scrollTop = o.scrollHeight;
+            const b = document.querySelector('#modalForm button[type=submit]').getBoundingClientRect(); return { top: Math.round(b.top), bottom: Math.round(b.bottom), vh: innerHeight }; });
+          if (rch.top < 0 || rch.bottom > rch.vh) bad.push(`360×640: кнопка отправки ${rch.top}..${rch.bottom} при ${rch.vh}`);
+          return [!bad.length, bad.join('; ') || `легенда «${g.legend}», чипы ${JSON.stringify(g.boxes)}, Tab → ${r1}, → ${r2.on}, кольцо ${JSON.stringify(r2.ring)}; 360×640 кнопка ${rch.top}..${rch.bottom}`];
+        } finally { await page.close(); }
+      });
     }
   } finally {
     await browser.close();

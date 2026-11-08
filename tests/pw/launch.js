@@ -116,7 +116,7 @@ for (const i of [1, 2]) sql('INSERT INTO leads (source, name, phone, service, co
 
   // F8: комментарий нижней формы — не длиннее лимита send.php
   await own.goto(BASE);
-  const ml = await own.locator('form textarea[aria-label="Комментарий"]').getAttribute('maxlength');
+  const ml = await own.locator('#contacts form textarea').getAttribute('maxlength');
   check(`F8 нижняя форма: textarea maxlength=${ml}`, ml === '1000');
 
   // F5, F10, F11, F12: заявки на 390 и 768 с раскрытым «Что изменено»

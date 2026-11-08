@@ -105,8 +105,8 @@ $set('modal_call_text', "it's\nx");
 
 preg_match('~onclick="(openCalc\([^"]*)"~', $html, $m);
 $oc = html_entity_decode($m[1] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8');
-check("materials.title=\"a');alert(1)//\" → html_entity_decode(onclick) contains \"openCalc('a\\x27);alert(1)//')\" and not contains \"');\"",
-    str_contains($oc, "openCalc('a\\x27);alert(1)//')") && !str_contains($oc, "');"), $oc);
+check("materials.title=\"a');alert(1)//\" → html_entity_decode(onclick) contains \"openCalc('a\\x27);alert(1)//',\" and not contains \"');\"",
+    str_contains($oc, "openCalc('a\\x27);alert(1)//',") && !str_contains($oc, "');"), $oc);
 
 $a = strpos($html, '<script type="application/ld+json">');
 $ld = substr($html, $a, strpos($html, '<link rel="preload"', $a) - $a);

@@ -136,7 +136,20 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
   body{font-family:'Manrope',sans-serif;color:#111;background:#fff;-webkit-font-smoothing:antialiased}
   ::selection{background:#FFC700;color:#111}
   a{text-decoration:none;color:inherit}
-  a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid #FFC700;outline-offset:2px}
+  /* фокус: жёлтое кольцо + тёмная подложка 2px — видно и на светлом (#f4f4f2, жёлтый там 1.4:1), и на тёмном (#161616) */
+  a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible,[data-when] input:focus-visible+span{outline:3px solid #FFC700;outline-offset:2px;box-shadow:0 0 0 2px #0d0d0d}
+  /* формы: видимые подписи над полями (13px), чипы «Когда нужно» — радио поверх всего чипа (тап-цель = чип, стрелки — нативные) */
+  #modalForm label[for],#contacts label[for],[data-when] legend{display:block;margin-bottom:6px;padding:0;font-size:13px;font-weight:700;line-height:1.4;color:#3a3a3a}
+  #contacts label[for]{color:#cfcfcf}
+  #contacts ::placeholder{color:#8f8f8f;opacity:1} /* серый браузера #757575 на #161616 — 3.9:1, ниже AA */
+  [data-when]{border:0;margin:0 0 14px;padding:0;min-width:0}
+  [data-when] div{display:flex;gap:8px}
+  [data-when] label{position:relative;flex:1;min-width:0}
+  [data-when] input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+  [data-when] span{display:flex;align-items:center;justify-content:center;min-height:44px;padding:0 6px;background:#f4f4f2;border:1px solid #e2e2de;color:#111;font-size:15px;font-weight:700}
+  [data-when] input:checked+span{background:#FFC700;border-color:#0d0d0d}
+  /* окно на узком экране: меньше полей вокруг — поля и чипы шире (на 320 контент 256px вместо 200px) */
+  @media (max-width:400px){#modalOverlay>div{padding:12px!important}[role=dialog]>div:last-child{padding:30px 20px 28px!important}}
   [data-svc] h3 a{text-decoration:underline;text-decoration-color:#FFC700;text-decoration-thickness:2px;text-underline-offset:5px}
   [data-burger]{display:none}
   @keyframes kenburns{0%{transform:scale(1.03) translate(0,0)}100%{transform:scale(1.13) translate(-2%,-1.5%)}}
@@ -482,7 +495,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
                 <span style="font-size:13px;color:#5f5f5f">/ <?= e($r['unit']) ?></span>
 <?php endif ?>
               </div>
-              <button onclick="openCalc('<?= jsattr($r['title']) ?>')" style="background:#0d0d0d;color:#fff;border:none;font-family:'Manrope';font-weight:700;font-size:13.5px;padding:13px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;width:100%" style-hover="background:#FFC700;color:#0d0d0d">Запросить расчёт</button>
+              <button onclick="openCalc('<?= jsattr($r['title']) ?>','','<?= jsattr($r['unit']) ?>')" style="background:#0d0d0d;color:#fff;border:none;font-family:'Manrope';font-weight:700;font-size:13.5px;padding:13px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;width:100%" style-hover="background:#FFC700;color:#0d0d0d">Запросить расчёт</button>
             </div>
           </div>
 <?php endforeach ?>
@@ -603,19 +616,23 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
             <form onsubmit="submitForm(event)">
               <h3 style="font-family:'Oswald';font-weight:600;font-size:24px;text-transform:uppercase;margin-bottom:8px"><?= e($s['form_title']) ?></h3>
               <p style="color:#9a9a9a;font-size:14px;margin-bottom:24px"><?= e($s['form_lead']) ?></p>
-              <input required placeholder="Ваше имя" aria-label="Ваше имя" autocomplete="name" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
-              <input required type="tel" placeholder="Телефон" aria-label="Телефон" autocomplete="tel" inputmode="tel" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
-              <select aria-label="Услуга" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#cfcfcf;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
+              <label for="fName">Ваше имя</label>
+              <input id="fName" required autocomplete="name" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:16px;font-family:'Manrope';margin-bottom:14px" style-focus="border-color:#FFC700">
+              <label for="fTel">Телефон</label>
+              <input id="fTel" required type="tel" autocomplete="tel" inputmode="tel" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:16px;font-family:'Manrope';margin-bottom:14px" style-focus="border-color:#FFC700">
+              <label for="fSvc">Услуга</label>
+              <select id="fSvc" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#cfcfcf;padding:14px 16px;font-size:16px;font-family:'Manrope';margin-bottom:14px" style-focus="border-color:#FFC700">
 <?php foreach ($services as $r): if ($r['in_form']): ?>
                 <option<?= $r['href'] === $here ? ' selected' : '' ?>><?= e($r['title']) ?></option>
 <?php endif; endforeach ?>
               </select>
-              <textarea placeholder="Комментарий (объём, адрес, сроки)" aria-label="Комментарий" rows="3" maxlength="1000" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none;resize:vertical" style-focus="border-color:#FFC700"></textarea>
-              <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;cursor:pointer">
-                <input type="checkbox" required aria-label="Согласие на обработку персональных данных" style="margin-top:2px;width:16px;height:16px;accent-color:#FFC700;flex-shrink:0">
+              <label for="fMsg">Комментарий</label>
+              <textarea id="fMsg" placeholder="Объём, адрес, сроки" rows="3" maxlength="1000" style="display:block;width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:16px;font-family:'Manrope';margin-bottom:12px;resize:vertical" style-focus="border-color:#FFC700"></textarea>
+              <label style="display:flex;align-items:center;gap:10px;min-height:44px;margin-bottom:12px;cursor:pointer">
+                <input type="checkbox" required aria-label="Согласие на обработку персональных данных" style="margin:0;width:22px;height:22px;accent-color:#FFC700;flex-shrink:0">
                 <span style="color:#8f8f8f;font-size:13px;line-height:1.45">Даю <a href="consent.php" target="_blank" style="text-decoration:underline">согласие на обработку персональных данных</a><span data-chint aria-live="polite" style="display:block;color:#FFC700;font-weight:700"></span></span>
               </label>
-              <p class="pd-policy" style="margin:-8px 0 16px 25px;color:#8f8f8f;font-size:13px;line-height:1.45"><a href="privacy.php" target="_blank" style="text-decoration:underline">Политика обработки персональных данных</a></p>
+              <p class="pd-policy" style="margin:-4px 0 16px 32px;color:#8f8f8f;font-size:13px;line-height:1.45"><a href="privacy.php" target="_blank" style="text-decoration:underline">Политика обработки персональных данных</a></p>
               <input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
               <?= $errBox(true) ?>
 
@@ -677,9 +694,9 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
   <!-- ================= CALL MODAL ================= -->
   <div id="modalOverlay" style="display:none">
     <div onclick="closeModal()" style="position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto">
-      <div onclick="event.stopPropagation()" style="background:#fff;max-width:440px;width:100%;padding:0;position:relative;margin:auto">
+      <div role="dialog" aria-modal="true" aria-labelledby="modalTitle" onclick="event.stopPropagation()" style="background:#fff;max-width:440px;width:100%;padding:0;position:relative;margin:auto">
         <div style="height:10px;background-image:repeating-linear-gradient(45deg,#FFC700 0 16px,#0d0d0d 16px 32px)"></div>
-        <button onclick="closeModal()" style="position:absolute;top:20px;right:18px;background:none;border:none;font-size:24px;cursor:pointer;color:#888;line-height:1">×</button>
+        <button type="button" onclick="closeModal()" aria-label="Закрыть" style="position:absolute;top:12px;right:6px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;font-size:24px;cursor:pointer;color:#6a6a6a;line-height:1">×</button>
         <div style="padding:36px 36px 40px">
           <div id="modalSuccess" style="display:none">
             <div style="text-align:center;padding:20px 0">
@@ -699,14 +716,24 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
               <div style="background:#f4f4f2;border-left:3px solid #FFC700;padding:11px 14px;margin-bottom:18px;font-size:14px;font-weight:700"><span id="modalMatLbl">Материал</span>: <span id="modalMatName"></span></div>
             </div>
             <form onsubmit="submitModal(event)">
-              <input required placeholder="Ваше имя" aria-label="Ваше имя" autocomplete="name" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:12px;outline:none" style-focus="border-color:#FFC700">
-              <input required type="tel" placeholder="Телефон" aria-label="Телефон" autocomplete="tel" inputmode="tel" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none" style-focus="border-color:#FFC700">
-              <div id="modalTask" style="display:none"><textarea placeholder="Объём, адрес, сроки" aria-label="Объём, адрес, сроки" rows="3" maxlength="900" style="display:block;width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:14.5px;font-family:'Manrope';margin-bottom:16px;outline:none;resize:vertical" style-focus="border-color:#FFC700"></textarea></div>
-              <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;cursor:pointer">
-                <input type="checkbox" required aria-label="Согласие на обработку персональных данных" style="margin-top:2px;width:16px;height:16px;accent-color:#FFC700;flex-shrink:0">
+              <label for="mName">Ваше имя</label>
+              <input id="mName" required autocomplete="name" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:16px;font-family:'Manrope';margin-bottom:14px" style-focus="border-color:#FFC700">
+              <label for="mTel">Телефон</label>
+              <input id="mTel" required type="tel" autocomplete="tel" inputmode="tel" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:16px;font-family:'Manrope';margin-bottom:14px" style-focus="border-color:#FFC700">
+              <div id="modalTask" style="display:none">
+                <fieldset data-when><legend>Когда нужно</legend><div>
+                  <label><input type="radio" name="when" value="сегодня"><span>Сегодня</span></label>
+                  <label><input type="radio" name="when" value="завтра"><span>Завтра</span></label>
+                  <label><input type="radio" name="when" value="позже"><span>Позже</span></label>
+                </div></fieldset>
+                <label for="mMsg" id="modalTaskLbl">Объём и куда везти</label>
+                <textarea id="mMsg" rows="3" maxlength="880" style="display:block;width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:16px;font-family:'Manrope';margin-bottom:12px;resize:vertical" style-focus="border-color:#FFC700"></textarea>
+              </div>
+              <label style="display:flex;align-items:center;gap:10px;min-height:44px;margin-bottom:12px;cursor:pointer">
+                <input type="checkbox" required aria-label="Согласие на обработку персональных данных" style="margin:0;width:22px;height:22px;accent-color:#FFC700;flex-shrink:0">
                 <span style="color:#6a6a6a;font-size:13px;line-height:1.45">Даю <a href="consent.php" target="_blank" style="text-decoration:underline">согласие на обработку персональных данных</a><span data-chint aria-live="polite" style="display:block;color:#b00020;font-weight:700"></span></span>
               </label>
-              <p class="pd-policy" style="margin:-8px 0 16px 25px;color:#6a6a6a;font-size:13px;line-height:1.45"><a href="privacy.php" target="_blank" style="text-decoration:underline">Политика обработки персональных данных</a></p>
+              <p class="pd-policy" style="margin:-4px 0 16px 32px;color:#6a6a6a;font-size:13px;line-height:1.45"><a href="privacy.php" target="_blank" style="text-decoration:underline">Политика обработки персональных данных</a></p>
               <input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
               <?= $errBox(false) ?>
 
@@ -753,20 +780,27 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
     var io1=function(k,m){ return new IntersectionObserver(function(es){ cin[k]=es[es.length-1].isIntersecting; cbarSync(); }, {rootMargin:m}); };
     if(cta) io1('cta','0px 0px 100000px 0px').observe(cta); if(ct) io1('ct','0px').observe(ct);
   }
-  function setModal(t,d,b,mat,svc){
+  function setModal(t,d,b,mat,svc,unit){
     var T=document.getElementById('modalTitle'),D=document.getElementById('modalDesc'),B=document.getElementById('modalBtn');
     if(T)T.textContent=t; if(D)D.textContent=d; if(B)B.textContent=b;
     if(mMat){ mMat.setAttribute('data-svc',svc||''); var L=document.getElementById('modalMatLbl'); if(L)L.textContent=svc||'Материал';
       if(mat){ mMat.style.display=''; var n=document.getElementById('modalMatName'); if(n)n.textContent=mat; } else mMat.style.display='none'; }
-    var X=document.getElementById('modalTask'); if(X)X.style.display=mat?'block':'none'; // поле задачи — только в расчёте/аренде
+    var X=document.getElementById('modalTask'); if(X)X.style.display=mat?'block':'none'; // чипы и поле задачи — только в расчёте/аренде
+    var TL=document.getElementById('modalTaskLbl'); if(TL)TL.textContent=svc?'Куда подать технику и на сколько смен или часов':(/^(тонн[аы]?|т)$/i.test(unit)?'Сколько тонн':/^(м³|м3|куб.*)$/i.test(unit)?'Сколько кубов':'Объём')+' и куда везти'; // единицы сида: тонна, м³
   }
-  function show(){ if(overlay)overlay.style.display='block'; if(mForm){ mForm.style.display=''; var f=mForm.querySelector('form'); if(f)clearErr(f); } if(mOk)mOk.style.display='none'; document.body.style.overflow='hidden'; cbarSync(); }
+  // окно — модальный диалог: фон inert (все соседи по пути от окна до body), фокус в первое поле, при закрытии — назад на открывашку
+  var opener=null;
+  function bg(on){ for(var n=overlay;n&&n!==document.body;n=n.parentElement) [].forEach.call(n.parentElement.children, function(x){ if(x!==n) x.inert=on; }); }
+  function show(){ if(!overlay)return; if(overlay.style.display!=='block')opener=document.activeElement; overlay.style.display='block'; bg(true);
+    if(mForm){ mForm.style.display=''; var f=mForm.querySelector('form'); if(f){ clearErr(f); f.querySelector('[autocomplete=name]').focus(); } } if(mOk)mOk.style.display='none'; document.body.style.overflow='hidden'; cbarSync(); }
   window.openModal=function(){ setModal('<?= jsstr($s['modal_call_title']) ?>','<?= jsstr($s['modal_call_text']) ?>','<?= jsstr($s['modal_call_btn']) ?>',null); show(); };
   window.openModalMobile=function(){ closeMenu(); window.openModal(); };
-  window.openCalc=function(name,svc){ setModal('<?= jsstr($s['modal_calc_title']) ?>','<?= jsstr($s['modal_calc_text']) ?>','<?= jsstr($s['modal_calc_btn']) ?>',name,svc); show(); };
+  window.openCalc=function(name,svc,unit){ setModal('<?= jsstr($s['modal_calc_title']) ?>','<?= jsstr($s['modal_calc_text']) ?>','<?= jsstr($s['modal_calc_btn']) ?>',name,svc,unit); show(); };
   // карточка техники: та же форма расчёта, услуга «Аренда спецтехники» + название из заголовка карточки
   window.openRent=function(btn){ var h=btn.closest('[data-lift]').querySelector('h3'); window.openCalc(h?h.textContent:'','Аренда спецтехники'); };
-  window.closeModal=function(){ if(overlay)overlay.style.display='none'; document.body.style.overflow=''; cbarSync(); };
+  window.closeModal=function(){ if(!overlay||overlay.style.display!=='block')return; overlay.style.display='none'; bg(false); document.body.style.overflow=''; cbarSync();
+    var o=opener; opener=null; if(o&&!o.getClientRects().length)o=document.querySelector('[data-burger]'); // открывашка из мобильного меню скрыта — фокус на бургер
+    if(o&&o.focus)o.focus(); };
   // галочка согласия: своя русская подсказка рядом (aria-live) и в нативном сообщении; снимается при отметке
   var HINT='Поставьте галочку согласия';
   function cbox(b, show){ b.setCustomValidity(b.checked?'':HINT); var h=b.closest('label').querySelector('[data-chint]'); if(h&&(b.checked||show))h.textContent=b.checked?'':HINT; }
@@ -803,7 +837,9 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
       return r.json().then(function(d){ return d&&d.ok===true ? d : (d&&d.error==='invalid' ? 'invalid' : 'server'); }, function(){ return 'server'; });
     }, function(){ return 'offline'; }).then(function(d){
       reset();
-      if(typeof d==='string') return showErr(form, d);
+      // ошибка: фокус возвращается на кнопку отправки (на время отправки она disabled, фокус падал на body и выходил из окна);
+      // текст ошибки читалка объявит сама (role=alert), «Позвонить»/WhatsApp — сразу перед кнопкой (Shift+Tab), Enter — повторить
+      if(typeof d==='string'){ showErr(form, d); if(btn&&!form.contains(document.activeElement))btn.focus(); return; } // фокус после показа блока — кнопка под ним остаётся в экране
       try{ form.reset(); cbox(box); }catch(_){} onOk();
     });
   }
@@ -811,9 +847,10 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
   window.submitModal=function(e){ e.preventDefault(); var f=e.target, fd=new FormData();
     var mEl=document.getElementById('modalMat'), mat=(mEl&&mEl.style.display!=='none')?(((document.getElementById('modalMatName')||{}).textContent)||''):'';
     var svc=(mEl&&mat&&mEl.getAttribute('data-svc'))||'';
-    var task=mat?val(f,'#modalTask textarea'):'';
-    if(svc){ fd.append('source','calc'); fd.append('service',svc); fd.append('comment','Техника: '+mat+(task?'\n'+task:'')); }
-    else { fd.append('source', mat?'material':'call'); fd.append('material', mat); if(task)fd.append('comment', task); }
+    // comment: «Техника: X» (аренда) → «Когда: завтра» (чип) → текст; пустые строки не добавляются
+    var w=mat&&f.querySelector('[name=when]:checked'), note=[svc?'Техника: '+mat:'', w?'Когда: '+w.value:'', mat?val(f,'#modalTask textarea'):''].filter(Boolean).join('\n');
+    if(svc){ fd.append('source','calc'); fd.append('service',svc); fd.append('comment',note); }
+    else { fd.append('source', mat?'material':'call'); fd.append('material', mat); if(note)fd.append('comment', note); }
     fd.append('name', val(f,'[autocomplete=name]')); fd.append('phone', val(f,'[autocomplete=tel]'));
     send(fd, f, function(){ if(mForm)mForm.style.display='none'; if(mOk){ mOk.style.display=''; mOk.querySelector('h3').focus(); } });
   };
@@ -822,7 +859,15 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
     fd.append('service', val(f,'select')); fd.append('comment', val(f,'textarea'));
     send(fd, f, function(){ var box=document.getElementById('formBox'),ok=document.getElementById('formSuccess'); if(box)box.style.display='none'; if(ok){ ok.style.display=''; ok.querySelector('h3').focus(); } });
   };
-  document.addEventListener('keydown', function(e){ if(e.key==='Escape') window.closeModal(); });
+  // окно открыто: Esc закрывает; Tab/Shift+Tab ходят по кругу внутри окна
+  document.addEventListener('keydown', function(e){
+    if(!overlay||overlay.style.display!=='block') return;
+    if(e.key==='Escape') return window.closeModal();
+    if(e.key!=='Tab') return;
+    var box=overlay.querySelector('[role=dialog]'), a=document.activeElement,
+        q=[].filter.call(box.querySelectorAll('a[href],button,input,select,textarea'), function(x){ return x.tabIndex>=0 && !x.disabled && x.getClientRects().length; });
+    if(q.length && (!box.contains(a) || a===q[e.shiftKey?0:q.length-1])){ e.preventDefault(); q[e.shiftKey?q.length-1:0].focus(); }
+  });
 
   // count-up + scroll-progress. ponytail: scroll-reveal убран (2026-10-28) — [data-anim] никогда не прячется,
   // карточки видны сразу; при reduced-motion/без IntersectionObserver счётчики просто показывают итог

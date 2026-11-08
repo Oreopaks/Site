@@ -227,8 +227,8 @@
   "size": "M",
   "kind": "code",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "§4 V1, V2; §2 Р2.4 (кегль, подписи); design D1, D3, D5"
  },
  {
@@ -248,8 +248,8 @@
   "size": "M",
   "kind": "code",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "§2 Р2.4"
  },
  {
@@ -269,8 +269,8 @@
   "size": "S",
   "kind": "code",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "§4 V3; §2 Р2.9; design D4"
  },
  {
