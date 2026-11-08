@@ -377,7 +377,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
   <section id="top" data-herowrap style="background:#0d0d0d;position:relative;color:#fff;overflow:hidden;min-height:90vh;display:flex;align-items:flex-end">
     <!-- image layer with slow ken-burns drift -->
     <div data-kenburns style="position:absolute;inset:0;z-index:0">
-      <img src="assets/hero-paving.webp" alt="Укладка асфальта дорожной техникой РегионДорСтрой в Орле" loading="eager" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 42%">
+      <img src="assets/hero-paving.webp" alt="Асфальтоукладчики и катки на укладке асфальта" loading="eager" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 42%">
     </div>
     <!-- cinematic scrims -->
     <div style="position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(13,13,13,.72) 0%,rgba(13,13,13,.28) 34%,rgba(13,13,13,.5) 62%,rgba(13,13,13,.95) 100%)"></div>
@@ -475,6 +475,10 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
           </div>
 <?php endforeach ?>
       </div>
+<?php /* подпись к фото техники (V8 а): пустое значение — строки нет (снимается, когда будут фото владельца) */
+if (($note = trim($s['fleet_photo_note'] ?? 'Фото для примера. Модель на снимке может отличаться от той, что в прайсе.')) !== ''): ?>
+      <p data-photonote style="margin-top:16px;color:#a8a8a8;font-size:14px;line-height:1.5"><?= e($note) ?></p>
+<?php endif ?>
 
       <div data-anim="fade-up" style="margin-top:40px;background:#161616;border:1px solid #262626;padding:28px clamp(16px,3vw,32px) 8px">
         <h3 style="font-family:'Oswald';font-weight:600;font-size:26px;text-transform:uppercase;letter-spacing:.3px;margin-bottom:14px"><?= e($s['fleet_prices_h3']) ?></h3>
@@ -856,7 +860,11 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
     if(mForm){ mForm.style.display=''; var f=mForm.querySelector('form'); if(f){ clearErr(f); f.querySelector('[autocomplete=name]').focus(); } } if(mOk)mOk.style.display='none'; document.body.style.overflow='hidden'; cbarSync(); }
   window.openModal=function(){ setModal('<?= jsstr($s['modal_call_title']) ?>','<?= jsstr($s['modal_call_text']) ?>','<?= jsstr($s['modal_call_btn']) ?>',null); show(); };
   window.openModalMobile=function(){ closeMenu(); window.openModal(); };
-  window.openCalc=function(name,svc,unit){ setModal(name===undefined?'<?= jsstr($s['form_title']) ?>':'<?= jsstr($s['modal_calc_title']) ?>',name===undefined?'<?= jsstr($s['form_lead']) ?>':'<?= jsstr($s['modal_calc_text']) ?>','<?= jsstr($s['modal_calc_btn']) ?>',name,svc,unit); show(); };
+  // заголовок/подводка (и кнопка аренды) по режиму: 0 — «Заявка» без позиции (как нижняя форма), 1 — аренда (svc задан), 2 — материал
+  window.openCalc=function(name,svc,unit){ var m=name===undefined?0:svc?1:2;
+    setModal(['<?= jsstr($s['form_title']) ?>','<?= jsstr(stub($s, 'modal_rent_title', 'Заказать технику')) ?>','<?= jsstr($s['modal_calc_title']) ?>'][m],
+      ['<?= jsstr($s['form_lead']) ?>','<?= jsstr(stub($s, 'modal_rent_text', 'Отметьте, когда нужна машина, и напишите адрес. Перезвоним и уточним время подачи.')) ?>','<?= jsstr($s['modal_calc_text']) ?>'][m],
+      m===1?'<?= jsstr(stub($s, 'modal_rent_btn', 'Отправить заявку')) ?>':'<?= jsstr($s['modal_calc_btn']) ?>',name,svc,unit); show(); };
   // карточка техники: та же форма расчёта, услуга «Аренда спецтехники» + название из заголовка карточки
   window.openRent=function(btn){ var h=btn.closest('[data-lift]').querySelector('h3'); window.openCalc(h?h.textContent:'','Аренда спецтехники'); };
   window.closeModal=function(){ if(!overlay||overlay.style.display!=='block')return; overlay.style.display='none'; bg(false); document.body.style.overflow=''; cbarSync();

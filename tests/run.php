@@ -102,7 +102,10 @@ if (!str_contains($full['privacy'], 'хранятся 1 год, но не дол
 if (!str_contains($full['consent'], 'Согласие действует 1 год либо до его отзыва')) $bad[] = 'consent: срок не выведен';
 foreach ($empty as $u => $h) {
     if ($m = $marks($h)) $bad[] = "пусто $u: " . implode(',', $m);
-    foreach (['ИНН', 'ОГРН', 'Силикатный', 'дрес:'] as $v) if (str_contains($h, $v)) $bad[] = "пусто $u: есть «{$v}»";
+    // T17: карточка «Реквизиты на сайте» в #why (текст из items) называет ИНН и ОГРН словами — для этих двух слов #why не в счёт
+    $nw = $u === '/' ? preg_replace('~<section id="why".*?</section>~s', '', $h) : $h;
+    if ($u === '/' && $nw === $h) $bad[] = 'пусто /: секция #why не найдена';
+    foreach (['ИНН' => $nw, 'ОГРН' => $nw, 'Силикатный' => $h, 'дрес:' => $h] as $v => $x) if (str_contains($x, $v)) $bad[] = "пусто $u: есть «{$v}»";
 }
 if (!str_contains($empty['privacy'], "<strong>Оператор:</strong> $org<br>") || !str_contains($empty['privacy'], 'хранятся не дольше, чем')) $bad[] = 'пусто privacy: оператор не назван или фраза о сроке сломана';
 if (!str_contains($empty['consent'], "<strong>$org</strong><br>") || !str_contains($empty['consent'], 'Согласие действует до достижения целей обработки либо до его отзыва')) $bad[] = 'пусто consent: оператор не назван или фраза о сроке сломана';

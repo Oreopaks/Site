@@ -1,6 +1,6 @@
 // Playwright: воронка заявки (studio M2, strategy §2 Р2.2–Р2.7, §8). Тест написан до правок: метки задач, которые ещё
 // не закрыты, красные. Метка → задача: A1, A2 → T06; A3 → T13 (и T06); A4 → T07; B1–B4, B7 — регрессия; B2p → T13; B5 → T08;
-// B6 → T11; C1–C4 → T09; D1, D2, E1 → T14; F1–F4 → T05; F5 → T39; F6 → T41; G1–G3 → T10; G4–G6 → T12; G7 → T11.
+// B6 → T11; B8 → T42; C1–C4 → T09; D1, D2, E1 → T14; F1–F4 → T05; F5 → T39; F6 → T41; G1–G3 → T10; G4–G6 → T12; G7 → T11.
 // Контракт разметки: окно — #modalForm form / #modalSuccess, нижняя форма — #contacts form / #formSuccess,
 // блок ошибки — #contacts [role=alert][data-code=invalid|rate|server|offline], панель — nav[aria-label="Связаться"],
 // три пути — [data-paths], цели — window.goal + ym(ID,'reachGoal',цель,параметры), чип — radio «Завтра», строка прайса — #fleet dl button.
@@ -314,6 +314,42 @@ const add = (m, k, where) => m.set(k, [...(m.get(k) || []), where]);
           const bad = st.filter(([, [c, r]]) => c || !r).map(([w, [c, r]]) => `${w}: ${c ? 'предотмечена' : ''}${!r ? ' не required' : ''}`);
           return [!bad.length, bad.join('; ') || st.map(([w]) => w).join(', ') + ' — не отмечена, required'];
         } finally { await page.close(); }
+      });
+
+      // B8 (T42): окно аренды (карточка «В АРЕНДУ →» и строка прайса) — свои modal_rent_title/text; материал — modal_calc_*;
+      // «Заявка» панели — form_title/form_lead; кнопка: аренда — modal_rent_btn, остальные — modal_calc_btn. Ожидание — из БД стенда, без ключа — фолбэк шаблона (тот же текст, что в home.php)
+      await run('B8', async () => {
+        const want = {
+          'аренда': [setting('modal_rent_title') ?? 'Заказать технику', setting('modal_rent_text') ?? 'Отметьте, когда нужна машина, и напишите адрес. Перезвоним и уточним время подачи.', setting('modal_rent_btn') ?? 'Отправить заявку'],
+          'материал': [setting('modal_calc_title'), setting('modal_calc_text'), setting('modal_calc_btn')],
+          'заявка': [setting('form_title'), setting('form_lead'), setting('modal_calc_btn')],
+        };
+        const bad = [], seen = [];
+        for (const [u, w] of [['', 390], ['', 1440], ['arenda-spetstekhniki/', 390]]) {
+          const page = await open(w, w > 768 ? 900 : 844);
+          try {
+            await page.goto(BASE + u);
+            const ways = [['аренда', 'карточка', page.locator('#fleet [data-lift] button').first()], ['аренда', 'прайс', page.locator('#fleet dl button').first()],
+              ['материал', 'карточка', page.locator('#materials [data-lift] button').first()]];
+            for (const [k, from, b] of ways) {
+              if (!(await b.count())) continue;
+              await b.click();
+              const got = [await page.locator('#modalTitle').textContent(), await page.locator('#modalDesc').textContent(), await page.locator('#modalBtn').textContent()];
+              const ok = got.join('|') === want[k].join('|');
+              (ok ? seen : bad).push(`/${u}@${w} ${k} (${from}): «${got.join('» / «')}»${ok ? '' : ` ≠ «${want[k].join('» / «')}»`}`);
+              await page.keyboard.press('Escape');
+            }
+            if (w <= 768) {
+              await page.evaluate(() => scrollTo({ top: (document.documentElement.scrollHeight - innerHeight) / 2, behavior: 'instant' })); await until(page);
+              await page.locator('nav[aria-label="Связаться"]').getByRole('button', { name: /заявка/i }).click();
+              const got = [await page.locator('#modalTitle').textContent(), await page.locator('#modalDesc').textContent(), await page.locator('#modalBtn').textContent()];
+              const ok = got.join('|') === want['заявка'].join('|');
+              (ok ? seen : bad).push(`/${u}@${w} заявка (панель): «${got.join('» / «')}»${ok ? '' : ` ≠ «${want['заявка'].join('» / «')}»`}`);
+              await page.keyboard.press('Escape');
+            }
+          } finally { await page.close(); }
+        }
+        return [!bad.length, bad.join('; ') || `${seen.length} окон: ${seen.slice(0, 4).join('; ')} …`];
       });
     }
 
