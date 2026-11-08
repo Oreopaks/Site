@@ -109,6 +109,17 @@ if (!str_contains($empty['consent'], "<strong>$org</strong><br>") || !str_contai
 if (!str_contains($empty['/'], e($org))) $bad[] = 'пусто /: в подвале нет наименования';
 check('T40 реквизиты: сид → ИНН/ОГРН/юр. адрес на /, privacy, consent; пустые ИНН/ОГРН/адрес/срок → строк нет, «[УКАЗАТЬ» нет, оператор назван; значения возвращены', !$bad && array_map($get, $rk) === $r0, implode('; ', $bad));
 
+// --- studio T16+T18: в первом экране и цифрах — только класс A (strategy Р1.3–Р1.6); неподтверждённое снято с сида и всех публичных страниц
+$hero = preg_match('~<section id="top".*?</section>~s', req("$base/")[1], $m) ? $m[0] : '';
+$bad = [];
+if ($hero === '' || str_contains($hero, 'data-count')) $bad[] = 'hero не найден или в нём счётчик data-count';
+foreach (['Экскаватор-погрузчик от 3 500 ₽ в час, щебень и песок с доставкой, асфальт и благоустройство — смету считаем по объекту. Работаем в Орле и области.', '>от 3 500<', '>₽/ч, техника с НДС<', '>9<', '>видов техники<'] as $v)
+    if (!str_contains($hero, $v)) $bad[] = "в hero нет «{$v}»";
+foreach (['/', '/arenda-spetstekhniki/', '/shcheben-pesok-grunt/', '/privacy.php', '/consent.php'] as $u)
+    if (preg_match_all('~15\+|[Бб]олее 15|5–10|Свой карьер~u', req("$base$u")[1], $m)) $bad[] = "$u: " . implode(',', array_unique($m[0]));
+if ($n = (int)db()->query("SELECT COUNT(*) FROM items WHERE num = 15 AND suffix = '+'")->fetchColumn()) $bad[] = "items num=15 '+': $n";
+check('T16+T18: hero без data-count, hero_p и цифры hero — факты класса A; «15+», «более 15», «5–10», «Свой карьер» нет на публичных страницах и в items', !$bad, implode('; ', $bad));
+
 // --- send.php
 [$code, $body] = req("$base/send.php", $lead);
 check('lead without consent → 400', $code === 400 && json_decode($body, true) === ['ok' => false, 'error' => 'consent'], "$code $body");
