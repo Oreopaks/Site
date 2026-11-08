@@ -1,610 +1,881 @@
 [
-  {
-    "id": "T01",
-    "milestone": "M2",
-    "title": "Тесты-до-правок: tests/pw/funnel.js (метки A–F) и маркер-гейт в tests/run.php",
-    "outcome": "funnel.js в стиле tests/pw/brand.js + metrika.js (BASE, PW_CHROME, правка стенд-БД через php PDO как в metrika.js), ширины 360/390/768/1440, страницы /, /arenda-spetstekhniki/, /shcheben-pesok-grunt/; строка на каждую метку + итог, ONLY=<буква> гоняет одну секцию. Метки: A1 hero главной: «Оставить заявку» → форма #contacts, «Позвонить» → tel:; A2 три пути [data-paths] → /arenda-spetstekhniki/, /shcheben-pesok-grunt/, #contacts; A3 каждый CTA (main, header, панель) на 3 страницах ведёт к форме, tel: или wa.me; B1 окно звонка → «Спасибо» + строка leads source=call; B2 аренда (карточка и строка прайса) → source=calc, service «Аренда спецтехники», comment начинается «Техника: »; B3 материал → source=material; B4 нижняя форма → source=calc; B5 «Спасибо»: заголовок в фокусе, обещание reply_promise, есть tel: и wa.me; B6 максимум полей (чип «Завтра» + текст 880 зн.) → ok:true, comment «Техника: X\\nКогда: завтра\\n<текст>»; B7 галочка согласия не предотмечена при каждом открытии; C1 send.php → 500 HTML: блок role=alert code=server, без события dialog; C2 429 JSON → code=rate; C3 route.abort → code=offline, введённые данные на месте; C4 телефон «123» → подсказка у поля, фокус на телефоне, запрос не ушёл; D1 metrika_id=12345 + «Принять» + стаб window.ym: 7 целей (lead_call, lead_rent, lead_material, lead_calc, click_tel, click_whatsapp, lead_error) на своих действиях; D2 lead_* не шлётся без n в ответе; E1 без согласия тега Метрики нет, после «Принять» — есть; F1 ≤768 nav[aria-label='Связаться'] position:fixed с tel: и wa.me?text=; F2 панель скрыта, пока виден CTA hero, #contacts и открыто окно, не пересекает CTA hero на 360×740 и 390×844; F3 ≥1024 панели не видно; F4 пустой whatsapp → одна кнопка во всю ширину. Маркер-гейт в run.php: при заполненных fact_asphalt_works/fact_blago_works отрендеренные /, обе посадочные, /asfaltirovanie/, /blagoustroystvo/, /privacy.php, /consent.php, 404 не содержат «[ПРОВЕРИТЬ», «[NEED», «TODO», «lorem» (без регистра), «XXX»; самопроверка: hero_p с «[ПРОВЕРИТЬ: тест]» ловится, значение возвращается.",
-    "files": ["tests/pw/funnel.js", "tests/run.php"],
-    "check": "Стенд :8080 на свежей БД: `RDS_DB=<свежая> NODE_PATH=/home/oleg/traning/web/node_modules node tests/pw/funnel.js` → exit≠0, красные как минимум A1, A2, B5, C1, D1, F1 — каждая с причиной по существу (не таймаут/селектор теста); B1–B4, B7 — pass (регрессия). `RDS_DB=<несуществующий> php tests/run.php` → exit 0, в выводе pass маркер-гейта и pass самопроверки «детектор поймал [ПРОВЕРИТЬ». `php -l tests/run.php`. Остальные tests/pw/*.js не тронуты (`git diff --stat tests/pw` — только funnel.js).",
-    "reference": null,
-    "axis": ["конверсия", "мобайл"],
-    "size": "M",
-    "kind": "test",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§8 Политика тестов; §2 Р2.2–Р2.7; task.md «Не сломать»"
-  },
-  {
-    "id": "T02",
-    "milestone": "M2",
-    "title": "Завести docs/studio/content-manifest.json по формату plan.md §Манифест",
-    "outcome": "Файл существует: {\"base\":\"main\",\"settings\":[],\"rows\":[]}; каждая следующая задача с непустым db_keys дописывает свои записи в том же коммите.",
-    "files": ["docs/studio/content-manifest.json"],
-    "check": "`php -r 'json_decode(file_get_contents(\"docs/studio/content-manifest.json\"), true, 512, JSON_THROW_ON_ERROR);'` без исключения; ключи base, settings, rows на месте.",
-    "reference": null,
-    "axis": ["тексты"],
-    "size": "S",
-    "kind": "content-migration",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§1 Р1.7; task.md шаг 14"
-  },
-  {
-    "id": "T03",
-    "milestone": "M2",
-    "title": "OWNER-ACTIONS: вопросы strategy §6 в формате файла + черновики класса E в docs/studio/copy/",
-    "outcome": "docs/OWNER-ACTIONS.md в формате ЧТО · ГДЕ · ЧТО ОТКРОЕТ: новые пункты §6 (живые телефоны и 46-90-81 из каталогов, подключён ли WhatsApp; фактический адрес/офис и приём клиентов; лицензии/СРО, год основания, безнал/НДС/договор/госзаказ; фото техники по типам и оригинал hero; Wix-сайт; Вебмастер — sitemap и регион «Орёл»; Search Console; Яндекс Бизнес/2ГИС/Zoon и честные отзывы; уведомление о новом H1 с откатом в админке); §7 — статус «снято с сайта до подтверждения» для «15+», «5–10 заказов», «Свой карьер»; §8 — ключ reply_promise, значение «в течение рабочего дня»; §10 — 7 целей Метрики и 2 составные с именами из Р2.7 (оговорка про юриста сохраняется); дата проверки 2026-11-08. docs/studio/copy/owner-pending.md — черновики класса E («ООО с 2016», договор и счёт с НДС, цена асфальта, ссылка на ЕГРЮЛ, «N единиц своей техники», «закажите до N:00 — привезём сегодня»), у каждого [ПРОВЕРИТЬ: что и у кого]; на сайт не попадают.",
-    "files": ["docs/OWNER-ACTIONS.md", "docs/studio/copy/owner-pending.md"],
-    "check": "`RDS_DB=<несуществующий> php tests/run.php` → exit 0 (проверка 13 ключей fact_* в OWNER-ACTIONS); каждый [ПРОВЕРИТЬ: …] из docs/studio/copy/ упомянут в OWNER-ACTIONS (сверка списком); каждый новый пункт имеет ЧТО, ГДЕ, ЧТО ОТКРОЕТ; ни одного утверждения без источника из facts.md; ps-humanness-judge ×2 (sonnet, haiku) на новые абзацы ≥6/7.",
-    "reference": null,
-    "axis": ["доверие", "локальное SEO", "тексты"],
-    "size": "M",
-    "kind": "copy",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§6; §1 Р1.3 (класс E); §10"
-  },
-  {
-    "id": "T04",
-    "milestone": "M2",
-    "title": "Протокол съёмки §5: доработать shoot.js (согласие + скрытие cookie, прогрузка ленивых), лист замеров measure.js; переснять Э1, Э2 и наш стенд",
-    "outcome": "var/studio/ref/tools/shoot.js снимает 390×844 (isMobile, touch) и 1440×900, DPR 1, ru-RU строго по протоколу strategy §5 (пп. 2–3 доработаны); var/studio/ref/tools/measure.js даёт лист замеров одного вида для любой стороны: computed CSS (кегль, интерлиньяж, разрядка, цвета) у h1, CTA, телефона, полей; bbox и центры; тап-цели <44; контраст WCAG. Пересняты plutos57.ru, orel.blago-s.ru и наш стенд на свежей БД → {390-fold,390,1440-fold,1440}.png + info.json + measure.json. Можно переиспользовать var/studio/audit/tools/design-*.js.",
-    "files": ["var/studio/ref/tools/shoot.js", "var/studio/ref/tools/measure.js"],
-    "check": "Оба домена живые и по теме (HTTP 200, заголовок про дороги/спецтехнику/благоустройство); на скринах нет cookie-баннера; в info.json у всех img complete && naturalWidth>0 (нет пустых ленивых зон); measure.json трёх сторон с одинаковым набором полей; в git ничего не добавлено.",
-    "reference": "Э1 plutos57 + Э2 orel.blago-s (съёмка самих эталонов)",
-    "axis": ["дизайн", "конверсия"],
-    "size": "S",
-    "kind": "test",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§5 Протокол съёмки; task.md «Известные грабли» (лист замеров)"
-  },
-  {
-    "id": "T05",
-    "milestone": "M2",
-    "title": "Липкая нижняя панель «Позвонить + WhatsApp» на ≤768 px",
-    "outcome": "<nav aria-label=\"Связаться\">, 56 px + env(safe-area-inset-bottom): жёлтая «Позвонить» (tel:) + тёмная «WhatsApp» (wa.me/…?text=Здравствуйте! Пишу с сайта regiondorstroy.com.); пустой whatsapp → одна кнопка на всю ширину. Скрыта, пока виден CTA hero, пока виден #contacts и при открытом окне; без JS — видна. z-index 80 (cookie-бар 90, окно 100), body{padding-bottom:56px} на ≤768. Часов нет. Главная и посадочные.",
-    "files": ["app/tpl/home.php"],
-    "check": "funnel.js F1–F4 pass; overflow.js, fold.js, tails.js, a11y.js, brand.js, grid.js — exit 0. ВИД-протокол: на 320/360/390/430/768 панель видна после прокрутки за hero, на 1024/1440/1920 — нет; iPhone 390×844 и Android 360×800 (isMobile, hasTouch, DPR 3): тап «Позвонить» → tel:+79807691111, тап WhatsApp → wa.me/79807691111?text=…; панель не закрывает cookie-бар и последнюю строку подвала; javaScriptEnabled:false — панель видна; axe без serious/critical. Критик vs Э2 (К1, К5) на 390 и 1440.",
-    "reference": "Э2 orel.blago-s (К1, К5)",
-    "axis": ["конверсия", "мобайл"],
-    "size": "M",
-    "kind": "code",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§2 Р2.3; утверждение (а)"
-  },
-  {
-    "id": "T06",
-    "milestone": "M2",
-    "title": "Hero главной: «Оставить заявку» + «Позвонить 8 980 769-11-11» и три пути (техника / материалы / дороги)",
-    "outcome": "Вместо «Наши услуги» (home.php:295) — tel:-кнопка с номером, как на посадочных (landing.php:44–45). Под кнопками [data-paths] три ссылки без цен и не [data-lp-chips]: «Аренда спецтехники · прайс по моделям →» /arenda-spetstekhniki/, «Щебень, песок, грунт · цены и доставка →» /shcheben-pesok-grunt/, «Дороги и благоустройство · расчёт →» #contacts (после публикации — /asfaltirovanie/). CTA «Оставить заявку» целиком в экране 360×740 и 390×844; пути могут быть ниже сгиба.",
-    "files": ["app/tpl/home.php"],
-    "check": "funnel.js A1, A2 pass; fold.js (0 чипов на /, первая tel: с цифрами), tails.js (A3), grid.js, overflow.js, brand.js, reveal.js — exit 0; bbox «Оставить заявку».bottom ≤740 на 360×740 и ≤844 на 390×844. ВИД-протокол: hero без переполнения блоков на 8 ширинах, тап «Позвонить» → tel: в эмуляции iPhone/Android. Критик vs Э1 (К4, К5) на 390 и 1440.",
-    "reference": "Э1 plutos57 (К4, К5)",
-    "axis": ["конверсия", "мобайл", "дизайн"],
-    "size": "M",
-    "kind": "code",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§2 Р2.2; §3 Р3.1"
-  },
-  {
-    "id": "T07",
-    "milestone": "M2",
-    "title": "Верхняя полоса на ≤640: одна строка 44 px с номером tel: (V5) + <aside aria-label=\"Контакты\">",
-    "outcome": "На ≤640 верхняя полоса — одна строка 44 px: ссылка tel: «8 980 769-11-11» шрифтом Oswald; e-mail и WhatsApp переезжают в мобильное меню и блок контактов; часов нет. Полоса на всех ширинах обёрнута в <aside aria-label=\"Контакты\">; на ≥641 вид прежний.",
-    "files": ["app/tpl/home.php"],
-    "check": "На 320/360/390/430/640: высота полосы 44±1 px, номер цифрами в верхних 120 px (bbox), тап-цель tel ≥44; на 641/768/1024/1440/1920 полоса совпадает с базлайном (скрин-сравнение); brand.js (лок-ап шапки не сдвинулся), fold.js, overflow.js, a11y.js (axe region ушёл) — exit 0; e-mail и WhatsApp доступны из меню на 390; эмуляция iPhone/Android: тап по номеру → tel:+79807691111. Критик vs Э1 (К1) и Э2 (К3) на 390, 1440 — без регресса.",
-    "reference": "Э1 plutos57 (К1); Э2 orel.blago-s (К3)",
-    "axis": ["мобайл", "конверсия", "доступность"],
-    "size": "M",
-    "kind": "code",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§4 V5, V4 (aside); design D2, D10, D13"
-  },
-  {
-    "id": "T08",
-    "milestone": "M2",
-    "title": "Одно обещание «перезвоним в течение рабочего дня» + экран «Спасибо» с номером и WhatsApp",
-    "outcome": "Новый ключ reply_promise (grp texts, фолбэк в шаблоне «в течение рабочего дня»); modal_call_text → «Оставьте номер — перезвоним в течение рабочего дня.»; form_ok_text и modal_ok_text → «Заявка принята. Перезвоним в течение рабочего дня.»; подпись под e-mail в контактах (home.php:529) берёт reply_promise. Экран «Спасибо» в окне и нижней форме: заголовок с tabindex=-1 получает фокус, строка о перезвоне, «Срочно? Позвоните или напишите:» [Позвонить tel:] [WhatsApp], в окне — «Закрыть». 4 записи в манифесте.",
-    "files": ["app/tpl/home.php", "db/seed.sql", "docs/studio/content-manifest.json"],
-    "check": "funnel.js B1–B5 pass; `grep -rnE '15 минут|ближайшее время|в течение дня' app/tpl db/*.sql` = 0, то же по HTML стенда; lead.js, call.js, tails.js — exit 0 (если тест утверждал старый текст — правка в том же коммите, причина в notes.md); фолбэк: DELETE reply_promise из стенд-БД → 200, текст по умолчанию, в логе php -S нет Warning. ВИД-протокол: экран «Спасибо» без переполнения на 8 ширинах, в эмуляции iPhone/Android тап «Позвонить»/WhatsApp на «Спасибо». ps-humanness-judge ×2 ≥6/7. Манифест: old = сид main.",
-    "reference": "Э2 orel.blago-s (К6)",
-    "axis": ["конверсия", "тексты", "доверие"],
-    "size": "M",
-    "kind": "code",
-    "db_keys": ["settings.reply_promise (новый)", "settings.modal_call_text", "settings.form_ok_text", "settings.modal_ok_text"],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§2 Р2.6"
-  },
-  {
-    "id": "T09",
-    "milestone": "M2",
-    "title": "Ошибки формы без alert(): блок role=alert, проверка телефона, тексты без «/ Telegram»",
-    "outcome": "Блок role=alert над кнопкой отправки в окне и нижней форме; тексты печатает сервер через e(), JS показывает. fetch reject → alert_offline (code=offline); 400 invalid → подсказка «Проверьте номер: нужно не меньше 10 цифр, например 8 980 000-00-00» + фокус на поле; 429/5xx/не-JSON → alert_fail (code=rate|server). Обе ошибки связи показывают «Позвонить 8 980 769-11-11» и «WhatsApp»; введённые данные сохраняются. Телефон: type=tel, inputmode=tel, JS-проверка «цифр ≥10» до запроса. alert_fail/alert_offline — новые тексты без «/ Telegram». Точка вызова window.goal&&goal('lead_error',{code}). send.php не меняется.",
-    "files": ["app/tpl/home.php", "db/seed.sql", "docs/studio/content-manifest.json"],
-    "check": "funnel.js C1–C4 pass; `grep -n 'alert(' app/tpl/home.php` = 0; ни одного события dialog во всех сценариях funnel.js; `git diff --stat public/send.php` пуст; lead.js, call.js, a11y.js — exit 0. ВИД-протокол: блок ошибки без переполнения на 8 ширинах, кнопки звонка/WhatsApp в нём ≥44 px в эмуляции iPhone/Android. Манифест: alert_fail, alert_offline. ps-humanness-judge ×2 ≥6/7.",
-    "reference": null,
-    "axis": ["конверсия", "доступность", "тексты"],
-    "size": "M",
-    "kind": "code",
-    "db_keys": ["settings.alert_fail", "settings.alert_offline"],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§2 Р2.5, Р2.4 (телефон); CRO #5"
-  },
-  {
-    "id": "T10",
-    "milestone": "M2",
-    "title": "Поля обеих форм: 16 px, видимые <label> 13 px, фокус-обводка вместо outline:none, чекбокс 22 px, строка согласия ≥44",
-    "outcome": "Окно и нижняя форма (посадочные используют тот же шаблон): кегль input/select/textarea 16 px; видимые подписи 13 px над полями (<label for>); inline outline:none убран; фокус — outline 3px #FFC700 + box-shadow 0 0 0 2px #0d0d0d на светлом и тёмном фоне; чекбокс согласия 22×22, строка согласия ≥44 px; галочка не предотмечена.",
-    "files": ["app/tpl/home.php"],
-    "check": "computed font-size полей ≥16px на всех ширинах; эмуляция iPhone 390×844 и Android 360×800 (isMobile, hasTouch, DPR 3): фокус в каждое поле → visualViewport.scale = 1; контраст фокус-обводки ≥3:1 к #f4f4f2 и #161616 (замер); a11y.js, lead.js, call.js, tails.js, overflow.js — exit 0; funnel.js B1–B4, B7 pass. ВИД-протокол: формы без переполнения на 8 ширинах, строка согласия ≥44 px. Критик vs Э2 (К5) на 390 и 1440.",
-    "reference": "Э2 orel.blago-s (К5)",
-    "axis": ["доступность", "мобайл", "дизайн"],
-    "size": "M",
-    "kind": "code",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§4 V1, V2; §2 Р2.4 (кегль, подписи); design D1, D3, D5"
-  },
-  {
-    "id": "T11",
-    "milestone": "M2",
-    "title": "Окно аренды/материала: чипы «Сегодня / Завтра / Позже», одно поле с видимой подписью, сборка comment",
-    "outcome": "Режимы аренды и материала: плашка контекста, имя*, телефон*, 3 радио-чипа ≥44 px (необязательно), одно поле с подписью (аренда: «Адрес или населённый пункт, сколько смен или часов»; материал: «Объём ({unit}) и куда везти»), maxlength 880. comment = «Техника: X» → «Когда: завтра» → текст, пустые строки не добавляются (формат tails.js A2). Режим звонка без изменений; send.php не меняется.",
-    "files": ["app/tpl/home.php"],
-    "check": "funnel.js B2, B3, B6 pass (comment в leads ровно «Техника: X\\nКогда: завтра\\n<текст>»); tails.js, lead.js, call.js, rent.js — exit 0; чипы — радиогруппа (стрелки), видимый фокус; на 360×640 кнопка отправки достижима прокруткой оверлея. ВИД-протокол: 8 ширин; iPhone/Android — тап по чипу, ввод без зума. Критик vs Э2 (К5) на 390 и 1440.",
-    "reference": "Э2 orel.blago-s (К5)",
-    "axis": ["конверсия", "мобайл"],
-    "size": "M",
-    "kind": "code",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§2 Р2.4"
-  },
-  {
-    "id": "T12",
-    "milestone": "M2",
-    "title": "Окно как диалог: role=dialog, aria-modal, aria-labelledby, фокус внутрь, inert на фон, возврат фокуса, «×» 44×44, прокрутка оверлея",
-    "outcome": "Окно (home.php:619–641) объявляется как диалог; при открытии фокус в первом поле; фон inert; Esc и «×» (44×44, aria-label=«Закрыть») закрывают и возвращают фокус на кнопку-открывашку; оверлей overflow-y:auto.",
-    "files": ["app/tpl/home.php"],
-    "check": "После открытия activeElement внутри окна; 12×Tab и 12×Shift+Tab не выходят из окна; Esc и «×» закрывают, фокус на открывашке; bbox «×» ≥44×44; на 360×640 оверлей прокручивается до кнопки отправки; a11y.js, call.js, lead.js — exit 0; funnel.js B pass; axe с открытым окном без serious/critical. ВИД-протокол: 8 ширин + iPhone/Android.",
-    "reference": null,
-    "axis": ["доступность", "конверсия"],
-    "size": "S",
-    "kind": "code",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§4 V3; §2 Р2.9; design D4"
-  },
-  {
-    "id": "T13",
-    "milestone": "M2",
-    "title": "CTA каталога: «В АРЕНДУ →» ≥44 с aria-label, строка прайса → окно аренды, различимые «Запросить расчёт», «Получить расчёт» внизу, отдельная tel: для 49-11-11",
-    "outcome": "Карточка техники: полноширинная кнопка ≥44 px, текст в исходнике «В АРЕНДУ →» (rent.js:56), aria-label=«В аренду: {title}»; 13 строк прайса: имя в <dt> → <button> openCalc('{name} {model}', 'Аренда спецтехники'), <dd> без изменений (price.js:34–35); кнопки материалов aria-label «Запросить расчёт: {материал}»; нижняя форма «Отправить заявку» → «Получить расчёт»; «городской: 49-11-11» — отдельная ссылка tel:+74862491111.",
-    "files": ["app/tpl/home.php"],
-    "check": "funnel.js A3 и B2 (из строки прайса) pass; rent.js, price.js, tails.js, grid.js, a11y.js, overflow.js — exit 0; на 390 в #fleet, прайсе и #materials 0 целей действия <44 px (bbox); 13 кнопок прайса и 9 карточек с различимыми доступными именами (tab-обход). ВИД-протокол: 8 ширин; iPhone/Android — тап по строке прайса открывает окно с «Техника: …», тап по 49-11-11 → tel:+74862491111. Критик vs Э1 (К2, К3) на 390 и 1440.",
-    "reference": "Э1 plutos57 (К2, К3)",
-    "axis": ["конверсия", "мобайл", "доступность"],
-    "size": "M",
-    "kind": "code",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§2 Р2.2, Р2.9; design D6, D10; CRO #7, #14"
-  },
-  {
-    "id": "T14",
-    "milestone": "M2",
-    "title": "Цели Метрики: window.goal в блоке Метрики + 7 целей на действиях",
-    "outcome": "Внутри блока Метрики window.goal=function(n,p){if(window.ym)ym(ID,'reachGoal',n,p)}; основной скрипт зовёт window.goal&&goal(...): lead_call / lead_rent / lead_material / lead_calc при ok===true && n по режиму окна и нижней форме; click_tel и click_whatsapp — делегирование по a[href^='tel:'] / a[href*='wa.me'] с {where: closest('[id]').id}; lead_error — с {code} (точка из T09). Без metrika_id и без согласия — ни тега, ни вызовов, ошибок в консоли нет.",
-    "files": ["app/tpl/home.php", "tests/pw/metrika.js (только если утверждает состав блока)"],
-    "check": "funnel.js D1, D2, E1 pass и funnel.js целиком exit 0 (выход M2); metrika.js, lead.js, call.js — exit 0; pageerror и console.error = 0 при пустом metrika_id; имена целей в коде (grep goal-вызовов) = списку Р2.7 = OWNER-ACTIONS §Метрика.",
-    "reference": null,
-    "axis": ["конверсия"],
-    "size": "M",
-    "kind": "code",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§2 Р2.7"
-  },
-  {
-    "id": "T15",
-    "milestone": "M3",
-    "title": "H1 главной «Строим дороги в Орле. Благоустраиваем территории.» + кегль на ≤640 и компенсация отступов на ≤400",
-    "outcome": "hero_h1 → значение из strategy §3 Р3.2 дословно (сид + манифест; перенос на прод — только при прод = сид). h1 главной на ≤640: clamp(28px,9.2vw,44px); всем h1 overflow-wrap:anywhere; отступы hero на ≤400 px 38→24 и 26→18 — CTA «Оставить заявку» остаётся в экране 360×740.",
-    "files": ["db/seed.sql", "app/tpl/home.php", "docs/studio/content-manifest.json"],
-    "check": "h1.scrollWidth ≤ h1.clientWidth на 320/360/390/430/768/1024/1440/1920; bbox «Оставить заявку».bottom ≤740 на 360×740 и ≤844 на 390×844 (с полосой T07 и путями T06); fold.js, grid.js, overflow.js, brand.js, tails.js — exit 0; funnel.js A1 pass. ВИД-протокол: скрин fold на iPhone/Android. Манифест: hero_h1, old = сид main. Критик vs Э1 (К4, К5) на 390 и 1440.",
-    "reference": "Э1 plutos57 (К4, К5)",
-    "axis": ["тексты", "локальное SEO", "дизайн"],
-    "size": "M",
-    "kind": "copy",
-    "db_keys": ["settings.hero_h1"],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§3 Р3.2; §4 V6; утверждение (б)"
-  },
-  {
-    "id": "T16",
-    "milestone": "M3",
-    "title": "Первый экран: hero_p и цифры stat_hero на фактах класса A",
-    "outcome": "hero_p → «Асфальт и благоустройство, аренда спецтехники, щебень, песок и грунт с доставкой по Орлу и Орловской области.»; stat_hero 1: «от 3 500» / «₽/ч, техника с НДС» текстом, без счётчика; stat_hero 2: «9» / «видов техники в аренду» текстом; 3 — без изменений. Лимиты grid.js:42 (title ≤22, text ≤8).",
-    "files": ["db/seed.sql", "docs/studio/content-manifest.json"],
-    "check": "grid.js, fold.js (0 чипов на /), overflow.js — exit 0; в hero нет data-count. ВИД-протокол: каждая цифра hero в одну строку, без переполнения на 8 ширинах и в эмуляции iPhone/Android. ps-humanness-judge ×2 ≥6/7. Манифест: hero_p + строки items stat_hero (match kind + старый title). Критик vs Э1 (К5) на 390 и 1440.",
-    "reference": "Э1 plutos57 (К5)",
-    "axis": ["тексты", "доверие", "конверсия"],
-    "size": "S",
-    "kind": "copy",
-    "db_keys": ["settings.hero_p", "items[kind=stat_hero,title=единиц спецтехники].title,text,num,suffix", "items[kind=stat_hero,title=полный цикл работ].title,text"],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§1 Р1.4"
-  },
-  {
-    "id": "T17",
-    "milestone": "M3",
-    "title": "«Почему выбирают»: факты вместо самооценок (why_p, 4 карточки, этап 5, services_lead)",
-    "outcome": "why_p → «Дорожные работы, аренда спецтехники и сыпучие материалы в Орле и области. Цены аренды — на сайте, реквизиты — в подвале.»; карточки «Цены до звонка» · «Всё в одной компании» · «Реквизиты на сайте» (ИНН, ОГРН, юр. адрес — подвал) · «Смета до работ» (этап 2), тексты карточек только из класса A; этап 5 → «Сдаём готовый объект.»; services_lead → «Работы и техника по Орлу и области — от двора до дороги.» h2 и лок-ап home.php:471–477 не тронуты.",
-    "files": ["db/seed.sql", "docs/studio/content-manifest.json"],
-    "check": "`grep -rnE 'Отличная репутация|без замечаний|Большой опыт|Многолетний|профессионал|гарантируем качество' db/*.sql app/tpl` = 0, то же по HTML стенда; brand.js (лок-ап «Почему мы») — exit 0; каждое утверждение карточек сверено с facts.md; ВИД-протокол без переполнения; ps-humanness-judge ×2 ≥6/7. Манифест: why_p, services_lead, 4 строки why (title, text), step «Сдача» text. Критик vs Э1 на 390 и 1440.",
-    "reference": "Э1 plutos57",
-    "axis": ["доверие", "тексты"],
-    "size": "S",
-    "kind": "copy",
-    "db_keys": ["settings.why_p", "settings.services_lead", "items[kind=why,title=Отличная репутация|Высокое качество|Большой опыт|Большие объёмы].title,text", "items[kind=step,title=Сдача].text"],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§1 Р1.5, Р1.3 (класс D)"
-  },
-  {
-    "id": "T18",
-    "milestone": "M3",
-    "title": "Снять неподтверждённое: «15+», «5–10 заказов в неделю», «Свой карьер», «более 15 единиц»",
-    "outcome": "stat_bar: «15+ единиц техники» → «6 направлений работ», «5–10 заказов в неделю» → «4 вида материалов»; fleet_lead без «Более 15 единиц»; текст услуги «Аренда спецтехники» без «Более 15 единиц»; бейдж «Свой карьер» у «Песок» пуст; pg_rent_desc → «Аренда спецтехники в Орле и области: экскаватор 36 000 ₽/смена, экскаватор-погрузчик 3 500 ₽/ч, грунтовый каток 28 000 ₽/смена — с НДС.»",
-    "files": ["db/seed.sql", "db/seed-pages.sql", "docs/studio/content-manifest.json"],
-    "check": "`grep -rnE '15\\+|более 15|Более 15|5–10|Свой карьер' db/*.sql app/tpl` = 0, то же по HTML всех публичных страниц стенда; grid.js, seo.js, price.js, rent.js — exit 0 (если тест утверждал старый текст — правка в том же коммите с причиной в notes.md); длина pg_rent_desc ≤160; ВИД-протокол; ps-humanness-judge ×2 ≥6/7. Манифест: 2 строки stat_bar, fleet_lead, services «Аренда спецтехники».text, materials «Песок».badge, pg_rent_desc. Критик vs Э1 (К5) на 390 и 1440.",
-    "reference": "Э1 plutos57 (К5)",
-    "axis": ["доверие", "тексты"],
-    "size": "M",
-    "kind": "copy",
-    "db_keys": ["items[kind=stat_bar,title=единиц техники].title,text,num,suffix", "items[kind=stat_bar,title=заказов в неделю].title,text", "settings.fleet_lead", "services[title=Аренда спецтехники].text", "materials[title=Песок].badge", "settings.pg_rent_desc"],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§1 Р1.3 (класс C), Р1.5, Р1.6; утверждение (в)"
-  },
-  {
-    "id": "T19",
-    "milestone": "M3",
-    "title": "Подпись под сеткой техники и нейтральный alt hero (V8 а, г)",
-    "outcome": "Под сеткой техники строка из нового ключа fleet_photo_note (grp texts; фолбэк в шаблоне «Фото показывают тип техники; модели и цены — в таблице ниже»; пустое значение — строки нет); alt hero (home.php:283) → «Асфальтоукладчики и катки на укладке асфальта».",
-    "files": ["app/tpl/home.php", "db/seed.sql", "docs/studio/content-manifest.json"],
-    "check": "Фолбэк: DELETE fleet_photo_note → строка с текстом по умолчанию, в логе php -S нет Warning; value='' → строки нет; seo.js, a11y.js, rent.js, grid.js — exit 0. ВИД-протокол: подпись читается (контраст AA, кегль ≥13 px) на 8 ширинах и в эмуляции iPhone/Android. ps-humanness-judge ×2 ≥6/7. Манифест: fleet_photo_note (old null + add). Критик vs Э1 на 390 и 1440.",
-    "reference": "Э1 plutos57",
-    "axis": ["доверие", "тексты"],
-    "size": "S",
-    "kind": "code",
-    "db_keys": ["settings.fleet_photo_note (новый)"],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§4 V8 (а, г); утверждение (г)"
-  },
-  {
-    "id": "T20",
-    "milestone": "M4",
-    "title": "Карточки техники на ≤640 — строка: фото 112×84 слева, имя/цена/кнопка справа",
-    "outcome": "На ≤640 каждая карточка техники — горизонтальная строка: фото 112×84, справа имя, цена, кнопка ≥44 (из T13); контейнер в 1 колонку; на ≥641 без изменений; главная и аренда.",
-    "files": ["app/tpl/home.php"],
-    "check": "На 390: высота позиции ≤120 px, в экране 844 px ≥5 позиций, кнопка ≥44, цена в строке; grid.js (≤2 колонок на 390), rent.js, price.js, overflow.js, reveal.js — exit 0. ВИД-протокол + 640/641: без переполнения, на ≥641 скрин = базлайн; iPhone/Android — тап по кнопке открывает окно аренды. Критик vs кроп Sunbelt 390 (К1–К4) и vs Э1 (К2) на 390 и 1440.",
-    "reference": "ориентир Sunbelt (К1–К4) + Э1 plutos57 (К2)",
-    "axis": ["мобайл", "дизайн", "конверсия"],
-    "size": "M",
-    "kind": "code",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§4 V7; §5 Sunbelt"
-  },
-  {
-    "id": "T21",
-    "milestone": "M4",
-    "title": "Перекадровка фото: mat-pesok и mat-grunt — в фактуру, fleet-crane — по шасси (те же пути)",
-    "outcome": "public/assets/mat-pesok.webp и mat-grunt.webp — кроп фактуры материала из тех же файлов (без шильда VOLVO, без многоэтажек и самосвала); fleet-crane.webp — кроп по шасси; пути и имена прежние, WebP, размер ≤ исходного; mat-shcheben и mat-pgs не трогаются. Инструменты — только dev (GD/ImageMagick/cwebp), следов в репо нет. Если alt перестаёт соответствовать кадру — правка alt в сиде + манифест.",
-    "files": ["public/assets/mat-pesok.webp", "public/assets/mat-grunt.webp", "public/assets/fleet-crane.webp"],
-    "check": "Скрины карточек 390/1440: на песке и грунте нет шильдов, логотипов, зданий, техники; на кране нет читаемого чужого шильда; размер файлов ≤ исходных; кадр осмыслен на 8 ширинах и в строке T20 (112×84); Lighthouse CLS не вырос; в notes.md — оговорка про кэш статики 1 год (ST #4). Критик vs Э1 на 390 и 1440.",
-    "reference": "Э1 plutos57",
-    "axis": ["дизайн", "доверие"],
-    "size": "S",
-    "kind": "code",
-    "db_keys": ["materials[title=Песок|Грунт].alt и fleet_cards[кран].alt — только если alt меняется"],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§4 V8 (б, в); утверждение (г)"
-  },
-  {
-    "id": "T22",
-    "milestone": "M4",
-    "title": "Посадочные: «Услуги» → строка «Другие услуги» (id=services сохраняется), у аренды убрать «Этапы»",
-    "outcome": "На /arenda-spetstekhniki/ и /shcheben-pesok-grunt/ блок #services: H2 «Другие услуги» + строка ссылок-названий без карточек и текстов (опубликованные посадочные — ссылки, остальное — openCalc или #contacts); у rent в PAGES нет 'steps'; главная без изменений.",
-    "files": ["app/bootstrap.php", "app/tpl/landing.php", "tests/run.php"],
-    "check": "Сначала новая проверка в run.php (красная): на аренде есть id=\"services\" и H2 «Другие услуги», нет текста первой карточки услуг, нет блока этапов; затем зелёная. Существующие проверки run.php M4 (ссылки в #services посадочных) — зелёные; seo.js, rent.js, tails.js, overflow.js — exit 0. ВИД-протокол: строка ссылок переносится без переполнения, цели ≥44 на ≤430. Эталона-пары нет (§5 сравнивает главные) — гейт по замерам и скринам.",
-    "reference": null,
-    "axis": ["тексты", "техническое SEO", "дизайн"],
-    "size": "M",
-    "kind": "code",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§3 Р3.4"
-  },
-  {
-    "id": "T23",
-    "milestone": "M5",
-    "title": "schema.org: @id организации, WebSite на главной, provider по @id, без geo и priceRange, taxID из org_inn, оба телефона",
-    "outcome": "$biz['@id'] = base#org; на главной @graph из WebSite (#website, inLanguage ru) + организации; на посадочных provider = {\"@id\": base#org}; из шаблона убраны geo и priceRange (строки ld_* в БД и поля админки не трогаются); taxID из org_inn, если заполнен; telephone = +79807691111 и +74862491111. streetAddress, postalCode, sameAs, AggregateRating, Offer.price — нет.",
-    "files": ["app/tpl/home.php", "tests/run.php"],
-    "check": "Сначала проверки в run.php (красные): JSON-LD всех страниц парсится; на / есть WebSite #website и организация @id; provider посадочных = {@id}; нет geo и priceRange; taxID есть при заполненном org_inn и отсутствует при пустом; telephone — оба номера; затем зелёные. seo.js — exit 0 (если утверждал geo/priceRange — правка с причиной в notes.md); `git diff main -- db/` не трогает ld_*.",
-    "reference": null,
-    "axis": ["техническое SEO", "локальное SEO"],
-    "size": "M",
-    "kind": "seo",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§3 Р3.7"
-  },
-  {
-    "id": "T24",
-    "milestone": "M5",
-    "title": "favicon.ico 16/32/48 + og.jpg 1200×630 + twitter:card summary_large_image",
-    "outcome": "public/favicon.ico (16/32/48 из favicon.svg) + <link rel=\"icon\" href=\"/favicon.ico\" sizes=\"32x32\">; public/assets/og.jpg 1200×630 ≤150 КБ: HTML-карточка с разметкой лок-апа шапки, «Дороги · Благоустройство · Аренда спецтехники · Щебень, песок, грунт», «Орёл и Орловская область», телефон, без фото; og:image → og.jpg с width/height 1200/630 и осмысленным og:image:alt; twitter:card = summary_large_image.",
-    "files": ["public/favicon.ico", "public/assets/og.jpg", "app/tpl/home.php"],
-    "check": "`curl -sI` стенда /favicon.ico → 200 (проходит через router.php); og.jpg ровно 1200×630 и ≤150 КБ; текст лок-апа на og.jpg совпадает с шапкой; мета-теги проверены парсингом HTML трёх страниц; seo.js, brand.js — exit 0; маркер-гейт зелёный.",
-    "reference": null,
-    "axis": ["техническое SEO", "доверие"],
-    "size": "S",
-    "kind": "seo",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§3 Р3.8; ST #7, #10"
-  },
-  {
-    "id": "T25",
-    "milestone": "M5",
-    "title": "width/height у всех <img> без изменения вёрстки",
-    "outcome": "Каждый <img> на публичных страницах (включая картинки из БД и загрузки админки) имеет width и height по натуральному размеру файла; отсутствующий файл не роняет страницу; вид не меняется.",
-    "files": ["app/tpl/home.php", "app/tpl/landing.php", "tests/run.php"],
-    "check": "Сначала проверка в run.php (красная): на /, аренде, материалах, asf/blago (с фактами) 0 <img> без width и height; затем зелёная; bbox ключевых блоков на 390 и 1440 до/после совпадают; Lighthouse CLS ≤ базлайна; upload.js, draft.js — exit 0; запись с несуществующим файлом картинки → 200 и без Warning.",
-    "reference": null,
-    "axis": ["техническое SEO", "скорость"],
-    "size": "M",
-    "kind": "seo",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§3 Р3.8 (ST #5)"
-  },
-  {
-    "id": "T26",
-    "milestone": "M5",
-    "title": "Перелинковка: карточки услуг кликабельны, ссылки под прайсом и материалами, «Аренда по прайсу →» на материалах",
-    "outcome": "Карточки услуг №1, №2, №6 → openCalc(<услуга>), пока /asfaltirovanie/ и /blagoustroystvo/ не опубликованы (после — ссылки по текущей логике $live); №4 «Грузоперевозки» → /arenda-spetstekhniki/ (services.href, на прод — только при href='#services'); под прайсом «Условия и цены аренды по моделям →» /arenda-spetstekhniki/; под материалами «Цены и доставка щебня, песка, грунта →» /shcheben-pesok-grunt/; на материалах строка «Нужен каток или погрузчик на объект? Аренда по прайсу →». Анкоры — названия услуг, без «в Орле» в каждом.",
-    "files": ["app/tpl/home.php", "db/seed.sql", "tests/run.php"],
-    "check": "Сначала проверка в run.php (красная): на / в теле (не меню и не подвал) есть ссылки на обе опубликованные посадочные, все 6 карточек услуг — ссылка или кнопка; затем зелёная; существующие проверки run.php M4 — зелёные; funnel.js A3 pass; seo.js, tails.js, overflow.js — exit 0. ВИД-протокол, цели ≥44 на ≤430. Манифест: services «Грузоперевозки».href.",
-    "reference": null,
-    "axis": ["техническое SEO", "конверсия", "локальное SEO"],
-    "size": "M",
-    "kind": "seo",
-    "db_keys": ["services[title=Грузоперевозки].href"],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§3 Р3.6"
-  },
-  {
-    "id": "T27",
-    "milestone": "M5",
-    "title": "FAQ на главной из FAQ_SITE + FAQ_ZONE: только отвеченные, без FAQPage на /",
-    "outcome": "На главной между «Как работаем» и контактами — блок «Вопросы и ответы» из FAQ_SITE + FAQ_ZONE (app/bootstrap.php:60–61), только с заполненными ответами; без ответов блока нет; FAQPage на / не выводится (на посадочных — как раньше); разметка блока переиспользует landing.php:71–77.",
-    "files": ["app/bootstrap.php", "app/tpl/home.php", "tests/run.php"],
-    "check": "Сначала проверка в run.php (красная): fact_measure='x' → на / есть «Вопросы и ответы» и вопрос про замер, в JSON-LD / нет FAQPage; пустые факты → блока нет; затем зелёная; FAQPage посадочных не изменился; seo.js — exit 0; маркер-гейт зелёный. ВИД-протокол с заполненными ответами.",
-    "reference": null,
-    "axis": ["тексты", "конверсия", "техническое SEO"],
-    "size": "M",
-    "kind": "code",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§3 Р3.5, Р3.1"
-  },
-  {
-    "id": "T28",
-    "milestone": "M6",
-    "title": "Skip-link → <main id=\"main\">, бургер aria-expanded/aria-controls, reduced-motion: scroll-behavior auto и без transition у [data-lift]",
-    "outcome": "Первая остановка Tab — видимая при фокусе «Перейти к содержимому» → main#main; бургер переключает aria-expanded и указывает aria-controls на меню; при prefers-reduced-motion scroll-behavior:auto и transition:none у [data-lift].",
-    "files": ["app/tpl/home.php"],
-    "check": "Первый Tab на / и посадочных — skip-link, Enter → фокус в main#main; бургер: aria-expanded false→true→false; при reduce computed scroll-behavior=auto, transition у [data-lift] — none/0s; a11y.js, reveal.js, brand.js — exit 0; axe без serious/critical на 390/1440. ВИД-протокол: меню открывается тапом в эмуляции iPhone/Android.",
-    "reference": null,
-    "axis": ["доступность"],
-    "size": "S",
-    "kind": "code",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§4 V4; design D11, D12"
-  },
-  {
-    "id": "T29",
-    "milestone": "M6",
-    "title": "Тап-цели: меню/подвал/крошки ≥24 px на десктопе, ссылки услуг и все CTA/каналы ≥44 px на 320–430",
-    "outcome": "На 320–430 все CTA, каналы связи и ссылки услуг ≥44 px; на ≥1024 пункты меню, ссылки подвала и крошек ≥24×24; лок-апы не сдвинуты.",
-    "files": ["app/tpl/home.php", "app/tpl/landing.php"],
-    "check": "Замер bbox всех интерактивных: на 320/360/390/430 среди CTA, каналов, ссылок услуг 0 целей <44; на 1024/1440/1920 0 целей <24×24; brand.js, overflow.js, a11y.js — exit 0. ВИД-протокол + iPhone/Android. Критик vs Э2 (К5) на 390.",
-    "reference": "Э2 orel.blago-s (К5)",
-    "axis": ["мобайл", "доступность"],
-    "size": "M",
-    "kind": "code",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§4 V4 (размеры); design D10"
-  },
-  {
-    "id": "T30",
-    "milestone": "M6",
-    "title": "privacy и consent: h1 clamp(24px,7.5vw,34px) + overflow-wrap:anywhere",
-    "outcome": "Заголовки юр. страниц помещаются на 320–430 без горизонтального скролла.",
-    "files": ["app/tpl/privacy.php", "app/tpl/consent.php"],
-    "check": "На 320/360/390/430/768/1024/1440/1920: documentElement.scrollWidth ≤ clientWidth и h1.scrollWidth ≤ h1.clientWidth на обеих страницах; overflow.js и run.php — exit 0; эмуляция iPhone/Android: переход по ссылке из строки согласия — страница без горизонтального скролла.",
-    "reference": null,
-    "axis": ["мобайл", "доступность"],
-    "size": "S",
-    "kind": "code",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§4 V6; design D7"
-  },
-  {
-    "id": "T31",
-    "milestone": "M6",
-    "title": "Сквозной axe + контраст: все публичные страницы × 390/1440 и состояния (окно, ошибка, меню, панель, «Спасибо») — 0 serious/critical",
-    "outcome": "axe-core через Playwright (npx -y, без следов в репо) на /, аренде, материалах, asf/blago (с фактами), privacy, consent, 404 × 390/1440 + состояния: окно звонка, окно аренды с ошибкой, мобильное меню, видимая панель, экран «Спасибо». Мелкие находки правятся здесь; если правка шире 3 файлов — отдельные задачи.",
-    "files": ["app/tpl/home.php", "app/tpl/landing.php"],
-    "check": "Вывод axe: 0 serious/critical во всех комбинациях; контраст AA у всех текстов; a11y.js — exit 0; список выделенных задач (если есть) в tasks.json.",
-    "reference": null,
-    "axis": ["доступность"],
-    "size": "M",
-    "kind": "test",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§4; task.md ось «доступность»"
-  },
-  {
-    "id": "T32",
-    "milestone": "M6",
-    "title": "Скорость: Lighthouse mobile/desktop по 3 страницам; мобильный srcset hero — только при LCP > 2.5 с",
-    "outcome": "Замеры после M2–M5 записаны в var/studio/m6/; если медиана LCP главной (mobile) >2.5 с — hero получает мобильный srcset (~60–80 КБ) без CLS; иначе код не трогается.",
-    "files": ["app/tpl/home.php (только при LCP > 2.5 с)", "public/assets/hero-paving-*.webp (там же)"],
-    "check": "`npx -y lighthouse … --chrome-path=/home/oleg/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome`, mobile, 3 прогона, медиана, /, аренда, материалы на стенде: Performance ≥90, LCP <2.5 с, CLS <0.1, TBT <200 мс; сравнение со стендом M0 (var/studio/m0) — не хуже; php -S без gzip завышает время — оговорка в notes.md, при сомнении замер базлайн-коммита в той же конфигурации; при srcset — fold.js, overflow.js — exit 0. Критик vs Э2 (К4).",
-    "reference": "Э2 orel.blago-s (К4)",
-    "axis": ["скорость"],
-    "size": "M",
-    "kind": "code",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§3 Р3.8 (srcset условно); ST #6"
-  },
-  {
-    "id": "T33",
-    "milestone": "M7",
-    "title": "HTML-ответы: Cache-Control и ETag/304 без ложных дат",
-    "outcome": "Публичные HTML-страницы отдают Cache-Control: no-cache и ETag по содержимому; повторный запрос с If-None-Match → 304 без тела. Last-Modified не вводим (нет честной даты, как в ADR-0009). Если в HTML есть поштучные токены и ETag бесполезен — задача снимается с причиной в notes.md.",
-    "files": ["public/index.php"],
-    "check": "`curl -sI /` → Cache-Control: no-cache и ETag; повтор с If-None-Match → 304; правка настройки в стенд-БД → новый ETag и 200; админка, send.php, privacy/consent — заголовки не изменились; run.php и seo.js — exit 0.",
-    "reference": null,
-    "axis": ["техническое SEO", "скорость"],
-    "size": "S",
-    "kind": "seo",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§3 Р3.8 (P2, в конце); ST #3"
-  },
-  {
-    "id": "T34",
-    "milestone": "M7",
-    "title": "Production-валидатор: маркеры, плейсхолдеры, битые ссылки и якоря, пустые alt на всех публичных страницах",
-    "outcome": "Краулер по стенду (свежая БД, затем факты asf/blago заполнены): все внутренние href и якоря ведут на 200 или существующий id; tel: и wa.me корректны; нет <img> с пустым alt, кроме декоративных; мелкие находки правятся здесь, крупные — отдельные задачи.",
-    "files": ["app/tpl/home.php", "app/tpl/landing.php"],
-    "check": "Отчёт краулера: 0 битых ссылок и якорей, 0 пустых alt у содержательных картинок; маркер-гейт run.php — pass; run.php — exit 0.",
-    "reference": null,
-    "axis": ["техническое SEO", "доступность"],
-    "size": "S",
-    "kind": "test",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "task.md шаг 9 (production-validator)"
-  },
-  {
-    "id": "T35",
-    "milestone": "M7",
-    "title": "Генеральная репетиция критика: главная против Э1 и Э2 на 390 и 1440 (fold + полная) по протоколу §5",
-    "outcome": "Пары A/B без меток + критерии §5 + лист замеров measure.js (T04) → ps-blind-critic (fable) по каждому эталону; результат и разрывы — var/studio/m7/critic.md; на каждый проигрыш ОДИН главный разрыв становится новой задачей.",
-    "files": ["var/studio/m7/critic.md"],
-    "check": "Вердикт критика по Э1 и Э2 × 390/1440 записан; на каждый проигрыш в tasks.json есть задача с этим разрывом.",
-    "reference": "Э1 plutos57; Э2 orel.blago-s",
-    "axis": ["дизайн", "конверсия", "мобайл"],
-    "size": "M",
-    "kind": "test",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "§5; task.md «Готово, когда» п. 2"
-  },
-  {
-    "id": "T36",
-    "milestone": "M8",
-    "title": "bin/studio-content.php — перенос текстов по манифесту (шаг 14) + тест в run.php",
-    "outcome": "Скрипт только на stdlib читает docs/studio/content-manifest.json и БД (RDS_DB или путь по умолчанию, как в app/db.php). Запись обновляется, только если текущее значение = old; иначе конфликт попадает в отчёт с обоими текстами. Ключи с old null добавляются вместе с add. Записи с одинаковыми (table, match) применяются вместе, всё в одной транзакции. По умолчанию сухой прогон, запись — только с --apply. Если в drafts есть строка — предупреждение (публикация черновика затрёт правки). Итог: применено / уже новое / конфликт / добавлено.",
-    "files": ["bin/studio-content.php", "tests/run.php"],
-    "check": "Тест в run.php через $cli: (1) свежая БД, значения из манифеста откачены к old, новые ключи удалены → сухой прогон показывает N изменений, файл БД не изменился (хеш); --apply → все new и ключи добавлены; повторный --apply → 0 изменений; (2) один ключ изменён вручную → конфликт с обоими текстами, ключ не тронут, остальные применены; `php -l bin/studio-content.php`; сверка: каждое изменённое значение `git diff main -- db/seed.sql db/seed-pages.sql` есть в манифесте и наоборот; `RDS_DB=<несуществующий> php tests/run.php` → exit 0.",
-    "reference": null,
-    "axis": ["тексты", "доверие"],
-    "size": "M",
-    "kind": "content-migration",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "task.md шаг 14; §1 Р1.7"
-  },
-  {
-    "id": "T37",
-    "milestone": "M8",
-    "title": "README и OWNER-ACTIONS — финальная сверка",
-    "outcome": "README: funnel.js в списке тестов и запуск (ONLY=…), маркер-гейт в run.php, bin/studio-content.php (сухой прогон и --apply) и content-manifest.json, раскладка docs/studio/. OWNER-ACTIONS: перечислены все [ПРОВЕРИТЬ] из docs/studio/copy/, имена целей Метрики совпадают с кодом, статусы §7–8 совпадают с сайтом, обновлена дата проверки.",
-    "files": ["README.md", "docs/OWNER-ACTIONS.md"],
-    "check": "Имена целей из goal-вызовов app/tpl/home.php = список в OWNER-ACTIONS; каждый [ПРОВЕРИТЬ из docs/studio/copy/ упомянут в OWNER-ACTIONS; run.php — exit 0; команды из README выполняются копипастой на свежей БД.",
-    "reference": null,
-    "axis": ["доверие"],
-    "size": "S",
-    "kind": "copy",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "task.md шаг 13 (чек-лист)"
-  },
-  {
-    "id": "T38",
-    "milestone": "M8",
-    "title": "Финал, шаг 13: «Готово, когда» + ps-gate-reviewer",
-    "outcome": "Вывод всех проверок «Не сломать» в транскрипте: php -l, run.php, каждый tests/pw/*.js (включая funnel.js) на своей свежей БД. Последняя панель ×3: либо ≥9 по каждой оси, либо stalled по осям доверие/тексты/локальное SEO с главным разрывом. Критик против Э1 и Э2 на 390 и 1440. Гейт по чек-листу: git status чист, OWNER-ACTIONS в формате, [ПРОВЕРИТЬ] перечислены, README обновлён. При HOLD — причина в notes.md, задачи возвращаются в петлю.",
-    "files": [],
-    "check": "ps-gate-reviewer (sonnet) — PASS; иначе HOLD с причиной.",
-    "reference": "Э1 plutos57; Э2 orel.blago-s",
-    "axis": ["дизайн", "конверсия", "тексты", "доверие", "техническое SEO", "локальное SEO", "скорость", "мобайл", "доступность"],
-    "size": "M",
-    "kind": "test",
-    "db_keys": [],
-    "status": "todo",
-    "rounds": 0,
-    "strategy_ref": "task.md «Готово, когда», шаг 13; strategy §10"
-  }
+ {
+  "id": "T01",
+  "milestone": "M2",
+  "title": "Тесты-до-правок: tests/pw/funnel.js (метки A–F) и маркер-гейт в tests/run.php",
+  "outcome": "funnel.js в стиле tests/pw/brand.js + metrika.js (BASE, PW_CHROME, правка стенд-БД через php PDO как в metrika.js), ширины 360/390/768/1440, страницы /, /arenda-spetstekhniki/, /shcheben-pesok-grunt/; строка на каждую метку + итог, ONLY=<буква> гоняет одну секцию. Метки: A1 hero главной: «Оставить заявку» → форма #contacts, «Позвонить» → tel:; A2 три пути [data-paths] → /arenda-spetstekhniki/, /shcheben-pesok-grunt/, #contacts; A3 каждый CTA (main, header, панель) на 3 страницах ведёт к форме, tel: или wa.me; B1 окно звонка → «Спасибо» + строка leads source=call; B2 аренда (карточка и строка прайса) → source=calc, service «Аренда спецтехники», comment начинается «Техника: »; B3 материал → source=material; B4 нижняя форма → source=calc; B5 «Спасибо»: заголовок в фокусе, обещание reply_promise, есть tel: и wa.me; B6 максимум полей (чип «Завтра» + текст 880 зн.) → ok:true, comment «Техника: X\\nКогда: завтра\\n<текст>»; B7 галочка согласия не предотмечена при каждом открытии; C1 send.php → 500 HTML: блок role=alert code=server, без события dialog; C2 429 JSON → code=rate; C3 route.abort → code=offline, введённые данные на месте; C4 телефон «123» → подсказка у поля, фокус на телефоне, запрос не ушёл; D1 metrika_id=12345 + «Принять» + стаб window.ym: 7 целей (lead_call, lead_rent, lead_material, lead_calc, click_tel, click_whatsapp, lead_error) на своих действиях; D2 lead_* не шлётся без n в ответе; E1 без согласия тега Метрики нет, после «Принять» — есть; F1 ≤768 nav[aria-label='Связаться'] position:fixed с tel: и wa.me?text=; F2 панель скрыта, пока виден CTA hero, #contacts и открыто окно, не пересекает CTA hero на 360×740 и 390×844; F3 ≥1024 панели не видно; F4 пустой whatsapp → одна кнопка во всю ширину. Маркер-гейт в run.php: при заполненных fact_asphalt_works/fact_blago_works отрендеренные /, обе посадочные, /asfaltirovanie/, /blagoustroystvo/, /privacy.php, /consent.php, 404 не содержат «[ПРОВЕРИТЬ», «[NEED», «TODO», «lorem» (без регистра), «XXX»; самопроверка: hero_p с «[ПРОВЕРИТЬ: тест]» ловится, значение возвращается.",
+  "files": [
+   "tests/pw/funnel.js",
+   "tests/run.php"
+  ],
+  "check": "Стенд :8080 на свежей БД: `RDS_DB=<свежая> NODE_PATH=/home/oleg/traning/web/node_modules node tests/pw/funnel.js` → exit≠0, красные как минимум A1, A2, B5, C1, D1, F1 — каждая с причиной по существу (не таймаут/селектор теста); B1–B4, B7 — pass (регрессия). `RDS_DB=<несуществующий> php tests/run.php` → exit 0, в выводе pass маркер-гейта и pass самопроверки «детектор поймал [ПРОВЕРИТЬ». `php -l tests/run.php`. Остальные tests/pw/*.js не тронуты (`git diff --stat tests/pw` — только funnel.js).",
+  "reference": null,
+  "axis": [
+   "конверсия",
+   "мобайл"
+  ],
+  "size": "M",
+  "kind": "test",
+  "db_keys": [],
+  "status": "done",
+  "rounds": 1,
+  "strategy_ref": "§8 Политика тестов; §2 Р2.2–Р2.7; task.md «Не сломать»"
+ },
+ {
+  "id": "T02",
+  "milestone": "M2",
+  "title": "Завести docs/studio/content-manifest.json по формату plan.md §Манифест",
+  "outcome": "Файл существует: {\"base\":\"main\",\"settings\":[],\"rows\":[]}; каждая следующая задача с непустым db_keys дописывает свои записи в том же коммите.",
+  "files": [
+   "docs/studio/content-manifest.json"
+  ],
+  "check": "`php -r 'json_decode(file_get_contents(\"docs/studio/content-manifest.json\"), true, 512, JSON_THROW_ON_ERROR);'` без исключения; ключи base, settings, rows на месте.",
+  "reference": null,
+  "axis": [
+   "тексты"
+  ],
+  "size": "S",
+  "kind": "content-migration",
+  "db_keys": [],
+  "status": "done",
+  "rounds": 1,
+  "strategy_ref": "§1 Р1.7; task.md шаг 14"
+ },
+ {
+  "id": "T03",
+  "milestone": "M2",
+  "title": "OWNER-ACTIONS: вопросы strategy §6 в формате файла + черновики класса E в docs/studio/copy/",
+  "outcome": "docs/OWNER-ACTIONS.md в формате ЧТО · ГДЕ · ЧТО ОТКРОЕТ: новые пункты §6 (живые телефоны и 46-90-81 из каталогов, подключён ли WhatsApp; фактический адрес/офис и приём клиентов; лицензии/СРО, год основания, безнал/НДС/договор/госзаказ; фото техники по типам и оригинал hero; Wix-сайт; Вебмастер — sitemap и регион «Орёл»; Search Console; Яндекс Бизнес/2ГИС/Zoon и честные отзывы; уведомление о новом H1 с откатом в админке); §7 — статус «снято с сайта до подтверждения» для «15+», «5–10 заказов», «Свой карьер»; §8 — ключ reply_promise, значение «в течение рабочего дня»; §10 — 7 целей Метрики и 2 составные с именами из Р2.7 (оговорка про юриста сохраняется); дата проверки 2026-11-08. docs/studio/copy/owner-pending.md — черновики класса E («ООО с 2016», договор и счёт с НДС, цена асфальта, ссылка на ЕГРЮЛ, «N единиц своей техники», «закажите до N:00 — привезём сегодня»), у каждого [ПРОВЕРИТЬ: что и у кого]; на сайт не попадают.",
+  "files": [
+   "docs/OWNER-ACTIONS.md",
+   "docs/studio/copy/owner-pending.md"
+  ],
+  "check": "`RDS_DB=<несуществующий> php tests/run.php` → exit 0 (проверка 13 ключей fact_* в OWNER-ACTIONS); каждый [ПРОВЕРИТЬ: …] из docs/studio/copy/ упомянут в OWNER-ACTIONS (сверка списком); каждый новый пункт имеет ЧТО, ГДЕ, ЧТО ОТКРОЕТ; ни одного утверждения без источника из facts.md; ps-humanness-judge ×2 (sonnet, haiku) на новые абзацы ≥6/7.",
+  "reference": null,
+  "axis": [
+   "доверие",
+   "локальное SEO",
+   "тексты"
+  ],
+  "size": "M",
+  "kind": "copy",
+  "db_keys": [],
+  "status": "in_progress",
+  "rounds": 3,
+  "strategy_ref": "§6; §1 Р1.3 (класс E); §10"
+ },
+ {
+  "id": "T04",
+  "milestone": "M2",
+  "title": "Протокол съёмки §5: доработать shoot.js (согласие + скрытие cookie, прогрузка ленивых), лист замеров measure.js; переснять Э1, Э2 и наш стенд",
+  "outcome": "var/studio/ref/tools/shoot.js снимает 390×844 (isMobile, touch) и 1440×900, DPR 1, ru-RU строго по протоколу strategy §5 (пп. 2–3 доработаны); var/studio/ref/tools/measure.js даёт лист замеров одного вида для любой стороны: computed CSS (кегль, интерлиньяж, разрядка, цвета) у h1, CTA, телефона, полей; bbox и центры; тап-цели <44; контраст WCAG. Пересняты plutos57.ru, orel.blago-s.ru и наш стенд на свежей БД → {390-fold,390,1440-fold,1440}.png + info.json + measure.json. Можно переиспользовать var/studio/audit/tools/design-*.js.",
+  "files": [
+   "var/studio/ref/tools/shoot.js",
+   "var/studio/ref/tools/measure.js"
+  ],
+  "check": "Оба домена живые и по теме (HTTP 200, заголовок про дороги/спецтехнику/благоустройство); на скринах нет cookie-баннера; в info.json у всех img complete && naturalWidth>0 (нет пустых ленивых зон); measure.json трёх сторон с одинаковым набором полей; в git ничего не добавлено.",
+  "reference": "Э1 plutos57 + Э2 orel.blago-s (съёмка самих эталонов)",
+  "axis": [
+   "дизайн",
+   "конверсия"
+  ],
+  "size": "S",
+  "kind": "test",
+  "db_keys": [],
+  "status": "done",
+  "rounds": 1,
+  "strategy_ref": "§5 Протокол съёмки; task.md «Известные грабли» (лист замеров)"
+ },
+ {
+  "id": "T05",
+  "milestone": "M2",
+  "title": "Липкая нижняя панель «Позвонить + WhatsApp» на ≤768 px",
+  "outcome": "<nav aria-label=\"Связаться\">, 56 px + env(safe-area-inset-bottom): жёлтая «Позвонить» (tel:) + тёмная «WhatsApp» (wa.me/…?text=Здравствуйте! Пишу с сайта regiondorstroy.com.); пустой whatsapp → одна кнопка на всю ширину. Скрыта, пока виден CTA hero, пока виден #contacts и при открытом окне; без JS — видна. z-index 80 (cookie-бар 90, окно 100), body{padding-bottom:56px} на ≤768. Часов нет. Главная и посадочные.",
+  "files": [
+   "app/tpl/home.php"
+  ],
+  "check": "funnel.js F1–F4 pass; overflow.js, fold.js, tails.js, a11y.js, brand.js, grid.js — exit 0. ВИД-протокол: на 320/360/390/430/768 панель видна после прокрутки за hero, на 1024/1440/1920 — нет; iPhone 390×844 и Android 360×800 (isMobile, hasTouch, DPR 3): тап «Позвонить» → tel:+79807691111, тап WhatsApp → wa.me/79807691111?text=…; панель не закрывает cookie-бар и последнюю строку подвала; javaScriptEnabled:false — панель видна; axe без serious/critical. Критик vs Э2 (К1, К5) на 390 и 1440.",
+  "reference": "Э2 orel.blago-s (К1, К5)",
+  "axis": [
+   "конверсия",
+   "мобайл"
+  ],
+  "size": "M",
+  "kind": "code",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§2 Р2.3; утверждение (а)"
+ },
+ {
+  "id": "T06",
+  "milestone": "M2",
+  "title": "Hero главной: «Оставить заявку» + «Позвонить 8 980 769-11-11» и три пути (техника / материалы / дороги)",
+  "outcome": "Вместо «Наши услуги» (home.php:295) — tel:-кнопка с номером, как на посадочных (landing.php:44–45). Под кнопками [data-paths] три ссылки без цен и не [data-lp-chips]: «Аренда спецтехники · прайс по моделям →» /arenda-spetstekhniki/, «Щебень, песок, грунт · цены и доставка →» /shcheben-pesok-grunt/, «Дороги и благоустройство · расчёт →» #contacts (после публикации — /asfaltirovanie/). CTA «Оставить заявку» целиком в экране 360×740 и 390×844; пути могут быть ниже сгиба.",
+  "files": [
+   "app/tpl/home.php"
+  ],
+  "check": "funnel.js A1, A2 pass; fold.js (0 чипов на /, первая tel: с цифрами), tails.js (A3), grid.js, overflow.js, brand.js, reveal.js — exit 0; bbox «Оставить заявку».bottom ≤740 на 360×740 и ≤844 на 390×844. ВИД-протокол: hero без переполнения блоков на 8 ширинах, тап «Позвонить» → tel: в эмуляции iPhone/Android. Критик vs Э1 (К4, К5) на 390 и 1440.",
+  "reference": "Э1 plutos57 (К4, К5)",
+  "axis": [
+   "конверсия",
+   "мобайл",
+   "дизайн"
+  ],
+  "size": "M",
+  "kind": "code",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§2 Р2.2; §3 Р3.1"
+ },
+ {
+  "id": "T07",
+  "milestone": "M2",
+  "title": "Верхняя полоса на ≤640: одна строка 44 px с номером tel: (V5) + <aside aria-label=\"Контакты\">",
+  "outcome": "На ≤640 верхняя полоса — одна строка 44 px: ссылка tel: «8 980 769-11-11» шрифтом Oswald; e-mail и WhatsApp переезжают в мобильное меню и блок контактов; часов нет. Полоса на всех ширинах обёрнута в <aside aria-label=\"Контакты\">; на ≥641 вид прежний.",
+  "files": [
+   "app/tpl/home.php"
+  ],
+  "check": "На 320/360/390/430/640: высота полосы 44±1 px, номер цифрами в верхних 120 px (bbox), тап-цель tel ≥44; на 641/768/1024/1440/1920 полоса совпадает с базлайном (скрин-сравнение); brand.js (лок-ап шапки не сдвинулся), fold.js, overflow.js, a11y.js (axe region ушёл) — exit 0; e-mail и WhatsApp доступны из меню на 390; эмуляция iPhone/Android: тап по номеру → tel:+79807691111. Критик vs Э1 (К1) и Э2 (К3) на 390, 1440 — без регресса.",
+  "reference": "Э1 plutos57 (К1); Э2 orel.blago-s (К3)",
+  "axis": [
+   "мобайл",
+   "конверсия",
+   "доступность"
+  ],
+  "size": "M",
+  "kind": "code",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§4 V5, V4 (aside); design D2, D10, D13"
+ },
+ {
+  "id": "T08",
+  "milestone": "M2",
+  "title": "Одно обещание «перезвоним в течение рабочего дня» + экран «Спасибо» с номером и WhatsApp",
+  "outcome": "Новый ключ reply_promise (grp texts, фолбэк в шаблоне «в течение рабочего дня»); modal_call_text → «Оставьте номер — перезвоним в течение рабочего дня.»; form_ok_text и modal_ok_text → «Заявка принята. Перезвоним в течение рабочего дня.»; подпись под e-mail в контактах (home.php:529) берёт reply_promise. Экран «Спасибо» в окне и нижней форме: заголовок с tabindex=-1 получает фокус, строка о перезвоне, «Срочно? Позвоните или напишите:» [Позвонить tel:] [WhatsApp], в окне — «Закрыть». 4 записи в манифесте.",
+  "files": [
+   "app/tpl/home.php",
+   "db/seed.sql",
+   "docs/studio/content-manifest.json"
+  ],
+  "check": "funnel.js B1–B5 pass; `grep -rnE '15 минут|ближайшее время|в течение дня' app/tpl db/*.sql` = 0, то же по HTML стенда; lead.js, call.js, tails.js — exit 0 (если тест утверждал старый текст — правка в том же коммите, причина в notes.md); фолбэк: DELETE reply_promise из стенд-БД → 200, текст по умолчанию, в логе php -S нет Warning. ВИД-протокол: экран «Спасибо» без переполнения на 8 ширинах, в эмуляции iPhone/Android тап «Позвонить»/WhatsApp на «Спасибо». ps-humanness-judge ×2 ≥6/7. Манифест: old = сид main.",
+  "reference": "Э2 orel.blago-s (К6)",
+  "axis": [
+   "конверсия",
+   "тексты",
+   "доверие"
+  ],
+  "size": "M",
+  "kind": "code",
+  "db_keys": [
+   "settings.reply_promise (новый)",
+   "settings.modal_call_text",
+   "settings.form_ok_text",
+   "settings.modal_ok_text"
+  ],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§2 Р2.6"
+ },
+ {
+  "id": "T09",
+  "milestone": "M2",
+  "title": "Ошибки формы без alert(): блок role=alert, проверка телефона, тексты без «/ Telegram»",
+  "outcome": "Блок role=alert над кнопкой отправки в окне и нижней форме; тексты печатает сервер через e(), JS показывает. fetch reject → alert_offline (code=offline); 400 invalid → подсказка «Проверьте номер: нужно не меньше 10 цифр, например 8 980 000-00-00» + фокус на поле; 429/5xx/не-JSON → alert_fail (code=rate|server). Обе ошибки связи показывают «Позвонить 8 980 769-11-11» и «WhatsApp»; введённые данные сохраняются. Телефон: type=tel, inputmode=tel, JS-проверка «цифр ≥10» до запроса. alert_fail/alert_offline — новые тексты без «/ Telegram». Точка вызова window.goal&&goal('lead_error',{code}). send.php не меняется.",
+  "files": [
+   "app/tpl/home.php",
+   "db/seed.sql",
+   "docs/studio/content-manifest.json"
+  ],
+  "check": "funnel.js C1–C4 pass; `grep -n 'alert(' app/tpl/home.php` = 0; ни одного события dialog во всех сценариях funnel.js; `git diff --stat public/send.php` пуст; lead.js, call.js, a11y.js — exit 0. ВИД-протокол: блок ошибки без переполнения на 8 ширинах, кнопки звонка/WhatsApp в нём ≥44 px в эмуляции iPhone/Android. Манифест: alert_fail, alert_offline. ps-humanness-judge ×2 ≥6/7.",
+  "reference": null,
+  "axis": [
+   "конверсия",
+   "доступность",
+   "тексты"
+  ],
+  "size": "M",
+  "kind": "code",
+  "db_keys": [
+   "settings.alert_fail",
+   "settings.alert_offline"
+  ],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§2 Р2.5, Р2.4 (телефон); CRO #5"
+ },
+ {
+  "id": "T10",
+  "milestone": "M2",
+  "title": "Поля обеих форм: 16 px, видимые <label> 13 px, фокус-обводка вместо outline:none, чекбокс 22 px, строка согласия ≥44",
+  "outcome": "Окно и нижняя форма (посадочные используют тот же шаблон): кегль input/select/textarea 16 px; видимые подписи 13 px над полями (<label for>); inline outline:none убран; фокус — outline 3px #FFC700 + box-shadow 0 0 0 2px #0d0d0d на светлом и тёмном фоне; чекбокс согласия 22×22, строка согласия ≥44 px; галочка не предотмечена.",
+  "files": [
+   "app/tpl/home.php"
+  ],
+  "check": "computed font-size полей ≥16px на всех ширинах; эмуляция iPhone 390×844 и Android 360×800 (isMobile, hasTouch, DPR 3): фокус в каждое поле → visualViewport.scale = 1; контраст фокус-обводки ≥3:1 к #f4f4f2 и #161616 (замер); a11y.js, lead.js, call.js, tails.js, overflow.js — exit 0; funnel.js B1–B4, B7 pass. ВИД-протокол: формы без переполнения на 8 ширинах, строка согласия ≥44 px. Критик vs Э2 (К5) на 390 и 1440.",
+  "reference": "Э2 orel.blago-s (К5)",
+  "axis": [
+   "доступность",
+   "мобайл",
+   "дизайн"
+  ],
+  "size": "M",
+  "kind": "code",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§4 V1, V2; §2 Р2.4 (кегль, подписи); design D1, D3, D5"
+ },
+ {
+  "id": "T11",
+  "milestone": "M2",
+  "title": "Окно аренды/материала: чипы «Сегодня / Завтра / Позже», одно поле с видимой подписью, сборка comment",
+  "outcome": "Режимы аренды и материала: плашка контекста, имя*, телефон*, 3 радио-чипа ≥44 px (необязательно), одно поле с подписью (аренда: «Адрес или населённый пункт, сколько смен или часов»; материал: «Объём ({unit}) и куда везти»), maxlength 880. comment = «Техника: X» → «Когда: завтра» → текст, пустые строки не добавляются (формат tails.js A2). Режим звонка без изменений; send.php не меняется.",
+  "files": [
+   "app/tpl/home.php"
+  ],
+  "check": "funnel.js B2, B3, B6 pass (comment в leads ровно «Техника: X\\nКогда: завтра\\n<текст>»); tails.js, lead.js, call.js, rent.js — exit 0; чипы — радиогруппа (стрелки), видимый фокус; на 360×640 кнопка отправки достижима прокруткой оверлея. ВИД-протокол: 8 ширин; iPhone/Android — тап по чипу, ввод без зума. Критик vs Э2 (К5) на 390 и 1440.",
+  "reference": "Э2 orel.blago-s (К5)",
+  "axis": [
+   "конверсия",
+   "мобайл"
+  ],
+  "size": "M",
+  "kind": "code",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§2 Р2.4"
+ },
+ {
+  "id": "T12",
+  "milestone": "M2",
+  "title": "Окно как диалог: role=dialog, aria-modal, aria-labelledby, фокус внутрь, inert на фон, возврат фокуса, «×» 44×44, прокрутка оверлея",
+  "outcome": "Окно (home.php:619–641) объявляется как диалог; при открытии фокус в первом поле; фон inert; Esc и «×» (44×44, aria-label=«Закрыть») закрывают и возвращают фокус на кнопку-открывашку; оверлей overflow-y:auto.",
+  "files": [
+   "app/tpl/home.php"
+  ],
+  "check": "После открытия activeElement внутри окна; 12×Tab и 12×Shift+Tab не выходят из окна; Esc и «×» закрывают, фокус на открывашке; bbox «×» ≥44×44; на 360×640 оверлей прокручивается до кнопки отправки; a11y.js, call.js, lead.js — exit 0; funnel.js B pass; axe с открытым окном без serious/critical. ВИД-протокол: 8 ширин + iPhone/Android.",
+  "reference": null,
+  "axis": [
+   "доступность",
+   "конверсия"
+  ],
+  "size": "S",
+  "kind": "code",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§4 V3; §2 Р2.9; design D4"
+ },
+ {
+  "id": "T13",
+  "milestone": "M2",
+  "title": "CTA каталога: «В АРЕНДУ →» ≥44 с aria-label, строка прайса → окно аренды, различимые «Запросить расчёт», «Получить расчёт» внизу, отдельная tel: для 49-11-11",
+  "outcome": "Карточка техники: полноширинная кнопка ≥44 px, текст в исходнике «В АРЕНДУ →» (rent.js:56), aria-label=«В аренду: {title}»; 13 строк прайса: имя в <dt> → <button> openCalc('{name} {model}', 'Аренда спецтехники'), <dd> без изменений (price.js:34–35); кнопки материалов aria-label «Запросить расчёт: {материал}»; нижняя форма «Отправить заявку» → «Получить расчёт»; «городской: 49-11-11» — отдельная ссылка tel:+74862491111.",
+  "files": [
+   "app/tpl/home.php"
+  ],
+  "check": "funnel.js A3 и B2 (из строки прайса) pass; rent.js, price.js, tails.js, grid.js, a11y.js, overflow.js — exit 0; на 390 в #fleet, прайсе и #materials 0 целей действия <44 px (bbox); 13 кнопок прайса и 9 карточек с различимыми доступными именами (tab-обход). ВИД-протокол: 8 ширин; iPhone/Android — тап по строке прайса открывает окно с «Техника: …», тап по 49-11-11 → tel:+74862491111. Критик vs Э1 (К2, К3) на 390 и 1440.",
+  "reference": "Э1 plutos57 (К2, К3)",
+  "axis": [
+   "конверсия",
+   "мобайл",
+   "доступность"
+  ],
+  "size": "M",
+  "kind": "code",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§2 Р2.2, Р2.9; design D6, D10; CRO #7, #14"
+ },
+ {
+  "id": "T14",
+  "milestone": "M2",
+  "title": "Цели Метрики: window.goal в блоке Метрики + 7 целей на действиях",
+  "outcome": "Внутри блока Метрики window.goal=function(n,p){if(window.ym)ym(ID,'reachGoal',n,p)}; основной скрипт зовёт window.goal&&goal(...): lead_call / lead_rent / lead_material / lead_calc при ok===true && n по режиму окна и нижней форме; click_tel и click_whatsapp — делегирование по a[href^='tel:'] / a[href*='wa.me'] с {where: closest('[id]').id}; lead_error — с {code} (точка из T09). Без metrika_id и без согласия — ни тега, ни вызовов, ошибок в консоли нет.",
+  "files": [
+   "app/tpl/home.php",
+   "tests/pw/metrika.js (только если утверждает состав блока)"
+  ],
+  "check": "funnel.js D1, D2, E1 pass и funnel.js целиком exit 0 (выход M2); metrika.js, lead.js, call.js — exit 0; pageerror и console.error = 0 при пустом metrika_id; имена целей в коде (grep goal-вызовов) = списку Р2.7 = OWNER-ACTIONS §Метрика.",
+  "reference": null,
+  "axis": [
+   "конверсия"
+  ],
+  "size": "M",
+  "kind": "code",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§2 Р2.7"
+ },
+ {
+  "id": "T15",
+  "milestone": "M3",
+  "title": "H1 главной «Строим дороги в Орле. Благоустраиваем территории.» + кегль на ≤640 и компенсация отступов на ≤400",
+  "outcome": "hero_h1 → значение из strategy §3 Р3.2 дословно (сид + манифест; перенос на прод — только при прод = сид). h1 главной на ≤640: clamp(28px,9.2vw,44px); всем h1 overflow-wrap:anywhere; отступы hero на ≤400 px 38→24 и 26→18 — CTA «Оставить заявку» остаётся в экране 360×740.",
+  "files": [
+   "db/seed.sql",
+   "app/tpl/home.php",
+   "docs/studio/content-manifest.json"
+  ],
+  "check": "h1.scrollWidth ≤ h1.clientWidth на 320/360/390/430/768/1024/1440/1920; bbox «Оставить заявку».bottom ≤740 на 360×740 и ≤844 на 390×844 (с полосой T07 и путями T06); fold.js, grid.js, overflow.js, brand.js, tails.js — exit 0; funnel.js A1 pass. ВИД-протокол: скрин fold на iPhone/Android. Манифест: hero_h1, old = сид main. Критик vs Э1 (К4, К5) на 390 и 1440.",
+  "reference": "Э1 plutos57 (К4, К5)",
+  "axis": [
+   "тексты",
+   "локальное SEO",
+   "дизайн"
+  ],
+  "size": "M",
+  "kind": "copy",
+  "db_keys": [
+   "settings.hero_h1"
+  ],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§3 Р3.2; §4 V6; утверждение (б)"
+ },
+ {
+  "id": "T16",
+  "milestone": "M3",
+  "title": "Первый экран: hero_p и цифры stat_hero на фактах класса A",
+  "outcome": "hero_p → «Асфальт и благоустройство, аренда спецтехники, щебень, песок и грунт с доставкой по Орлу и Орловской области.»; stat_hero 1: «от 3 500» / «₽/ч, техника с НДС» текстом, без счётчика; stat_hero 2: «9» / «видов техники в аренду» текстом; 3 — без изменений. Лимиты grid.js:42 (title ≤22, text ≤8).",
+  "files": [
+   "db/seed.sql",
+   "docs/studio/content-manifest.json"
+  ],
+  "check": "grid.js, fold.js (0 чипов на /), overflow.js — exit 0; в hero нет data-count. ВИД-протокол: каждая цифра hero в одну строку, без переполнения на 8 ширинах и в эмуляции iPhone/Android. ps-humanness-judge ×2 ≥6/7. Манифест: hero_p + строки items stat_hero (match kind + старый title). Критик vs Э1 (К5) на 390 и 1440.",
+  "reference": "Э1 plutos57 (К5)",
+  "axis": [
+   "тексты",
+   "доверие",
+   "конверсия"
+  ],
+  "size": "S",
+  "kind": "copy",
+  "db_keys": [
+   "settings.hero_p",
+   "items[kind=stat_hero,title=единиц спецтехники].title,text,num,suffix",
+   "items[kind=stat_hero,title=полный цикл работ].title,text"
+  ],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§1 Р1.4"
+ },
+ {
+  "id": "T17",
+  "milestone": "M3",
+  "title": "«Почему выбирают»: факты вместо самооценок (why_p, 4 карточки, этап 5, services_lead)",
+  "outcome": "why_p → «Дорожные работы, аренда спецтехники и сыпучие материалы в Орле и области. Цены аренды — на сайте, реквизиты — в подвале.»; карточки «Цены до звонка» · «Всё в одной компании» · «Реквизиты на сайте» (ИНН, ОГРН, юр. адрес — подвал) · «Смета до работ» (этап 2), тексты карточек только из класса A; этап 5 → «Сдаём готовый объект.»; services_lead → «Работы и техника по Орлу и области — от двора до дороги.» h2 и лок-ап home.php:471–477 не тронуты.",
+  "files": [
+   "db/seed.sql",
+   "docs/studio/content-manifest.json"
+  ],
+  "check": "`grep -rnE 'Отличная репутация|без замечаний|Большой опыт|Многолетний|профессионал|гарантируем качество' db/*.sql app/tpl` = 0, то же по HTML стенда; brand.js (лок-ап «Почему мы») — exit 0; каждое утверждение карточек сверено с facts.md; ВИД-протокол без переполнения; ps-humanness-judge ×2 ≥6/7. Манифест: why_p, services_lead, 4 строки why (title, text), step «Сдача» text. Критик vs Э1 на 390 и 1440.",
+  "reference": "Э1 plutos57",
+  "axis": [
+   "доверие",
+   "тексты"
+  ],
+  "size": "S",
+  "kind": "copy",
+  "db_keys": [
+   "settings.why_p",
+   "settings.services_lead",
+   "items[kind=why,title=Отличная репутация|Высокое качество|Большой опыт|Большие объёмы].title,text",
+   "items[kind=step,title=Сдача].text"
+  ],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§1 Р1.5, Р1.3 (класс D)"
+ },
+ {
+  "id": "T18",
+  "milestone": "M3",
+  "title": "Снять неподтверждённое: «15+», «5–10 заказов в неделю», «Свой карьер», «более 15 единиц»",
+  "outcome": "stat_bar: «15+ единиц техники» → «6 направлений работ», «5–10 заказов в неделю» → «4 вида материалов»; fleet_lead без «Более 15 единиц»; текст услуги «Аренда спецтехники» без «Более 15 единиц»; бейдж «Свой карьер» у «Песок» пуст; pg_rent_desc → «Аренда спецтехники в Орле и области: экскаватор 36 000 ₽/смена, экскаватор-погрузчик 3 500 ₽/ч, грунтовый каток 28 000 ₽/смена — с НДС.»",
+  "files": [
+   "db/seed.sql",
+   "db/seed-pages.sql",
+   "docs/studio/content-manifest.json"
+  ],
+  "check": "`grep -rnE '15\\+|более 15|Более 15|5–10|Свой карьер' db/*.sql app/tpl` = 0, то же по HTML всех публичных страниц стенда; grid.js, seo.js, price.js, rent.js — exit 0 (если тест утверждал старый текст — правка в том же коммите с причиной в notes.md); длина pg_rent_desc ≤160; ВИД-протокол; ps-humanness-judge ×2 ≥6/7. Манифест: 2 строки stat_bar, fleet_lead, services «Аренда спецтехники».text, materials «Песок».badge, pg_rent_desc. Критик vs Э1 (К5) на 390 и 1440.",
+  "reference": "Э1 plutos57 (К5)",
+  "axis": [
+   "доверие",
+   "тексты"
+  ],
+  "size": "M",
+  "kind": "copy",
+  "db_keys": [
+   "items[kind=stat_bar,title=единиц техники].title,text,num,suffix",
+   "items[kind=stat_bar,title=заказов в неделю].title,text",
+   "settings.fleet_lead",
+   "services[title=Аренда спецтехники].text",
+   "materials[title=Песок].badge",
+   "settings.pg_rent_desc"
+  ],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§1 Р1.3 (класс C), Р1.5, Р1.6; утверждение (в)"
+ },
+ {
+  "id": "T19",
+  "milestone": "M3",
+  "title": "Подпись под сеткой техники и нейтральный alt hero (V8 а, г)",
+  "outcome": "Под сеткой техники строка из нового ключа fleet_photo_note (grp texts; фолбэк в шаблоне «Фото показывают тип техники; модели и цены — в таблице ниже»; пустое значение — строки нет); alt hero (home.php:283) → «Асфальтоукладчики и катки на укладке асфальта».",
+  "files": [
+   "app/tpl/home.php",
+   "db/seed.sql",
+   "docs/studio/content-manifest.json"
+  ],
+  "check": "Фолбэк: DELETE fleet_photo_note → строка с текстом по умолчанию, в логе php -S нет Warning; value='' → строки нет; seo.js, a11y.js, rent.js, grid.js — exit 0. ВИД-протокол: подпись читается (контраст AA, кегль ≥13 px) на 8 ширинах и в эмуляции iPhone/Android. ps-humanness-judge ×2 ≥6/7. Манифест: fleet_photo_note (old null + add). Критик vs Э1 на 390 и 1440.",
+  "reference": "Э1 plutos57",
+  "axis": [
+   "доверие",
+   "тексты"
+  ],
+  "size": "S",
+  "kind": "code",
+  "db_keys": [
+   "settings.fleet_photo_note (новый)"
+  ],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§4 V8 (а, г); утверждение (г)"
+ },
+ {
+  "id": "T20",
+  "milestone": "M4",
+  "title": "Карточки техники на ≤640 — строка: фото 112×84 слева, имя/цена/кнопка справа",
+  "outcome": "На ≤640 каждая карточка техники — горизонтальная строка: фото 112×84, справа имя, цена, кнопка ≥44 (из T13); контейнер в 1 колонку; на ≥641 без изменений; главная и аренда.",
+  "files": [
+   "app/tpl/home.php"
+  ],
+  "check": "На 390: высота позиции ≤120 px, в экране 844 px ≥5 позиций, кнопка ≥44, цена в строке; grid.js (≤2 колонок на 390), rent.js, price.js, overflow.js, reveal.js — exit 0. ВИД-протокол + 640/641: без переполнения, на ≥641 скрин = базлайн; iPhone/Android — тап по кнопке открывает окно аренды. Критик vs кроп Sunbelt 390 (К1–К4) и vs Э1 (К2) на 390 и 1440.",
+  "reference": "ориентир Sunbelt (К1–К4) + Э1 plutos57 (К2)",
+  "axis": [
+   "мобайл",
+   "дизайн",
+   "конверсия"
+  ],
+  "size": "M",
+  "kind": "code",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§4 V7; §5 Sunbelt"
+ },
+ {
+  "id": "T21",
+  "milestone": "M4",
+  "title": "Перекадровка фото: mat-pesok и mat-grunt — в фактуру, fleet-crane — по шасси (те же пути)",
+  "outcome": "public/assets/mat-pesok.webp и mat-grunt.webp — кроп фактуры материала из тех же файлов (без шильда VOLVO, без многоэтажек и самосвала); fleet-crane.webp — кроп по шасси; пути и имена прежние, WebP, размер ≤ исходного; mat-shcheben и mat-pgs не трогаются. Инструменты — только dev (GD/ImageMagick/cwebp), следов в репо нет. Если alt перестаёт соответствовать кадру — правка alt в сиде + манифест.",
+  "files": [
+   "public/assets/mat-pesok.webp",
+   "public/assets/mat-grunt.webp",
+   "public/assets/fleet-crane.webp"
+  ],
+  "check": "Скрины карточек 390/1440: на песке и грунте нет шильдов, логотипов, зданий, техники; на кране нет читаемого чужого шильда; размер файлов ≤ исходных; кадр осмыслен на 8 ширинах и в строке T20 (112×84); Lighthouse CLS не вырос; в notes.md — оговорка про кэш статики 1 год (ST #4). Критик vs Э1 на 390 и 1440.",
+  "reference": "Э1 plutos57",
+  "axis": [
+   "дизайн",
+   "доверие"
+  ],
+  "size": "S",
+  "kind": "code",
+  "db_keys": [
+   "materials[title=Песок|Грунт].alt и fleet_cards[кран].alt — только если alt меняется"
+  ],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§4 V8 (б, в); утверждение (г)"
+ },
+ {
+  "id": "T22",
+  "milestone": "M4",
+  "title": "Посадочные: «Услуги» → строка «Другие услуги» (id=services сохраняется), у аренды убрать «Этапы»",
+  "outcome": "На /arenda-spetstekhniki/ и /shcheben-pesok-grunt/ блок #services: H2 «Другие услуги» + строка ссылок-названий без карточек и текстов (опубликованные посадочные — ссылки, остальное — openCalc или #contacts); у rent в PAGES нет 'steps'; главная без изменений.",
+  "files": [
+   "app/bootstrap.php",
+   "app/tpl/landing.php",
+   "tests/run.php"
+  ],
+  "check": "Сначала новая проверка в run.php (красная): на аренде есть id=\"services\" и H2 «Другие услуги», нет текста первой карточки услуг, нет блока этапов; затем зелёная. Существующие проверки run.php M4 (ссылки в #services посадочных) — зелёные; seo.js, rent.js, tails.js, overflow.js — exit 0. ВИД-протокол: строка ссылок переносится без переполнения, цели ≥44 на ≤430. Эталона-пары нет (§5 сравнивает главные) — гейт по замерам и скринам.",
+  "reference": null,
+  "axis": [
+   "тексты",
+   "техническое SEO",
+   "дизайн"
+  ],
+  "size": "M",
+  "kind": "code",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§3 Р3.4"
+ },
+ {
+  "id": "T23",
+  "milestone": "M5",
+  "title": "schema.org: @id организации, WebSite на главной, provider по @id, без geo и priceRange, taxID из org_inn, оба телефона",
+  "outcome": "$biz['@id'] = base#org; на главной @graph из WebSite (#website, inLanguage ru) + организации; на посадочных provider = {\"@id\": base#org}; из шаблона убраны geo и priceRange (строки ld_* в БД и поля админки не трогаются); taxID из org_inn, если заполнен; telephone = +79807691111 и +74862491111. streetAddress, postalCode, sameAs, AggregateRating, Offer.price — нет.",
+  "files": [
+   "app/tpl/home.php",
+   "tests/run.php"
+  ],
+  "check": "Сначала проверки в run.php (красные): JSON-LD всех страниц парсится; на / есть WebSite #website и организация @id; provider посадочных = {@id}; нет geo и priceRange; taxID есть при заполненном org_inn и отсутствует при пустом; telephone — оба номера; затем зелёные. seo.js — exit 0 (если утверждал geo/priceRange — правка с причиной в notes.md); `git diff main -- db/` не трогает ld_*.",
+  "reference": null,
+  "axis": [
+   "техническое SEO",
+   "локальное SEO"
+  ],
+  "size": "M",
+  "kind": "seo",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§3 Р3.7"
+ },
+ {
+  "id": "T24",
+  "milestone": "M5",
+  "title": "favicon.ico 16/32/48 + og.jpg 1200×630 + twitter:card summary_large_image",
+  "outcome": "public/favicon.ico (16/32/48 из favicon.svg) + <link rel=\"icon\" href=\"/favicon.ico\" sizes=\"32x32\">; public/assets/og.jpg 1200×630 ≤150 КБ: HTML-карточка с разметкой лок-апа шапки, «Дороги · Благоустройство · Аренда спецтехники · Щебень, песок, грунт», «Орёл и Орловская область», телефон, без фото; og:image → og.jpg с width/height 1200/630 и осмысленным og:image:alt; twitter:card = summary_large_image.",
+  "files": [
+   "public/favicon.ico",
+   "public/assets/og.jpg",
+   "app/tpl/home.php"
+  ],
+  "check": "`curl -sI` стенда /favicon.ico → 200 (проходит через router.php); og.jpg ровно 1200×630 и ≤150 КБ; текст лок-апа на og.jpg совпадает с шапкой; мета-теги проверены парсингом HTML трёх страниц; seo.js, brand.js — exit 0; маркер-гейт зелёный.",
+  "reference": null,
+  "axis": [
+   "техническое SEO",
+   "доверие"
+  ],
+  "size": "S",
+  "kind": "seo",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§3 Р3.8; ST #7, #10"
+ },
+ {
+  "id": "T25",
+  "milestone": "M5",
+  "title": "width/height у всех <img> без изменения вёрстки",
+  "outcome": "Каждый <img> на публичных страницах (включая картинки из БД и загрузки админки) имеет width и height по натуральному размеру файла; отсутствующий файл не роняет страницу; вид не меняется.",
+  "files": [
+   "app/tpl/home.php",
+   "app/tpl/landing.php",
+   "tests/run.php"
+  ],
+  "check": "Сначала проверка в run.php (красная): на /, аренде, материалах, asf/blago (с фактами) 0 <img> без width и height; затем зелёная; bbox ключевых блоков на 390 и 1440 до/после совпадают; Lighthouse CLS ≤ базлайна; upload.js, draft.js — exit 0; запись с несуществующим файлом картинки → 200 и без Warning.",
+  "reference": null,
+  "axis": [
+   "техническое SEO",
+   "скорость"
+  ],
+  "size": "M",
+  "kind": "seo",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§3 Р3.8 (ST #5)"
+ },
+ {
+  "id": "T26",
+  "milestone": "M5",
+  "title": "Перелинковка: карточки услуг кликабельны, ссылки под прайсом и материалами, «Аренда по прайсу →» на материалах",
+  "outcome": "Карточки услуг №1, №2, №6 → openCalc(<услуга>), пока /asfaltirovanie/ и /blagoustroystvo/ не опубликованы (после — ссылки по текущей логике $live); №4 «Грузоперевозки» → /arenda-spetstekhniki/ (services.href, на прод — только при href='#services'); под прайсом «Условия и цены аренды по моделям →» /arenda-spetstekhniki/; под материалами «Цены и доставка щебня, песка, грунта →» /shcheben-pesok-grunt/; на материалах строка «Нужен каток или погрузчик на объект? Аренда по прайсу →». Анкоры — названия услуг, без «в Орле» в каждом.",
+  "files": [
+   "app/tpl/home.php",
+   "db/seed.sql",
+   "tests/run.php"
+  ],
+  "check": "Сначала проверка в run.php (красная): на / в теле (не меню и не подвал) есть ссылки на обе опубликованные посадочные, все 6 карточек услуг — ссылка или кнопка; затем зелёная; существующие проверки run.php M4 — зелёные; funnel.js A3 pass; seo.js, tails.js, overflow.js — exit 0. ВИД-протокол, цели ≥44 на ≤430. Манифест: services «Грузоперевозки».href.",
+  "reference": null,
+  "axis": [
+   "техническое SEO",
+   "конверсия",
+   "локальное SEO"
+  ],
+  "size": "M",
+  "kind": "seo",
+  "db_keys": [
+   "services[title=Грузоперевозки].href"
+  ],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§3 Р3.6"
+ },
+ {
+  "id": "T27",
+  "milestone": "M5",
+  "title": "FAQ на главной из FAQ_SITE + FAQ_ZONE: только отвеченные, без FAQPage на /",
+  "outcome": "На главной между «Как работаем» и контактами — блок «Вопросы и ответы» из FAQ_SITE + FAQ_ZONE (app/bootstrap.php:60–61), только с заполненными ответами; без ответов блока нет; FAQPage на / не выводится (на посадочных — как раньше); разметка блока переиспользует landing.php:71–77.",
+  "files": [
+   "app/bootstrap.php",
+   "app/tpl/home.php",
+   "tests/run.php"
+  ],
+  "check": "Сначала проверка в run.php (красная): fact_measure='x' → на / есть «Вопросы и ответы» и вопрос про замер, в JSON-LD / нет FAQPage; пустые факты → блока нет; затем зелёная; FAQPage посадочных не изменился; seo.js — exit 0; маркер-гейт зелёный. ВИД-протокол с заполненными ответами.",
+  "reference": null,
+  "axis": [
+   "тексты",
+   "конверсия",
+   "техническое SEO"
+  ],
+  "size": "M",
+  "kind": "code",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§3 Р3.5, Р3.1"
+ },
+ {
+  "id": "T28",
+  "milestone": "M6",
+  "title": "Skip-link → <main id=\"main\">, бургер aria-expanded/aria-controls, reduced-motion: scroll-behavior auto и без transition у [data-lift]",
+  "outcome": "Первая остановка Tab — видимая при фокусе «Перейти к содержимому» → main#main; бургер переключает aria-expanded и указывает aria-controls на меню; при prefers-reduced-motion scroll-behavior:auto и transition:none у [data-lift].",
+  "files": [
+   "app/tpl/home.php"
+  ],
+  "check": "Первый Tab на / и посадочных — skip-link, Enter → фокус в main#main; бургер: aria-expanded false→true→false; при reduce computed scroll-behavior=auto, transition у [data-lift] — none/0s; a11y.js, reveal.js, brand.js — exit 0; axe без serious/critical на 390/1440. ВИД-протокол: меню открывается тапом в эмуляции iPhone/Android.",
+  "reference": null,
+  "axis": [
+   "доступность"
+  ],
+  "size": "S",
+  "kind": "code",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§4 V4; design D11, D12"
+ },
+ {
+  "id": "T29",
+  "milestone": "M6",
+  "title": "Тап-цели: меню/подвал/крошки ≥24 px на десктопе, ссылки услуг и все CTA/каналы ≥44 px на 320–430",
+  "outcome": "На 320–430 все CTA, каналы связи и ссылки услуг ≥44 px; на ≥1024 пункты меню, ссылки подвала и крошек ≥24×24; лок-апы не сдвинуты.",
+  "files": [
+   "app/tpl/home.php",
+   "app/tpl/landing.php"
+  ],
+  "check": "Замер bbox всех интерактивных: на 320/360/390/430 среди CTA, каналов, ссылок услуг 0 целей <44; на 1024/1440/1920 0 целей <24×24; brand.js, overflow.js, a11y.js — exit 0. ВИД-протокол + iPhone/Android. Критик vs Э2 (К5) на 390.",
+  "reference": "Э2 orel.blago-s (К5)",
+  "axis": [
+   "мобайл",
+   "доступность"
+  ],
+  "size": "M",
+  "kind": "code",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§4 V4 (размеры); design D10"
+ },
+ {
+  "id": "T30",
+  "milestone": "M6",
+  "title": "privacy и consent: h1 clamp(24px,7.5vw,34px) + overflow-wrap:anywhere",
+  "outcome": "Заголовки юр. страниц помещаются на 320–430 без горизонтального скролла.",
+  "files": [
+   "app/tpl/privacy.php",
+   "app/tpl/consent.php"
+  ],
+  "check": "На 320/360/390/430/768/1024/1440/1920: documentElement.scrollWidth ≤ clientWidth и h1.scrollWidth ≤ h1.clientWidth на обеих страницах; overflow.js и run.php — exit 0; эмуляция iPhone/Android: переход по ссылке из строки согласия — страница без горизонтального скролла.",
+  "reference": null,
+  "axis": [
+   "мобайл",
+   "доступность"
+  ],
+  "size": "S",
+  "kind": "code",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§4 V6; design D7"
+ },
+ {
+  "id": "T31",
+  "milestone": "M6",
+  "title": "Сквозной axe + контраст: все публичные страницы × 390/1440 и состояния (окно, ошибка, меню, панель, «Спасибо») — 0 serious/critical",
+  "outcome": "axe-core через Playwright (npx -y, без следов в репо) на /, аренде, материалах, asf/blago (с фактами), privacy, consent, 404 × 390/1440 + состояния: окно звонка, окно аренды с ошибкой, мобильное меню, видимая панель, экран «Спасибо». Мелкие находки правятся здесь; если правка шире 3 файлов — отдельные задачи.",
+  "files": [
+   "app/tpl/home.php",
+   "app/tpl/landing.php"
+  ],
+  "check": "Вывод axe: 0 serious/critical во всех комбинациях; контраст AA у всех текстов; a11y.js — exit 0; список выделенных задач (если есть) в tasks.json.",
+  "reference": null,
+  "axis": [
+   "доступность"
+  ],
+  "size": "M",
+  "kind": "test",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§4; task.md ось «доступность»"
+ },
+ {
+  "id": "T32",
+  "milestone": "M6",
+  "title": "Скорость: Lighthouse mobile/desktop по 3 страницам; мобильный srcset hero — только при LCP > 2.5 с",
+  "outcome": "Замеры после M2–M5 записаны в var/studio/m6/; если медиана LCP главной (mobile) >2.5 с — hero получает мобильный srcset (~60–80 КБ) без CLS; иначе код не трогается.",
+  "files": [
+   "app/tpl/home.php (только при LCP > 2.5 с)",
+   "public/assets/hero-paving-*.webp (там же)"
+  ],
+  "check": "`npx -y lighthouse … --chrome-path=/home/oleg/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome`, mobile, 3 прогона, медиана, /, аренда, материалы на стенде: Performance ≥90, LCP <2.5 с, CLS <0.1, TBT <200 мс; сравнение со стендом M0 (var/studio/m0) — не хуже; php -S без gzip завышает время — оговорка в notes.md, при сомнении замер базлайн-коммита в той же конфигурации; при srcset — fold.js, overflow.js — exit 0. Критик vs Э2 (К4).",
+  "reference": "Э2 orel.blago-s (К4)",
+  "axis": [
+   "скорость"
+  ],
+  "size": "M",
+  "kind": "code",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§3 Р3.8 (srcset условно); ST #6"
+ },
+ {
+  "id": "T33",
+  "milestone": "M7",
+  "title": "HTML-ответы: Cache-Control и ETag/304 без ложных дат",
+  "outcome": "Публичные HTML-страницы отдают Cache-Control: no-cache и ETag по содержимому; повторный запрос с If-None-Match → 304 без тела. Last-Modified не вводим (нет честной даты, как в ADR-0009). Если в HTML есть поштучные токены и ETag бесполезен — задача снимается с причиной в notes.md.",
+  "files": [
+   "public/index.php"
+  ],
+  "check": "`curl -sI /` → Cache-Control: no-cache и ETag; повтор с If-None-Match → 304; правка настройки в стенд-БД → новый ETag и 200; админка, send.php, privacy/consent — заголовки не изменились; run.php и seo.js — exit 0.",
+  "reference": null,
+  "axis": [
+   "техническое SEO",
+   "скорость"
+  ],
+  "size": "S",
+  "kind": "seo",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§3 Р3.8 (P2, в конце); ST #3"
+ },
+ {
+  "id": "T34",
+  "milestone": "M7",
+  "title": "Production-валидатор: маркеры, плейсхолдеры, битые ссылки и якоря, пустые alt на всех публичных страницах",
+  "outcome": "Краулер по стенду (свежая БД, затем факты asf/blago заполнены): все внутренние href и якоря ведут на 200 или существующий id; tel: и wa.me корректны; нет <img> с пустым alt, кроме декоративных; мелкие находки правятся здесь, крупные — отдельные задачи.",
+  "files": [
+   "app/tpl/home.php",
+   "app/tpl/landing.php"
+  ],
+  "check": "Отчёт краулера: 0 битых ссылок и якорей, 0 пустых alt у содержательных картинок; маркер-гейт run.php — pass; run.php — exit 0.",
+  "reference": null,
+  "axis": [
+   "техническое SEO",
+   "доступность"
+  ],
+  "size": "S",
+  "kind": "test",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "task.md шаг 9 (production-validator)"
+ },
+ {
+  "id": "T35",
+  "milestone": "M7",
+  "title": "Генеральная репетиция критика: главная против Э1 и Э2 на 390 и 1440 (fold + полная) по протоколу §5",
+  "outcome": "Пары A/B без меток + критерии §5 + лист замеров measure.js (T04) → ps-blind-critic (fable) по каждому эталону; результат и разрывы — var/studio/m7/critic.md; на каждый проигрыш ОДИН главный разрыв становится новой задачей.",
+  "files": [
+   "var/studio/m7/critic.md"
+  ],
+  "check": "Вердикт критика по Э1 и Э2 × 390/1440 записан; на каждый проигрыш в tasks.json есть задача с этим разрывом.",
+  "reference": "Э1 plutos57; Э2 orel.blago-s",
+  "axis": [
+   "дизайн",
+   "конверсия",
+   "мобайл"
+  ],
+  "size": "M",
+  "kind": "test",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "§5; task.md «Готово, когда» п. 2"
+ },
+ {
+  "id": "T36",
+  "milestone": "M8",
+  "title": "bin/studio-content.php — перенос текстов по манифесту (шаг 14) + тест в run.php",
+  "outcome": "Скрипт только на stdlib читает docs/studio/content-manifest.json и БД (RDS_DB или путь по умолчанию, как в app/db.php). Запись обновляется, только если текущее значение = old; иначе конфликт попадает в отчёт с обоими текстами. Ключи с old null добавляются вместе с add. Записи с одинаковыми (table, match) применяются вместе, всё в одной транзакции. По умолчанию сухой прогон, запись — только с --apply. Если в drafts есть строка — предупреждение (публикация черновика затрёт правки). Итог: применено / уже новое / конфликт / добавлено.",
+  "files": [
+   "bin/studio-content.php",
+   "tests/run.php"
+  ],
+  "check": "Тест в run.php через $cli: (1) свежая БД, значения из манифеста откачены к old, новые ключи удалены → сухой прогон показывает N изменений, файл БД не изменился (хеш); --apply → все new и ключи добавлены; повторный --apply → 0 изменений; (2) один ключ изменён вручную → конфликт с обоими текстами, ключ не тронут, остальные применены; `php -l bin/studio-content.php`; сверка: каждое изменённое значение `git diff main -- db/seed.sql db/seed-pages.sql` есть в манифесте и наоборот; `RDS_DB=<несуществующий> php tests/run.php` → exit 0.",
+  "reference": null,
+  "axis": [
+   "тексты",
+   "доверие"
+  ],
+  "size": "M",
+  "kind": "content-migration",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "task.md шаг 14; §1 Р1.7"
+ },
+ {
+  "id": "T37",
+  "milestone": "M8",
+  "title": "README и OWNER-ACTIONS — финальная сверка",
+  "outcome": "README: funnel.js в списке тестов и запуск (ONLY=…), маркер-гейт в run.php, bin/studio-content.php (сухой прогон и --apply) и content-manifest.json, раскладка docs/studio/. OWNER-ACTIONS: перечислены все [ПРОВЕРИТЬ] из docs/studio/copy/, имена целей Метрики совпадают с кодом, статусы §7–8 совпадают с сайтом, обновлена дата проверки.",
+  "files": [
+   "README.md",
+   "docs/OWNER-ACTIONS.md"
+  ],
+  "check": "Имена целей из goal-вызовов app/tpl/home.php = список в OWNER-ACTIONS; каждый [ПРОВЕРИТЬ из docs/studio/copy/ упомянут в OWNER-ACTIONS; run.php — exit 0; команды из README выполняются копипастой на свежей БД.",
+  "reference": null,
+  "axis": [
+   "доверие"
+  ],
+  "size": "S",
+  "kind": "copy",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "task.md шаг 13 (чек-лист)"
+ },
+ {
+  "id": "T38",
+  "milestone": "M8",
+  "title": "Финал, шаг 13: «Готово, когда» + ps-gate-reviewer",
+  "outcome": "Вывод всех проверок «Не сломать» в транскрипте: php -l, run.php, каждый tests/pw/*.js (включая funnel.js) на своей свежей БД. Последняя панель ×3: либо ≥9 по каждой оси, либо stalled по осям доверие/тексты/локальное SEO с главным разрывом. Критик против Э1 и Э2 на 390 и 1440. Гейт по чек-листу: git status чист, OWNER-ACTIONS в формате, [ПРОВЕРИТЬ] перечислены, README обновлён. При HOLD — причина в notes.md, задачи возвращаются в петлю.",
+  "files": [],
+  "check": "ps-gate-reviewer (sonnet) — PASS; иначе HOLD с причиной.",
+  "reference": "Э1 plutos57; Э2 orel.blago-s",
+  "axis": [
+   "дизайн",
+   "конверсия",
+   "тексты",
+   "доверие",
+   "техническое SEO",
+   "локальное SEO",
+   "скорость",
+   "мобайл",
+   "доступность"
+  ],
+  "size": "M",
+  "kind": "test",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "task.md «Готово, когда», шаг 13; strategy §10"
+ }
 ]
