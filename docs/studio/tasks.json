@@ -621,8 +621,8 @@
   "size": "M",
   "kind": "code",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "§4 V7; §5 Sunbelt"
  },
  {
@@ -646,8 +646,8 @@
   "db_keys": [
    "materials[title=Песок|Грунт].alt и fleet_cards[кран].alt — только если alt меняется"
   ],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "§4 V8 (б, в); утверждение (г)"
  },
  {
@@ -673,6 +673,27 @@
   "status": "todo",
   "rounds": 0,
   "strategy_ref": "§3 Р3.4"
+ },
+ {
+  "id": "T47",
+  "milestone": "M4",
+  "title": "fleet-excavator.webp: убрать читаемый чужой шильд «CASE» (кроп/заплатка как у крана в T21)",
+  "outcome": "На фото карточки «Экскаваторы» нет читаемого чужого бренда на 390 и 1440; путь и имя прежние, WebP, размер ≤ исходного; кадр осмыслен в строке 112×84 и в карточке ≥641.",
+  "files": [
+   "public/assets/fleet-excavator.webp"
+  ],
+  "check": "скрины карточки 390/1440 до/после; размер ≤ исходного; md5 изменился; остальные фото не тронуты; rent.js, grid.js exit 0.",
+  "reference": "Э1 plutos57",
+  "axis": [
+   "дизайн",
+   "доверие"
+  ],
+  "size": "S",
+  "kind": "code",
+  "db_keys": [],
+  "status": "todo",
+  "rounds": 0,
+  "strategy_ref": "strategy §4 (фото), критик R12: «CASE» на стреле экскаватора читается на 1440"
  },
  {
   "id": "T43",

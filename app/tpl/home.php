@@ -164,6 +164,9 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
   #fleet dl button::after{content:'';position:absolute;inset:0}
   #fleet dl [data-sub] button{margin:-6px 0 -19px;padding:6px 0 19px} /* подпозиция без верхнего поля: вверх цель заходит только в нижнее поле родительской строки (6px), не на её текст */
   #fleet dl [data-sub]{min-width:fit-content!important} /* «— с гидромолотом →» не рвётся на 320: не влезает целиком — цена уходит ниже */
+  /* строка читается как одна цель: фон под курсором (где есть hover) и под пальцем; фон выходит за текст на 12px — поля блока прайса ≥16 */
+  @media (hover:hover){#fleet dl>div:has(button:hover){background:#1f1f1f;box-shadow:-12px 0 0 #1f1f1f,12px 0 0 #1f1f1f}}
+  #fleet dl>div:has(button:active){background:#1f1f1f;box-shadow:-12px 0 0 #1f1f1f,12px 0 0 #1f1f1f}
   [data-svc] h3 a{text-decoration:underline;text-decoration-color:#FFC700;text-decoration-thickness:2px;text-underline-offset:5px}
   [data-burger]{display:none}
   @keyframes kenburns{0%{transform:scale(1.03) translate(0,0)}100%{transform:scale(1.13) translate(-2%,-1.5%)}}
@@ -241,6 +244,15 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
     [data-pd]{display:block;font-size:14px} [data-psep]{display:none} /* путь — две строки: название / уточнение → (без висячей стрелки на 320–360) */
     #why img+div>div:first-child{font-size:18.5px!important}
     [data-r="g3"],[data-r="g4"],[data-r="g5"],[data-r="g2"],[data-r="foot"]{grid-template-columns:1fr!important}
+    /* техника (T20): карточка — строка, фото 112×84 слева, имя/цена/кнопка справа; позиция ≤120 px — в экран 844 входят 5 (tests/pw/rent.js) */
+    #fleet [data-r="g3"]{gap:12px!important} /* 360–389: «ЭКСКАВАТОРЫ-ПОГРУЗЧИКИ» в 2 строки (132 px) — 5 позиций всё равно входят и в 360×800 */
+    #fleet [data-lift]{display:grid;grid-template-columns:112px minmax(0,1fr);column-gap:12px;align-items:center;padding:8px}
+    #fleet [data-lift] img{width:112px!important;height:84px!important}
+    #fleet [data-lift]>div{padding:0!important}
+    #fleet [data-lift] h3{font-size:16px!important;line-height:1.15;overflow-wrap:anywhere} /* страховка: слово владельца длиннее колонки переносится, а не обрезается карточкой */
+    #fleet [data-lift] h3+div{min-height:0!important;margin:2px 0 0!important}
+    #fleet [data-lift] h3+div>span[style*="22px"]{font-size:20px!important;line-height:1.2} /* цена; «договорная» — свой кегль */
+    #fleet [data-lift] button{margin-top:6px!important}
     h1{font-size:clamp(28px,9.2vw,44px)!important} /* «БЛАГОУСТРАИВАЕМ» в строку 256px на 320; посадочные — свои 28px ([data-lp-head] h1) */
     h2{font-size:32px!important}
     div[style*="padding:0 32px"]{padding-left:18px!important;padding-right:18px!important}
@@ -266,6 +278,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
     header>div:first-child>a div div+div{font-size:7.8px!important}
     #why img+div>div:first-child{font-size:14.8px!important}
     [data-topbar]>div>div:first-child{display:none!important} /* адрес (193px) + номер (111px) не влезают в 284px — остаётся номер */
+    #fleet [data-lift] h3{font-size:14px!important;letter-spacing:0!important} /* колонка у фото 112 — 142px на 320; «АСФАЛЬТОУКЛАДЧИКИ» 16px = 162, 14px = 138 */
   }
   /* липкая панель «Позвонить + WhatsApp + Заявка» (≤768): видна без JS; JS ставит data-off, пока на экране CTA первого экрана, #contacts,
      окно или меню (CTA ниже экрана — тоже). z-index 80: под cookie-баром (90) и окном (100). Подвал удлинён на высоту панели — последняя строка не под ней */
