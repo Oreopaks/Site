@@ -150,6 +150,15 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
   [data-when] input:checked+span{background:#FFC700;border-color:#0d0d0d}
   /* окно на узком экране: меньше полей вокруг — поля и чипы шире (на 320 контент 256px вместо 200px) */
   @media (max-width:400px){#modalOverlay>div{padding:12px!important}[role=dialog]>div:last-child{padding:30px 20px 28px!important}}
+  /* строка прайса = кнопка «в аренду»: имя ≥44 px по высоте без сдвига строки (поля компенсированы), тап по всей строке, включая цену.
+     Узко (320–360): имя не уже своего самого длинного слова — цена уходит строкой ниже, справа, а не наезжает на имя */
+  #fleet dl>div{position:relative;flex-wrap:wrap;row-gap:2px}
+  #fleet dl dt{min-width:min-content!important}
+  #fleet dl dd{margin-left:auto!important}
+  #fleet dl button{display:block;width:100%;min-height:44px;margin:-12px 0;padding:12px 0;background:none;border:0;color:inherit;font:inherit;text-align:left;cursor:pointer}
+  #fleet dl button::after{content:'';position:absolute;inset:0}
+  #fleet dl [data-sub] button{margin:-6px 0 -19px;padding:6px 0 19px} /* подпозиция без верхнего поля: вверх цель заходит только в нижнее поле родительской строки (6px), не на её текст */
+  #fleet dl [data-sub]{min-width:fit-content!important} /* «— с гидромолотом →» не рвётся на 320: не влезает целиком — цена уходит ниже */
   [data-svc] h3 a{text-decoration:underline;text-decoration-color:#FFC700;text-decoration-thickness:2px;text-underline-offset:5px}
   [data-burger]{display:none}
   @keyframes kenburns{0%{transform:scale(1.03) translate(0,0)}100%{transform:scale(1.13) translate(-2%,-1.5%)}}
@@ -238,6 +247,8 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
     footer{padding-bottom:calc(84px + env(safe-area-inset-bottom))!important}
   }
   @media (prefers-reduced-motion:reduce){[data-cbar]{transition:none}}
+  /* контакты: на ≤360 городской переносится под мобильный — номер прижат к низу своей цели, городской к верху: читаются парой, цели по 44 */
+  @media (max-width:360px){[data-tels]>a:first-child{align-items:flex-end!important}[data-tels]>a+a{align-items:flex-start!important}}
   /* контакты карточки «Почему мы»: одна строка или ровно две — «г. Орёл · телефон» / почта (294 = ширина строки при 14px + 2px) */
   @container (max-width:294px){
     #why [data-csep]{display:none}
@@ -425,7 +436,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
                 <span style="font-size:14px;color:#a8a8a8">/ <?= e($r['unit']) ?></span>
 <?php endif ?>
               </div>
-              <button type="button" onclick="openRent(this)" style="display:block;margin-top:0;padding:6px 0;background:none;border:none;cursor:pointer;font-family:inherit;font-size:12.5px;color:#FFC700;font-weight:700;letter-spacing:.5px">В АРЕНДУ →</button>
+              <button type="button" onclick="openRent(this)" aria-label="В аренду: <?= e($r['title']) ?>" style="display:flex;align-items:center;justify-content:center;width:100%;min-height:44px;margin-top:12px;padding:0 12px;background:none;border:1.5px solid #FFC700;cursor:pointer;font-family:'Manrope';font-size:13.5px;color:#FFC700;font-weight:800;letter-spacing:.5px" style-hover="background:#FFC700;color:#0d0d0d">В АРЕНДУ →</button>
             </div>
           </div>
 <?php endforeach ?>
@@ -440,9 +451,9 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
         : ($i === $n - 1 ? 'padding:14px 0' : 'padding:14px 0;border-bottom:1px solid #262626')); ?>
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;<?= $pad ?>">
 <?php if ($r['is_sub']): ?>
-            <dt style="flex:1;min-width:0;padding-left:12px;color:#a8a8a8;font-size:14px">— <?= e($r['name']) ?></dt>
+            <dt data-sub style="flex:1;min-width:0;padding-left:12px;color:#a8a8a8;font-size:14px"><button type="button" onclick="openCalc('<?= jsattr($sub = trim(($tech ?? '') . ' ' . $r['name'])) ?>','Аренда спецтехники')" aria-label="В аренду: <?= e($sub) ?>" style-hover="color:#FFC700">— <?= e($r['name']) ?>&nbsp;<span aria-hidden="true" style="color:#FFC700">→</span></button></dt><?php /* $tech — родительская строка выше (подпозиция идёт сразу за ней) */ ?>
 <?php else: ?>
-            <dt style="flex:1;min-width:0;font-weight:600"><?= e($r['name']) ?><?php if ($r['model'] !== ''): ?> <span style="color:#a8a8a8;font-weight:500;white-space:nowrap"><?= e($r['model']) ?></span><?php endif ?></dt>
+            <dt style="flex:1;min-width:0;font-weight:600"><button type="button" onclick="openCalc('<?= jsattr($tech = trim($r['name'] . ' ' . $r['model'])) ?>','Аренда спецтехники')" aria-label="В аренду: <?= e($tech) ?>" style-hover="color:#FFC700"><?= e($r['name']) ?><?php if ($r['model'] !== ''): ?> <span style="color:#a8a8a8;font-weight:500;white-space:nowrap"><?= e($r['model']) ?></span><?php endif ?>&nbsp;<span aria-hidden="true" style="color:#FFC700">→</span></button></dt>
 <?php endif ?>
 <?php if ($r['price_kind'] === 'contract'): ?>
             <dd style="margin:0;white-space:nowrap"><?= $badge ?> <span style="font-size:14px;color:#a8a8a8">/ <?= e($r['unit']) ?></span></dd>
@@ -495,7 +506,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
                 <span style="font-size:13px;color:#5f5f5f">/ <?= e($r['unit']) ?></span>
 <?php endif ?>
               </div>
-              <button onclick="openCalc('<?= jsattr($r['title']) ?>','','<?= jsattr($r['unit']) ?>')" style="background:#0d0d0d;color:#fff;border:none;font-family:'Manrope';font-weight:700;font-size:13.5px;padding:13px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;width:100%" style-hover="background:#FFC700;color:#0d0d0d">Запросить расчёт</button>
+              <button onclick="openCalc('<?= jsattr($r['title']) ?>','','<?= jsattr($r['unit']) ?>')" aria-label="Запросить расчёт: <?= e($r['title']) ?>" style="background:#0d0d0d;color:#fff;border:none;font-family:'Manrope';font-weight:700;font-size:13.5px;padding:13px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;width:100%" style-hover="background:#FFC700;color:#0d0d0d">Запросить расчёт</button>
             </div>
           </div>
 <?php endforeach ?>
@@ -579,10 +590,16 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
           <h2 style="font-family:'Oswald';font-weight:700;font-size:44px;text-transform:uppercase;line-height:1.05;letter-spacing:.5px;margin-bottom:28px"><?= e($s['contacts_h2']) ?></h2>
 
           <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:30px">
-            <a href="tel:<?= e($s['phone_mobile']) ?>" style="display:flex;align-items:center;gap:14px">
+            <!-- два номера — две ссылки tel: ≥44 px (городской звонит на городской); в одну строку, на узком городской — строкой ниже -->
+            <div style="display:flex;align-items:center;gap:14px">
               <span style="width:46px;height:46px;background:#0d0d0d;color:#FFC700;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h3l2 5-2.2 1.3a12 12 0 0 0 5.7 5.7L16 15l5 2v3a2 2 0 0 1-2 2A17 17 0 0 1 4 5a2 2 0 0 1 2-2Z"/></svg></span>
-              <span><span style="display:block;font-family:'Oswald';font-weight:600;font-size:21px"><?= e($s['phone_mobile_fmt']) ?></span><span style="font-size:13px;color:#5f5f5f">городской: <?= e($s['phone_city_fmt']) ?></span></span>
-            </a>
+              <div data-tels style="display:flex;flex-wrap:wrap;align-items:center;column-gap:14px">
+                <a href="tel:<?= e($s['phone_mobile']) ?>" style="display:flex;align-items:center;min-height:44px;font-family:'Oswald';font-weight:600;font-size:21px;white-space:nowrap"><?= e($s['phone_mobile_fmt']) ?></a>
+<?php if ($s['phone_city'] !== ''): ?>
+                <a href="tel:<?= e($s['phone_city']) ?>" style="display:flex;align-items:center;min-height:44px;font-size:13px;color:#5f5f5f;white-space:nowrap">городской:&nbsp;<span style="color:#111;font-weight:600"><?= e($s['phone_city_fmt']) ?></span></a>
+<?php endif ?>
+              </div>
+            </div>
             <a href="mailto:<?= e($s['email']) ?>" style="display:flex;align-items:center;gap:14px">
               <span style="width:46px;height:46px;background:#0d0d0d;color:#FFC700;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="m3.5 7 8.5 6 8.5-6"/></svg></span>
               <span><span style="display:block;font-family:'Oswald';font-weight:600;font-size:18px"><?= e($s['email']) ?></span><span style="font-size:13px;color:#5f5f5f">ответим <?= e(stub($s, 'reply_promise', 'в течение рабочего дня')) ?></span></span>
@@ -636,7 +653,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
               <input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
               <?= $errBox(true) ?>
 
-              <button type="submit" style="width:100%;background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope';font-weight:800;font-size:15px;padding:16px;cursor:pointer;text-transform:uppercase;letter-spacing:.4px" style-hover="background:#ffd633">Отправить заявку</button>
+              <button type="submit" style="width:100%;background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope';font-weight:800;font-size:15px;padding:16px;cursor:pointer;text-transform:uppercase;letter-spacing:.4px" style-hover="background:#ffd633">Получить расчёт</button>
             </form>
           </div>
         </div>
@@ -819,8 +836,9 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
     window.goal&&goal('lead_error',{code:code});
   }
   function clearErr(form){ var b=form.querySelector('[data-err]'), t=form.querySelector('[autocomplete=tel]'); if(b)b.hidden=true; if(t)t.removeAttribute('aria-invalid'); }
-  // заявка уходит только на свой сервер (send.php); без галочки согласия и без 10 цифр в номере запрос не отправляется
-  function send(fd, form, onOk){
+  // заявка уходит только на свой сервер (send.php); без галочки согласия и без 10 цифр в номере запрос не отправляется.
+  // g — цель Метрики (lead_*): только при ok===true и номере заявки n (без n — honeypot, send.php:25, цель не шлётся)
+  function send(fd, form, g, onOk){
     var box=form.querySelector('input[type=checkbox]');
     if(!box||!box.checked){ if(box){ cbox(box, true); box.focus(); } return; }
     clearErr(form);
@@ -840,6 +858,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
       // ошибка: фокус возвращается на кнопку отправки (на время отправки она disabled, фокус падал на body и выходил из окна);
       // текст ошибки читалка объявит сама (role=alert), «Позвонить»/WhatsApp — сразу перед кнопкой (Shift+Tab), Enter — повторить
       if(typeof d==='string'){ showErr(form, d); if(btn&&!form.contains(document.activeElement))btn.focus(); return; } // фокус после показа блока — кнопка под ним остаётся в экране
+      if(d.n) window.goal&&goal(g);
       try{ form.reset(); cbox(box); }catch(_){} onOk();
     });
   }
@@ -852,13 +871,19 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
     if(svc){ fd.append('source','calc'); fd.append('service',svc); fd.append('comment',note); }
     else { fd.append('source', mat?'material':'call'); fd.append('material', mat); if(note)fd.append('comment', note); }
     fd.append('name', val(f,'[autocomplete=name]')); fd.append('phone', val(f,'[autocomplete=tel]'));
-    send(fd, f, function(){ if(mForm)mForm.style.display='none'; if(mOk){ mOk.style.display=''; mOk.querySelector('h3').focus(); } });
+    send(fd, f, svc?'lead_rent':mat?'lead_material':'lead_call', function(){ if(mForm)mForm.style.display='none'; if(mOk){ mOk.style.display=''; mOk.querySelector('h3').focus(); } });
   };
   window.submitForm=function(e){ e.preventDefault(); var f=e.target, fd=new FormData();
     fd.append('source','calc'); fd.append('name', val(f,'[autocomplete=name]')); fd.append('phone', val(f,'[autocomplete=tel]'));
     fd.append('service', val(f,'select')); fd.append('comment', val(f,'textarea'));
-    send(fd, f, function(){ var box=document.getElementById('formBox'),ok=document.getElementById('formSuccess'); if(box)box.style.display='none'; if(ok){ ok.style.display=''; ok.querySelector('h3').focus(); } });
+    send(fd, f, 'lead_calc', function(){ var box=document.getElementById('formBox'),ok=document.getElementById('formSuccess'); if(box)box.style.display='none'; if(ok){ ok.style.display=''; ok.querySelector('h3').focus(); } });
   };
+  // цели «нажали на телефон / WhatsApp»: where — id ближайшего блока, иначе область страницы (header, aside — верхняя полоса, nav — липкая панель, footer, main)
+  document.addEventListener('click', function(e){
+    var a=window.goal&&e.target.closest&&e.target.closest('a[href^="tel:"],a[href*="wa.me"]'); if(!a) return;
+    var w=a.closest('[id],header,footer,aside,nav,main');
+    goal(a.getAttribute('href').indexOf('tel:')===0?'click_tel':'click_whatsapp', {where:w?(w.id||w.tagName.toLowerCase()):''});
+  });
   // окно открыто: Esc закрывает; Tab/Shift+Tab ходят по кругу внутри окна
   document.addEventListener('keydown', function(e){
     if(!overlay||overlay.style.display!=='block') return;
@@ -905,6 +930,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
     window.ym=window.ym||function(){ (window.ym.a=window.ym.a||[]).push(arguments); }; window.ym.l=1*new Date();
     var t=document.createElement('script'); t.defer=true; t.src='https://mc.yandex.ru/metrika/tag.js'; document.head.appendChild(t);
     window.ym(ID,'init',{webvisor:false,clickmap:true,accurateTrackBounce:true});
+    window.goal=function(n,p){ if(window.ym) ym(ID,'reachGoal',n,p); }; // цели — только после «Принять»; до согласия и без metrika_id goal нет, вызовы молчат
   }
   function off(){ window['disableYaCounter'+ID]=true; }
   function choose(v){

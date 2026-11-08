@@ -291,8 +291,8 @@
   "size": "M",
   "kind": "code",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "§2 Р2.2, Р2.9; design D6, D10; CRO #7, #14"
  },
  {
@@ -312,9 +312,32 @@
   "size": "M",
   "kind": "code",
   "db_keys": [],
+  "status": "done",
+  "rounds": 1,
+  "strategy_ref": "§2 Р2.7"
+ },
+ {
+  "id": "T39",
+  "milestone": "M2",
+  "title": "Заявка в один тап с любой точки на мобиле: кнопка «Заявка» в липкой панели → окно расчёта",
+  "outcome": "На ≤768 липкая панель: «Позвонить» · «WhatsApp» · «Заявка» (третья открывает окно в режиме расчёта, те же поля и согласие); при пустом whatsapp — две кнопки. На ≥1024 без изменений. Hero CTA и #contacts не меняются (A1). measure.js дополнен полем «форма достижима в 1 тап (окно) из любой прокрутки». Цель Метрики — та же lead_calc.",
+  "files": [
+   "app/tpl/home.php",
+   "tests/pw/funnel.js",
+   "var/studio/ref/tools/measure.js"
+  ],
+  "check": "funnel F1–F4 + новая метка F5 (на 320/360/390/768: тап «Заявка» в панели на 50% прокрутки → окно открыто, фокус в поле имени, отправка → leads source=calc); B7 (галочка не предотмечена); overflow.js, fold.js, tails.js — exit 0; ВИД-протокол 320–768 + iPhone/Android: 3 кнопки ≥44, без переполнения на 320. Критик vs Э2 (К1 + «форма в 1 тап») на 390 и 1440.",
+  "reference": "Э2 orel.blago-s (К1; разрыв R4 «форма далеко»)",
+  "axis": [
+   "конверсия",
+   "мобайл"
+  ],
+  "size": "M",
+  "kind": "code",
+  "db_keys": [],
   "status": "todo",
   "rounds": 0,
-  "strategy_ref": "§2 Р2.7"
+  "strategy_ref": "§2 Р2.3 (панель), разрыв критика R4 (notes.md)"
  },
  {
   "id": "T15",

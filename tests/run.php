@@ -99,14 +99,18 @@ check('honeypot → ok:true, count unchanged', $code === 200 && (json_decode($bo
 
 // --- экранирование (D5/D6)
 db()->prepare('UPDATE materials SET title = ? WHERE sort = 1')->execute(["a');alert(1)//"]);
+$fp = db()->query('SELECT name, model FROM fleet_prices WHERE sort = 1')->fetch();
+db()->prepare('UPDATE fleet_prices SET name = ?, model = ? WHERE sort = 1')->execute(["b');alert(2)//", '']); // строка прайса — тоже openCalc (T13)
 $set('ld_name', '</script><script>x');
 $set('modal_call_text', "it's\nx");
 [, $html] = req("$base/");
 
-preg_match('~onclick="(openCalc\([^"]*)"~', $html, $m);
-$oc = html_entity_decode($m[1] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8');
-check("materials.title=\"a');alert(1)//\" → html_entity_decode(onclick) contains \"openCalc('a\\x27);alert(1)//',\" and not contains \"');\"",
-    str_contains($oc, "openCalc('a\\x27);alert(1)//',") && !str_contains($oc, "');"), $oc);
+preg_match_all('~onclick="(openCalc\([^"]*)"~', $html, $m);
+$ocs = array_map(fn($x) => html_entity_decode($x, ENT_QUOTES | ENT_HTML5, 'UTF-8'), $m[1]);
+$oc = implode(' | ', array_filter($ocs, fn($x) => str_contains($x, 'alert(')));
+check("materials.title=\"a');alert(1)//\", fleet_prices.name=\"b');alert(2)//\" → html_entity_decode(onclick) contains \"openCalc('a\\x27);alert(1)//',\" and \"openCalc('b\\x27);alert(2)//',\", no openCalc onclick contains \"');\"",
+    str_contains($oc, "openCalc('a\\x27);alert(1)//',") && str_contains($oc, "openCalc('b\\x27);alert(2)//',") && !array_filter($ocs, fn($x) => str_contains($x, "');")), $oc);
+db()->prepare('UPDATE fleet_prices SET name = ?, model = ? WHERE sort = 1')->execute([$fp['name'], $fp['model']]);
 
 $a = strpos($html, '<script type="application/ld+json">');
 $ld = substr($html, $a, strpos($html, '<link rel="preload"', $a) - $a);
