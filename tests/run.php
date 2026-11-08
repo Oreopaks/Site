@@ -945,7 +945,7 @@ $cut = fn(string $h, string $from, string $to) => explode($to, explode($from, $h
 [, $html] = req("$base/");
 $errs = [];
 foreach (['arenda-spetstekhniki', 'shcheben-pesok-grunt'] as $slug) {
-    if (substr_count($html, "href=\"/$slug/\" style=\"") !== 2) $errs[] = "$slug: меню"; // style= есть только у пунктов меню
+    if (substr_count($cut($html, '<header', '</header>'), "href=\"/$slug/\" style=\"") !== 2) $errs[] = "$slug: меню"; // меню = <header> (ПК + мобильное); пути hero (T06) тоже с style=
     if (!str_contains($cut($html, 'id="services"', '</section>'), "<a href=\"/$slug/\">")) $errs[] = "$slug: карточка";
     if (!str_contains($cut($html, '<footer', '</footer>'), "href=\"/$slug/\"")) $errs[] = "$slug: подвал";
 }

@@ -166,6 +166,7 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
     [data-herowrap]{min-height:auto!important}
     [data-hero-content]{padding-top:92px!important;padding-bottom:52px!important}
     h1{font-size:44px!important}
+    [data-paths]{flex-direction:column}
   }
   @media (max-width:768px){
     [data-r="g3"]{grid-template-columns:repeat(2,1fr)!important}
@@ -179,6 +180,8 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
     header>div:first-child>a div div+div{font-size:9.7px!important}
     header>div:first-child>div:last-child{gap:8px!important}
     [data-burger]{width:44px!important}
+    [data-hero-cta] a{padding:13px 18px!important;font-size:14px!important} /* как [data-lp-cta] посадочных: «Позвонить 8 980 769-11-11» влезает в 256px на 320 */
+    [data-pd]{display:block;font-size:14px} [data-psep]{display:none} /* путь — две строки: название / уточнение → (без висячей стрелки на 320–360) */
     #why img+div>div:first-child{font-size:18.5px!important}
     [data-r="g3"],[data-r="g4"],[data-r="g5"],[data-r="g2"],[data-r="foot"]{grid-template-columns:1fr!important}
     h1{font-size:33px!important}
@@ -313,10 +316,17 @@ $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:6
       <div data-anim="fade-up" style="display:inline-flex;align-items:center;gap:9px;background:rgba(255,199,0,.14);border:1px solid rgba(255,199,0,.4);color:#FFC700;font-weight:700;font-size:13px;padding:8px 15px;letter-spacing:.5px;margin-bottom:26px"><span aria-hidden="true" style="width:7px;height:7px;background:#FFC700;flex-shrink:0"></span><?= e($s['hero_badge']) ?></div>
       <h1 data-anim="fade-up" style="font-family:'Oswald';font-weight:700;font-size:80px;line-height:.97;letter-spacing:.5px;text-transform:uppercase;margin-bottom:24px;max-width:920px;text-shadow:0 6px 44px rgba(0,0,0,.55)"><?= $s['hero_h1'] /* trusted_html, правит только owner */ ?></h1>
       <p data-anim="fade-up" style="font-size:19px;line-height:1.6;color:#dcdcdc;max-width:560px;margin-bottom:38px;text-shadow:0 2px 20px rgba(0,0,0,.5)"><?= e($s['hero_p']) ?></p>
-      <div data-anim="fade-up" style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:54px">
+      <div data-anim="fade-up" data-hero-cta style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px">
         <a href="#contacts" style="background:#FFC700;color:#0d0d0d;font-family:'Manrope';font-weight:800;font-size:15px;padding:17px 30px;text-transform:uppercase;letter-spacing:.3px;display:inline-flex;align-items:center" style-hover="background:#ffd633">Оставить заявку</a>
-        <a href="#services" style="background:rgba(255,255,255,.06);color:#fff;border:1.5px solid rgba(255,255,255,.28);font-weight:700;font-size:15px;padding:16px 30px;text-transform:uppercase;letter-spacing:.3px;display:inline-flex;align-items:center" style-hover="border-color:#FFC700">Наши услуги</a>
+        <a href="tel:<?= e($s['phone_mobile']) ?>" style="background:rgba(255,255,255,.06);color:#fff;border:1.5px solid rgba(255,255,255,.28);font-weight:700;font-size:15px;padding:16px 30px;text-transform:uppercase;letter-spacing:.3px;display:inline-flex;align-items:center" style-hover="border-color:#FFC700">Позвонить&nbsp;<span style="font-family:'Oswald';letter-spacing:.3px;white-space:nowrap"><?= e($s['phone_mobile_fmt']) ?></span></a>
       </div>
+      <!-- три пути (strategy Р2.2): без цен и не [data-lp-chips] — на / чипов нет (tests/pw/fold.js); «Дороги» → форма, пока посадочная asf не опубликована -->
+      <ul data-anim="fade-up" data-paths aria-label="Направления" style="list-style:none;margin:0 0 44px;padding:0;display:flex;flex-wrap:wrap;column-gap:24px;text-shadow:0 2px 20px rgba(0,0,0,.5)">
+<?php foreach ([['/arenda-spetstekhniki/', 'Аренда спецтехники', 'прайс по моделям'], ['/shcheben-pesok-grunt/', 'Щебень, песок, грунт', 'цены и доставка'],
+    [page_gaps($s, 'asf') ? '#contacts' : '/asfaltirovanie/', 'Дороги и благоустройство', 'расчёт']] as [$ph, $pt, $pd]): ?>
+        <li><a href="<?= e($ph) ?>" style="display:block;padding:11px 0;font-size:15px;line-height:22px;font-weight:700;color:#fff" style-hover="color:#FFC700"><?= e($pt) ?> <span data-pd style="font-weight:600;color:#c7c7c7;white-space:nowrap"><span data-psep>· </span><?= e($pd) ?>&nbsp;<span aria-hidden="true" style="color:#FFC700">→</span></span></a></li>
+<?php endforeach ?>
+      </ul>
       <div data-anim="fade-up" style="display:flex;gap:clamp(28px,5vw,56px);flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.2);padding-top:26px;max-width:680px">
 <?php foreach ($statHero as $r): ?>
         <div><div style="font-family:'Oswald';font-weight:700;font-size:40px;color:#FFC700;line-height:1"><?= $stat($r) ?></div><div style="font-size:13px;color:#c7c7c7;margin-top:2px"><?= e($r['title']) ?></div></div>

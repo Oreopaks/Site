@@ -126,8 +126,8 @@
   "size": "M",
   "kind": "code",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "§2 Р2.2; §3 Р3.1"
  },
  {
