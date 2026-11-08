@@ -64,6 +64,28 @@ check('порядок /: services < fleet < materials', $at($home0, 'services') 
 check('порядок /arenda-spetstekhniki/: fleet < services', $at($rent0, 'fleet') !== false && $at($rent0, 'services') !== false && $at($rent0, 'fleet') < $at($rent0, 'services'));
 check('порядок /shcheben-pesok-grunt/: materials < services', $at($mat0, 'materials') !== false && $at($mat0, 'services') !== false && $at($mat0, 'materials') < $at($mat0, 'services'));
 
+// --- studio T01: маркер-гейт — в отрендеренном HTML публичных страниц (сид, asf/blago опубликованы фактом-заглушкой) нет маркеров черновика
+$set = fn(string $k, string $v) => db()->prepare('UPDATE settings SET value = ? WHERE key = ?')->execute([$v, $k]);
+$get = fn(string $k) => db()->query('SELECT value FROM settings WHERE key = ' . db()->quote($k))->fetchColumn();
+$marks = fn(string $h): array => preg_match_all('~\[ПРОВЕРИТЬ|\[NEED|TODO|(?i:lorem)|XXX~u', $h, $m) ? array_values(array_unique($m[0])) : [];
+$f0 = [$get('fact_asphalt_works'), $get('fact_blago_works')];
+$set('fact_asphalt_works', 'Дворы и проезды');
+$set('fact_blago_works', 'Плитка');
+$bad = [];
+foreach (['/' => 200, '/arenda-spetstekhniki/' => 200, '/shcheben-pesok-grunt/' => 200, '/asfaltirovanie/' => 200, '/blagoustroystvo/' => 200,
+    '/privacy.php' => 200, '/consent.php' => 200, '/nope/' => 404] as $u => $want) {
+    [$code, $h] = req("$base$u");
+    if ($code !== $want || $marks($h)) $bad[] = "$u $code " . implode(',', $marks($h));
+}
+check('маркер-гейт: /, обе посадочные, /asfaltirovanie/, /blagoustroystvo/, /privacy.php, /consent.php, 404 — без [ПРОВЕРИТЬ, [NEED, TODO, lorem, XXX', !$bad, implode('; ', $bad));
+$hp = $get('hero_p');
+$set('hero_p', "$hp [ПРОВЕРИТЬ: тест]");
+$caught = $marks(req("$base/")[1]);
+$set('hero_p', $hp);
+check('маркер-гейт: самопроверка — детектор поймал [ПРОВЕРИТЬ в hero_p, значение возвращено', $caught === ['[ПРОВЕРИТЬ'] && $get('hero_p') === $hp && !$marks(req("$base/")[1]), json_encode($caught, JSON_UNESCAPED_UNICODE));
+$set('fact_asphalt_works', $f0[0]);
+$set('fact_blago_works', $f0[1]);
+
 // --- send.php
 [$code, $body] = req("$base/send.php", $lead);
 check('lead without consent → 400', $code === 400 && json_decode($body, true) === ['ok' => false, 'error' => 'consent'], "$code $body");
@@ -76,7 +98,6 @@ check('valid lead → count=1', $code === 200 && ($j['ok'] ?? null) === true && 
 check('honeypot → ok:true, count unchanged', $code === 200 && (json_decode($body, true)['ok'] ?? null) === true && $leads() === 1, "$code $body");
 
 // --- экранирование (D5/D6)
-$set = fn(string $k, string $v) => db()->prepare('UPDATE settings SET value = ? WHERE key = ?')->execute([$v, $k]);
 db()->prepare('UPDATE materials SET title = ? WHERE sort = 1')->execute(["a');alert(1)//"]);
 $set('ld_name', '</script><script>x');
 $set('modal_call_text', "it's\nx");
