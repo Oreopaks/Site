@@ -1,6 +1,6 @@
 // Playwright: воронка заявки (studio M2, strategy §2 Р2.2–Р2.7, §8). Тест написан до правок: метки задач, которые ещё
 // не закрыты, красные. Метка → задача: A1, A2 → T06; A3 → T13 (и T06); A4 → T07; B1–B4, B7 — регрессия; B2p → T13; B5 → T08;
-// B6 → T11; C1–C4 → T09; D1, D2, E1 → T14; F1–F4 → T05; G1–G3 → T10; G4–G6 → T12; G7 → T11.
+// B6 → T11; C1–C4 → T09; D1, D2, E1 → T14; F1–F4 → T05; F5 → T39; G1–G3 → T10; G4–G6 → T12; G7 → T11.
 // Контракт разметки: окно — #modalForm form / #modalSuccess, нижняя форма — #contacts form / #formSuccess,
 // блок ошибки — #contacts [role=alert][data-code=invalid|rate|server|offline], панель — nav[aria-label="Связаться"],
 // три пути — [data-paths], цели — window.goal + ym(ID,'reachGoal',цель,параметры), чип — radio «Завтра», строка прайса — #fleet dl button.
@@ -309,6 +309,8 @@ const add = (m, k, where) => m.set(k, [...(m.get(k) || []), where]);
           await card(page, 'materials').locator('button').first().click(); await box('материал', modal(page)); await esc();
           await openCall(page); await fill(modal(page), 'PW B7'); await send(page, modal(page)); await visible(page, '#modalSuccess'); await esc();
           await openCall(page); await box('звонок после отправки', modal(page)); await esc();
+          await page.evaluate(() => scrollTo({ top: (document.documentElement.scrollHeight - innerHeight) / 2, behavior: 'instant' })); await until(page);
+          await page.locator('nav[aria-label="Связаться"]').getByRole('button', { name: /заявка/i }).click(); await box('заявка из панели', modal(page)); await esc();
           const bad = st.filter(([, [c, r]]) => c || !r).map(([w, [c, r]]) => `${w}: ${c ? 'предотмечена' : ''}${!r ? ' не required' : ''}`);
           return [!bad.length, bad.join('; ') || st.map(([w]) => w).join(', ') + ' — не отмечена, required'];
         } finally { await page.close(); }
@@ -463,8 +465,11 @@ const add = (m, k, where) => m.set(k, [...(m.get(k) || []), where]);
         if (!n) return null;
         const c = getComputedStyle(n), r = n.getBoundingClientRect();
         const shown = !n.hidden && n.getClientRects().length > 0 && c.visibility !== 'hidden' && +c.opacity > 0 && r.bottom > 0 && r.top < innerHeight;
-        const links = [...n.querySelectorAll('a')].filter((a) => a.getClientRects().length).map((a) => ({ href: a.getAttribute('href'), w: a.getBoundingClientRect().width }));
-        return { pos: c.position, shown, r: { top: r.top, bottom: r.bottom, left: r.left, right: r.right }, cw: n.clientWidth, links };
+        const links = [...n.querySelectorAll('a, button')].filter((a) => a.getClientRects().length).map((a) => {
+          const b = a.getBoundingClientRect();
+          return { tag: a.tagName, role: a.getAttribute('role') || '', t: a.textContent.trim(), href: a.getAttribute('href') || '', w: b.width, h: b.height, ovf: a.scrollWidth - a.clientWidth };
+        });
+        return { pos: c.position, shown, r: { top: r.top, bottom: r.bottom, left: r.left, right: r.right }, cw: n.clientWidth, sw: n.scrollWidth, links };
       });
       // прокрутка сразу за hero (hero целиком выше экрана; #contacts ниже)
       const mid = async (page) => {
@@ -551,12 +556,97 @@ const add = (m, k, where) => m.set(k, [...(m.get(k) || []), where]);
             await mid(page);
             const p = await state(page), at = `/${u}`;
             if (!p) { add(bad, none, at); continue; }
-            if (!(p.links.length === 1 && p.links[0].href.startsWith('tel:') && p.links[0].w >= p.cw - 1)) add(bad, `кнопки ${JSON.stringify(p.links)} при ширине панели ${p.cw}`, at);
+            // T39: при пустом whatsapp — две кнопки «Позвонить» (tel:) и «Заявка» (окно расчёта; без JS — #contacts) на всю ширину панели
+            const [t, z] = p.links;
+            if (!(p.links.length === 2 && t.href.startsWith('tel:') && z.role === 'button' && z.href.endsWith('#contacts') && /заявка/i.test(z.t) && Math.abs(t.w + z.w - p.cw) <= 1 && Math.min(t.w, z.w) >= 44))
+              add(bad, `кнопки ${JSON.stringify(p.links.map((l) => [l.tag, l.t, l.href.slice(0, 12), Math.round(l.w)]))} при ширине панели ${p.cw}`, at);
           }
           await page.close();
-          return [!bad.size, group(bad) || 'whatsapp пуст: одна tel:-кнопка во всю ширину на 3 страницах'];
+          return [!bad.size, group(bad) || 'whatsapp пуст: «Позвонить» (tel:) + «Заявка» на всю ширину на 3 страницах'];
         });
       } finally { setSetting('whatsapp', wa0); }
+
+      // F5 (T39): заявка в один тап с любой точки. 320/360/390/768, прокрутка 50%: в панели три кнопки (tel:, wa.me, «Заявка») ≥44
+      // без переполнения; тап «Заявка» → окно расчёта, фокус в имени, галочка не отмечена, Tab не выходит из окна;
+      // на / отправка → leads source=calc, service = услуга из поля окна, цель lead_calc; на посадочных услуга выбрана по странице
+      await run('F5', async () => {
+        const bad = new Map(), seen = [];
+        const PICK = { '': null, 'arenda-spetstekhniki/': 'Аренда спецтехники', 'shcheben-pesok-grunt/': 'Поставка материалов' };
+        for (const [w, h] of [[320, 640], [360, 740], [390, 844], [768, 1024]]) {
+          const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: true, reducedMotion: 'reduce' });
+          const page = await ctx.newPage();
+          page.setDefaultTimeout(5000);
+          for (const u of PAGES) {
+            const at = `/${u}@${w}`;
+            await page.goto(BASE + u);
+            await page.evaluate(() => { window.__g = []; window.goal = (g) => window.__g.push(g); }); // metrika_id пуст — цели ловит стаб
+            await page.evaluate(() => scrollTo({ top: (document.documentElement.scrollHeight - innerHeight) / 2, behavior: 'instant' }));
+            await until(page);
+            const p = await state(page);
+            if (!p) { add(bad, none, at); continue; }
+            if (!p.shown) add(bad, 'панель не видна на 50%', at);
+            const kinds = p.links.map((l) => l.href.startsWith('tel:') ? 'tel' : /wa\.me/.test(l.href) ? 'wa' : l.role === 'button' && l.href.endsWith('#contacts') && /^заявка$/i.test(l.t) ? 'zayavka' : `?${l.t}`);
+            if (kinds.join() !== 'tel,wa,zayavka') add(bad, `кнопки панели ${kinds.join(', ')}, нужно tel, wa, Заявка`, at);
+            for (const l of p.links) {
+              if (l.w < 44 || l.h < 44) add(bad, `«${l.t}» ${Math.round(l.w)}×${Math.round(l.h)}`, at);
+              if (l.ovf > 0) add(bad, `«${l.t}»: текст шире кнопки на ${l.ovf}`, at);
+            }
+            if (p.sw > p.cw) add(bad, `панель: переполнение ${p.sw}>${p.cw}`, at);
+            const z = page.locator('nav[aria-label="Связаться"]').getByRole('button', { name: /заявка/i });
+            if (!(await z.count())) { add(bad, 'в панели нет кнопки «Заявка»', at); continue; }
+            await z.tap();
+            await until(page, 200);
+            const s = await page.evaluate(() => {
+              const d = [...document.querySelectorAll('[role=dialog]')].find((x) => x.getClientRects().length), f = document.querySelector('#modalForm form'), a = document.activeElement;
+              const sel = f && [...f.querySelectorAll('select')].find((x) => x.getClientRects().length);
+              return { d: !!d, title: d ? document.getElementById(d.getAttribute('aria-labelledby')).textContent.trim() : '', name: !!(a && a.matches('#modalForm [autocomplete=name]')),
+                on: a ? a.tagName + (a.id ? '#' + a.id : '') : 'null', box: f && f.querySelector('input[type=checkbox]').checked, svc: sel ? sel.value : null,
+                bar: !!document.querySelector('nav[aria-label="Связаться"]:not([data-off])') && getComputedStyle(document.querySelector('nav[aria-label="Связаться"]')).visibility !== 'hidden' };
+            });
+            if (!s.d) { add(bad, 'тап «Заявка» не открыл окно', at); continue; }
+            seen.push(`${at} «${s.title}» услуга «${s.svc}»`);
+            if (!s.name) add(bad, `фокус на ${s.on}, а не в поле имени`, at);
+            if (s.box) add(bad, 'галочка согласия предотмечена', at);
+            if (s.bar) add(bad, 'панель видна при открытом окне', at);
+            if (s.svc === null) add(bad, 'в окне нет видимого поля «Услуга» (select)', at);
+            else if (PICK[u] && s.svc !== PICK[u]) add(bad, `услуга «${s.svc}», нужно «${PICK[u]}»`, at);
+            if (w === 390) {
+              const out = [];
+              for (let i = 1; i <= 12; i++) { await page.keyboard.press('Tab'); if (!(await page.evaluate(() => document.querySelector('[role=dialog]').contains(document.activeElement)))) out.push(i); }
+              if (out.length) add(bad, `Tab выводит фокус из окна (шаги ${out.join(',')})`, at);
+            }
+            if (u !== '') continue;
+            const name = `PW F5 ${w} ${STAMP}`, note = w === 390 ? 'Двор 300 м², Орёл, к июню' : '';
+            if (note) { await modal(page).getByRole('radio', { name: 'Завтра' }).check(); await modal(page).locator('textarea').fill(note); } // сборка comment: «Когда: …» → текст
+            await fill(modal(page), name);
+            const r = await send(page, modal(page));
+            const ok = await visible(page, '#modalSuccess');
+            const row = lead(name), g = await page.evaluate(() => window.__g.filter((x) => x.startsWith('lead_')));
+            if (!(r.body && r.body.ok === true && ok)) add(bad, `отправка: ответ ${r.status} ${JSON.stringify(r.body)}, «Спасибо» ${ok ? 'есть' : 'нет'}`, at);
+            const want = note ? `Когда: завтра\n${note}` : '';
+            if (!row || row[0] !== 'calc' || row[1] !== s.svc || row[3] !== want) add(bad, `leads ${JSON.stringify(row)}, нужно source=calc, service=«${s.svc}», comment ${JSON.stringify(want)}`, at);
+            if (g.join() !== 'lead_calc') add(bad, `цели ${JSON.stringify(g)}, нужно lead_calc`, at);
+          }
+          await ctx.close();
+        }
+        // без JS: «Заявка» — ссылка на #contacts своей страницы (<base href="/"> не уводит с посадочной), тап на 390 → нижняя форма в кадре
+        const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, javaScriptEnabled: false, reducedMotion: 'reduce' });
+        const page = await ctx.newPage();
+        page.setDefaultTimeout(5000);
+        const nj = [];
+        for (const u of PAGES) {
+          await page.goto(BASE + u);
+          await page.evaluate(() => scrollTo({ top: (document.documentElement.scrollHeight - innerHeight) / 2, behavior: 'instant' }));
+          await page.locator('nav[aria-label="Связаться"]').getByRole('button', { name: /заявка/i }).tap();
+          await until(page, 1500);
+          const m = await page.evaluate(() => { const r = document.querySelector('#contacts form').getBoundingClientRect(); return { at: location.pathname + location.hash, top: Math.round(r.top), vh: innerHeight }; });
+          if (m.at !== `/${u}#contacts` || m.top < 0 || m.top >= m.vh) add(bad, `без JS: тап «Заявка» → ${m.at}, форма top ${m.top} при ${m.vh}`, `/${u}@390`);
+          nj.push(`${m.at} (форма top ${m.top})`);
+        }
+        await ctx.close();
+        seen.push(`без JS → ${nj.join(', ')}`);
+        return [!bad.size, group(bad) || `${seen[seen.length - 1]}; 50% прокрутки → «Заявка» в панели → окно (${seen.length - 1}): ${seen.slice(0, 2).join('; ')} …; отправка с / на 4 ширинах → calc + lead_calc`];
+      });
     }
 
     // ================= G: поля и окно — доступность (T10, T11, T12) =================
@@ -567,6 +657,7 @@ const add = (m, k, where) => m.set(k, [...(m.get(k) || []), where]);
       const openIn = (page, how) => page.evaluate((how) => {
         if (window.closeModal) closeModal();
         if (how === 'call') { openModal(); return true; }
+        if (how === 'calc') { openCalc(); return true; } // T39: окно расчёта без позиции (кнопка «Заявка» панели)
         const b = document.querySelector(how);
         if (!b) return false;
         b.click();
@@ -597,7 +688,7 @@ const add = (m, k, where) => m.set(k, [...(m.get(k) || []), where]);
           const page = await open(w, 800);
           for (const u of PAGES) {
             await page.goto(BASE + u);
-            for (const [k, how] of [['нижняя', null], ...MODES]) {
+            for (const [k, how] of [['нижняя', null], ...MODES, ['заявка', 'calc']]) {
               if (how && !(await openIn(page, how))) continue;
               const at = `/${u}@${w}`;
               const r = await page.evaluate(([sel, FIELDS]) => {
@@ -624,7 +715,7 @@ const add = (m, k, where) => m.set(k, [...(m.get(k) || []), where]);
           }
           await page.close();
         }
-        return [!bad.size, group(bad) || '320/390/1440 × 3 страницы × (нижняя + 3 режима окна): поля ≥16px, подписи ≥13px над полями, чекбокс ≥22, строка согласия ≥44, не отмечен'];
+        return [!bad.size, group(bad) || '320/390/1440 × 3 страницы × (нижняя + 4 режима окна): поля ≥16px, подписи ≥13px над полями, чекбокс ≥22, строка согласия ≥44, не отмечен'];
       });
 
       // G2 (T10): iPhone 390×844 и Android 360×800 (isMobile, hasTouch, DPR 3) — тап в каждое поле → фокус в нём, visualViewport.scale = 1.
@@ -635,9 +726,9 @@ const add = (m, k, where) => m.set(k, [...(m.get(k) || []), where]);
           const ctx = await browser.newContext({ ...dev, viewport: vp, deviceScaleFactor: 3, isMobile: true, hasTouch: true, reducedMotion: 'reduce' });
           const page = await ctx.newPage();
           page.setDefaultTimeout(5000);
-          for (const [k, how] of [['нижняя', null], ...MODES]) {
+          for (const [k, how] of [['нижняя', null], ...MODES, ['заявка', 'calc']]) {
             await page.goto(BASE);
-            if (how === 'call') await openIn(page, how);
+            if (how === 'call' || how === 'calc') await openIn(page, how);
             else if (how) await opener(page, how).tap();
             const fields = page.locator(`${how ? '#modalForm form' : '#contacts form'} :is(${FIELDS})`).filter({ visible: true });
             for (let i = 0, c = await fields.count(); i < c; i++) {
@@ -652,7 +743,7 @@ const add = (m, k, where) => m.set(k, [...(m.get(k) || []), where]);
           }
           await ctx.close();
         }
-        return [!bad.size && n > 0, group(bad) || `iPhone/Android: ${n} тапов по полям (нижняя + 3 режима окна) — фокус в поле, scale = 1`];
+        return [!bad.size && n > 0, group(bad) || `iPhone/Android: ${n} тапов по полям (нижняя + 4 режима окна) — фокус в поле, scale = 1`];
       });
 
       // G3 (T10): фокус с клавиатуры на полях и галочке — кольцо (outline/box-shadow ≥2px), контраст ≥3:1 к фону поля

@@ -965,8 +965,9 @@ check('M4: после факта asf → /asfaltirovanie/ в подвале и �
 $set('fact_asphalt_works', '');
 [, $hr] = req("$base/arenda-spetstekhniki/");
 $sv = $cut($hr, 'id="services"', '</section>');
-check('M4: на rent нет карточки со ссылкой на себя, есть на mat; в <select> выбрано «Аренда спецтехники» (одна)', $sv !== '' && !str_contains($sv, '/arenda-spetstekhniki/')
-    && str_contains($sv, '<a href="/shcheben-pesok-grunt/">') && substr_count($hr, ' selected>') === 1 && str_contains($hr, '<option selected>Аренда спецтехники</option>'));
+// T39: «Услуга» есть и в нижней форме, и в окне «Заявка» — в каждом <select> выбрана одна опция, и это «Аренда спецтехники»
+check('M4: на rent нет карточки со ссылкой на себя, есть на mat; в обоих <select> (форма, окно) выбрано «Аренда спецтехники» (по одной)', $sv !== '' && !str_contains($sv, '/arenda-spetstekhniki/')
+    && str_contains($sv, '<a href="/shcheben-pesok-grunt/">') && substr_count($hr, '<select ') === 2 && substr_count($hr, ' selected>') === 2 && substr_count($hr, '<option selected>Аренда спецтехники</option>') === 2);
 $o = new PDO("sqlite:$oldDb");
 $o->exec(file_get_contents("$root/db/schema.sql") . file_get_contents("$root/db/seed.sql")); // прод до M1: сид есть, pg_* нет
 $o->exec("UPDATE items SET href = '#why' WHERE kind = 'nav' AND title = 'Материалы'"); // правка владельца

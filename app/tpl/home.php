@@ -237,15 +237,18 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
     #why img+div>div:first-child{font-size:14.8px!important}
     [data-topbar]>div>div:first-child{display:none!important} /* адрес (193px) + номер (111px) не влезают в 284px — остаётся номер */
   }
-  /* липкая панель «Позвонить + WhatsApp» (≤768): видна без JS; JS ставит data-off, пока на экране CTA первого экрана, #contacts,
+  /* липкая панель «Позвонить + WhatsApp + Заявка» (≤768): видна без JS; JS ставит data-off, пока на экране CTA первого экрана, #contacts,
      окно или меню (CTA ниже экрана — тоже). z-index 80: под cookie-баром (90) и окном (100). Подвал удлинён на высоту панели — последняя строка не под ней */
   [data-cbar]{display:none}
   @media (max-width:768px){
     [data-cbar]{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:80;background:#0d0d0d;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -6px 20px rgba(0,0,0,.28);transition:transform .25s cubic-bezier(.22,.61,.36,1),visibility .25s}
     [data-cbar] a{flex:1;min-width:0;height:56px;display:flex;align-items:center;justify-content:center;gap:10px;font-family:'Manrope';font-weight:800;font-size:15px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
+    [data-cbar] [role=button]{border-left:1px solid #333}
     [data-cbar][data-off]{transform:translateY(100%);visibility:hidden}
     footer{padding-bottom:calc(84px + env(safe-area-inset-bottom))!important}
   }
+  /* три кнопки на узком (320 → по 106px): «Позвонить» с иконкой в строку не влезает и при 13px — иконка над подписью */
+  @media (max-width:420px){[data-cbar] a{flex-direction:column;gap:4px;padding:0 4px;font-size:13px}}
   @media (prefers-reduced-motion:reduce){[data-cbar]{transition:none}}
   /* контакты: на ≤360 городской переносится под мобильный — номер прижат к низу своей цели, городской к верху: читаются парой, цели по 44 */
   @media (max-width:360px){[data-tels]>a:first-child{align-items:flex-end!important}[data-tels]>a+a{align-items:flex-start!important}}
@@ -706,6 +709,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
 <?php if ($s['whatsapp'] !== ''): ?>
     <a href="<?= e($s['whatsapp'] . (str_contains($s['whatsapp'], '?') ? '&' : '?') . 'text=' . rawurlencode('Здравствуйте! Пишу с сайта regiondorstroy.com.')) ?>" style="background:#1f1f1f;color:#fff"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.4-4.1A8 8 0 1 1 8.3 18.7Z"/></svg>WhatsApp</a>
 <?php endif ?>
+    <a href="<?= e($here) ?>#contacts" role="button" aria-haspopup="dialog" onclick="openCalc();return false" onkeydown="if(event.key===' '){event.preventDefault();openCalc()}" style="background:#1f1f1f;color:#fff"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6v3H9z"/><path d="M15 4.5h2a2 2 0 0 1 2 2V19a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2h2M9 11h6M9 15h4"/></svg>Заявка</a>
   </nav>
 
   <!-- ================= CALL MODAL ================= -->
@@ -737,6 +741,14 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
               <input id="mName" required autocomplete="name" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:16px;font-family:'Manrope';margin-bottom:14px" style-focus="border-color:#FFC700">
               <label for="mTel">Телефон</label>
               <input id="mTel" required type="tel" autocomplete="tel" inputmode="tel" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:16px;font-family:'Manrope';margin-bottom:14px" style-focus="border-color:#FFC700">
+              <div id="modalSvc" style="display:none">
+                <label for="mSvc">Услуга</label>
+                <select id="mSvc" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:16px;font-family:'Manrope';margin-bottom:14px" style-focus="border-color:#FFC700">
+<?php foreach ($services as $r): if ($r['in_form']): ?>
+                  <option<?= $r['href'] === $here ? ' selected' : '' ?>><?= e($r['title']) ?></option>
+<?php endif; endforeach ?>
+                </select>
+              </div>
               <div id="modalTask" style="display:none">
                 <fieldset data-when><legend>Когда нужно</legend><div>
                   <label><input type="radio" name="when" value="сегодня"><span>Сегодня</span></label>
@@ -802,8 +814,9 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
     if(T)T.textContent=t; if(D)D.textContent=d; if(B)B.textContent=b;
     if(mMat){ mMat.setAttribute('data-svc',svc||''); var L=document.getElementById('modalMatLbl'); if(L)L.textContent=svc||'Материал';
       if(mat){ mMat.style.display=''; var n=document.getElementById('modalMatName'); if(n)n.textContent=mat; } else mMat.style.display='none'; }
-    var X=document.getElementById('modalTask'); if(X)X.style.display=mat?'block':'none'; // чипы и поле задачи — только в расчёте/аренде
-    var TL=document.getElementById('modalTaskLbl'); if(TL)TL.textContent=svc?'Куда подать технику и на сколько смен или часов':(/^(тонн[аы]?|т)$/i.test(unit)?'Сколько тонн':/^(м³|м3|куб.*)$/i.test(unit)?'Сколько кубов':'Объём')+' и куда везти'; // единицы сида: тонна, м³
+    var gen=mat===undefined, S=document.getElementById('modalSvc'); if(S)S.style.display=gen?'':'none'; // openCalc() без позиции («Заявка» панели): услуга — в поле
+    var X=document.getElementById('modalTask'); if(X)X.style.display=(mat||gen)?'block':'none'; // чипы и поле задачи — только в расчёте/аренде
+    var TL=document.getElementById('modalTaskLbl'); if(TL)TL.textContent=gen?'Объём, адрес, сроки':svc?'Куда подать технику и на сколько смен или часов':(/^(тонн[аы]?|т)$/i.test(unit)?'Сколько тонн':/^(м³|м3|куб.*)$/i.test(unit)?'Сколько кубов':'Объём')+' и куда везти'; // единицы сида: тонна, м³
   }
   // окно — модальный диалог: фон inert (все соседи по пути от окна до body), фокус в первое поле, при закрытии — назад на открывашку
   var opener=null;
@@ -812,7 +825,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
     if(mForm){ mForm.style.display=''; var f=mForm.querySelector('form'); if(f){ clearErr(f); f.querySelector('[autocomplete=name]').focus(); } } if(mOk)mOk.style.display='none'; document.body.style.overflow='hidden'; cbarSync(); }
   window.openModal=function(){ setModal('<?= jsstr($s['modal_call_title']) ?>','<?= jsstr($s['modal_call_text']) ?>','<?= jsstr($s['modal_call_btn']) ?>',null); show(); };
   window.openModalMobile=function(){ closeMenu(); window.openModal(); };
-  window.openCalc=function(name,svc,unit){ setModal('<?= jsstr($s['modal_calc_title']) ?>','<?= jsstr($s['modal_calc_text']) ?>','<?= jsstr($s['modal_calc_btn']) ?>',name,svc,unit); show(); };
+  window.openCalc=function(name,svc,unit){ setModal(name===undefined?'<?= jsstr($s['form_title']) ?>':'<?= jsstr($s['modal_calc_title']) ?>',name===undefined?'<?= jsstr($s['form_lead']) ?>':'<?= jsstr($s['modal_calc_text']) ?>','<?= jsstr($s['modal_calc_btn']) ?>',name,svc,unit); show(); };
   // карточка техники: та же форма расчёта, услуга «Аренда спецтехники» + название из заголовка карточки
   window.openRent=function(btn){ var h=btn.closest('[data-lift]').querySelector('h3'); window.openCalc(h?h.textContent:'','Аренда спецтехники'); };
   window.closeModal=function(){ if(!overlay||overlay.style.display!=='block')return; overlay.style.display='none'; bg(false); document.body.style.overflow=''; cbarSync();
@@ -865,13 +878,13 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
   function val(f,sel){ var el=f.querySelector(sel); return el?el.value.trim():''; }
   window.submitModal=function(e){ e.preventDefault(); var f=e.target, fd=new FormData();
     var mEl=document.getElementById('modalMat'), mat=(mEl&&mEl.style.display!=='none')?(((document.getElementById('modalMatName')||{}).textContent)||''):'';
-    var svc=(mEl&&mat&&mEl.getAttribute('data-svc'))||'';
+    var svc=(mEl&&mat&&mEl.getAttribute('data-svc'))||'', gen=document.getElementById('modalSvc').style.display!=='none', task=mat||gen;
     // comment: «Техника: X» (аренда) → «Когда: завтра» (чип) → текст; пустые строки не добавляются
-    var w=mat&&f.querySelector('[name=when]:checked'), note=[svc?'Техника: '+mat:'', w?'Когда: '+w.value:'', mat?val(f,'#modalTask textarea'):''].filter(Boolean).join('\n');
-    if(svc){ fd.append('source','calc'); fd.append('service',svc); fd.append('comment',note); }
+    var w=task&&f.querySelector('[name=when]:checked'), note=[svc?'Техника: '+mat:'', w?'Когда: '+w.value:'', task?val(f,'#modalTask textarea'):''].filter(Boolean).join('\n');
+    if(svc||gen){ fd.append('source','calc'); fd.append('service',svc||val(f,'#mSvc')); fd.append('comment',note); }
     else { fd.append('source', mat?'material':'call'); fd.append('material', mat); if(note)fd.append('comment', note); }
     fd.append('name', val(f,'[autocomplete=name]')); fd.append('phone', val(f,'[autocomplete=tel]'));
-    send(fd, f, svc?'lead_rent':mat?'lead_material':'lead_call', function(){ if(mForm)mForm.style.display='none'; if(mOk){ mOk.style.display=''; mOk.querySelector('h3').focus(); } });
+    send(fd, f, svc?'lead_rent':gen?'lead_calc':mat?'lead_material':'lead_call', function(){ if(mForm)mForm.style.display='none'; if(mOk){ mOk.style.display=''; mOk.querySelector('h3').focus(); } });
   };
   window.submitForm=function(e){ e.preventDefault(); var f=e.target, fd=new FormData();
     fd.append('source','calc'); fd.append('name', val(f,'[autocomplete=name]')); fd.append('phone', val(f,'[autocomplete=tel]'));
