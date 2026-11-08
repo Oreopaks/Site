@@ -35,6 +35,21 @@ execFileSync('php', [path.join(__dirname, '../../bin/create-user.php'), LOGIN, '
   const txt = (await dd.locator('dd').innerText()).replace(/ /g, ' ');
   check('на / видно «99 999 ₽»', txt.includes('99 999 ₽') && await dd.isVisible(), txt);
 
+  // T43: в строках прайса знак «заявка» (svg, aria-hidden) вместо «→», имя «В аренду: …»; цена не наезжает на текст кнопки (R5), в т. ч. с «99 999 ₽»
+  for (const w of [320, 360, 375, 390, 1440]) {
+    await page.setViewportSize({ width: w, height: 900 });
+    await page.goto(BASE);
+    await page.evaluate(() => document.fonts.ready);
+    const rows = await page.$$eval('#fleet dl > div', (a) => a.map((d) => {
+      const b = d.querySelector('button'), p = d.querySelector('dd').getBoundingClientRect(), g = document.createRange();
+      g.selectNodeContents(b);
+      const hit = [...g.getClientRects()].some((r) => r.width && r.left < p.right && p.left < r.right && r.top < p.bottom && p.top < r.bottom);
+      return { name: b.getAttribute('aria-label'), arrow: b.textContent.includes('→'), icon: !!b.querySelector('svg[aria-hidden="true"]'), hit };
+    }));
+    const bad = rows.filter((r) => r.arrow || !r.icon || !/^В аренду: \S/.test(r.name) || r.hit);
+    check(`@${w}: ${rows.length} строк прайса — знак-svg без «→», имя «В аренду: …», цена не на тексте кнопки`, rows.length === 14 && !bad.length, JSON.stringify(bad));
+  }
+
   await browser.close();
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(1); });

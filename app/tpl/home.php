@@ -57,6 +57,10 @@ $reach = fn(bool $dark): string => '<div style="display:flex;flex-wrap:wrap;gap:
     . '<a href="tel:' . e($s['phone_mobile']) . '" style="' . $rb . 'background:#FFC700;color:#0d0d0d">Позвонить <span style="white-space:nowrap">' . e($s['phone_mobile_fmt']) . '</span></a>'
     . ($s['whatsapp'] !== '' ? '<a href="' . e($s['whatsapp']) . '" style="' . $rb . ($dark ? 'border:1.5px solid rgba(255,255,255,.35);color:#fff' : 'background:#1f1f1f;color:#fff') . '">WhatsApp</a>' : '')
     . '</div>';
+// WhatsApp с приветствием — одна ссылка для липкой панели и шапки (≥1024)
+$waHi = $s['whatsapp'] . (str_contains($s['whatsapp'], '?') ? '&' : '?') . 'text=' . rawurlencode('Здравствуйте! Пишу с сайта regiondorstroy.com.');
+// знак «заявка» в строке прайса — планшет кнопки «Заявка» липкой панели; nowrap — значок не уходит на строку один
+$req = '<span style="white-space:nowrap">&nbsp;<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px"><path d="M9 3h6v3H9z"/><path d="M15 4.5h2a2 2 0 0 1 2 2V19a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2h2M9 11h6M9 15h4"/></svg></span>';
 $urgent = 'Срочно? Позвоните' . ($s['whatsapp'] !== '' ? ' или напишите' : '') . ':';
 // блок ошибки отправки над кнопкой: тексты печатает сервер, JS берёт текст по коду и вставляет через textContent; tel/WhatsApp — при ошибке связи
 $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-invalid="В номере меньше 10 цифр. Проверьте, например: 8&nbsp;980&nbsp;000-00-00" data-fail="' . e($s['alert_fail']) . '" data-offline="' . e($s['alert_offline']) . '"'
@@ -342,7 +346,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
         <div data-hcontact>
           <a href="tel:<?= e($s['phone_mobile']) ?>" data-hphone style="font-family:'Oswald';font-weight:600;font-size:18px;color:#fff;letter-spacing:.3px"><?= e($s['phone_mobile_fmt']) ?></a>
 <?php if ($s['whatsapp'] !== ''): ?>
-          <a href="<?= e($s['whatsapp']) ?>" data-hwa aria-label="Написать в WhatsApp" style-hover="color:#fff"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.4-4.1A8 8 0 1 1 8.3 18.7Z"/></svg><span>WhatsApp</span></a>
+          <a href="<?= e($waHi) ?>" data-hwa aria-label="Написать в WhatsApp" style-hover="color:#fff"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.4-4.1A8 8 0 1 1 8.3 18.7Z"/></svg><span>WhatsApp</span></a>
 <?php endif ?>
         </div>
         <button onclick="openModal()" data-desknav style="background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope';font-weight:800;font-size:13.5px;padding:13px 22px;cursor:pointer;letter-spacing:.3px;text-transform:uppercase" style-hover="background:#ffd633">Заказать звонок</button>
@@ -489,9 +493,9 @@ if (($note = trim($s['fleet_photo_note'] ?? 'Фото для примера. М�
         : ($i === $n - 1 ? 'padding:14px 0' : 'padding:14px 0;border-bottom:1px solid #262626')); ?>
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;<?= $pad ?>">
 <?php if ($r['is_sub']): ?>
-            <dt data-sub style="flex:1;min-width:0;padding-left:12px;color:#a8a8a8;font-size:14px"><button type="button" onclick="openCalc('<?= jsattr($sub = trim(($tech ?? '') . ' ' . $r['name'])) ?>','Аренда спецтехники')" aria-label="В аренду: <?= e($sub) ?>" style-hover="color:#FFC700">— <?= e($r['name']) ?>&nbsp;<span aria-hidden="true" style="color:#FFC700">→</span></button></dt><?php /* $tech — родительская строка выше (подпозиция идёт сразу за ней) */ ?>
+            <dt data-sub style="flex:1;min-width:0;padding-left:12px;color:#a8a8a8;font-size:14px"><button type="button" onclick="openCalc('<?= jsattr($sub = trim(($tech ?? '') . ' ' . $r['name'])) ?>','Аренда спецтехники')" aria-label="В аренду: <?= e($sub) ?>" style-hover="color:#FFC700">— <?= e($r['name']) ?><?= $req ?></button></dt><?php /* $tech — родительская строка выше (подпозиция идёт сразу за ней) */ ?>
 <?php else: ?>
-            <dt style="flex:1;min-width:0;font-weight:600"><button type="button" onclick="openCalc('<?= jsattr($tech = trim($r['name'] . ' ' . $r['model'])) ?>','Аренда спецтехники')" aria-label="В аренду: <?= e($tech) ?>" style-hover="color:#FFC700"><?= e($r['name']) ?><?php if ($r['model'] !== ''): ?> <span style="color:#a8a8a8;font-weight:500;white-space:nowrap"><?= e($r['model']) ?></span><?php endif ?>&nbsp;<span aria-hidden="true" style="color:#FFC700">→</span></button></dt>
+            <dt style="flex:1;min-width:0;font-weight:600"><button type="button" onclick="openCalc('<?= jsattr($tech = trim($r['name'] . ' ' . $r['model'])) ?>','Аренда спецтехники')" aria-label="В аренду: <?= e($tech) ?>" style-hover="color:#FFC700"><?= e($r['name']) ?><?php if ($r['model'] !== ''): ?> <span style="color:#a8a8a8;font-weight:500;white-space:nowrap"><?= e($r['model']) ?></span><?php endif ?><?= $req ?></button></dt>
 <?php endif ?>
 <?php if ($r['price_kind'] === 'contract'): ?>
             <dd style="margin:0;white-space:nowrap"><?= $badge ?> <span style="font-size:14px;color:#a8a8a8">/ <?= e($r['unit']) ?></span></dd>
@@ -742,7 +746,7 @@ if (($note = trim($s['fleet_photo_note'] ?? 'Фото для примера. М�
   <nav aria-label="Связаться" data-cbar>
     <a href="tel:<?= e($s['phone_mobile']) ?>" style="background:#FFC700;color:#0d0d0d"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0d0d0d" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h3l2 5-2.2 1.3a12 12 0 0 0 5.7 5.7L16 15l5 2v3a2 2 0 0 1-2 2A17 17 0 0 1 4 5a2 2 0 0 1 2-2Z"/></svg>Позвонить</a>
 <?php if ($s['whatsapp'] !== ''): ?>
-    <a href="<?= e($s['whatsapp'] . (str_contains($s['whatsapp'], '?') ? '&' : '?') . 'text=' . rawurlencode('Здравствуйте! Пишу с сайта regiondorstroy.com.')) ?>" style="background:#1f1f1f;color:#fff"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.4-4.1A8 8 0 1 1 8.3 18.7Z"/></svg>WhatsApp</a>
+    <a href="<?= e($waHi) ?>" style="background:#1f1f1f;color:#fff"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.4-4.1A8 8 0 1 1 8.3 18.7Z"/></svg>WhatsApp</a>
 <?php endif ?>
     <a href="<?= e($here) ?>#contacts" role="button" aria-haspopup="dialog" onclick="openCalc();return false" onkeydown="if(event.key===' '){event.preventDefault();openCalc()}" style="background:#1f1f1f;color:#fff"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6v3H9z"/><path d="M15 4.5h2a2 2 0 0 1 2 2V19a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2h2M9 11h6M9 15h4"/></svg>Заявка</a>
   </nav>

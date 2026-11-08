@@ -577,8 +577,8 @@
    "settings.fleet_label",
    "items[kind=stat_bar,…].title,text"
   ],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "новичок M3 (var/studio/m3/novice/novice.md): «Собственный парк» + «фото для примера» читается как сток; 9/11/14 путает; WA шапки без приветствия"
  },
  {
@@ -691,8 +691,8 @@
   "size": "S",
   "kind": "code",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "новичок M2, п. 7 (стрелки «→» в прайсе выглядят как переход); §4 V7",
   "note": "Батч с T20 допустим: один файл, блок #fleet, общий критик Sunbelt и общие price.js/rent.js."
  },

@@ -1,6 +1,6 @@
 // Playwright: воронка заявки (studio M2, strategy §2 Р2.2–Р2.7, §8). Тест написан до правок: метки задач, которые ещё
 // не закрыты, красные. Метка → задача: A1, A2 → T06; A3 → T13 (и T06); A4 → T07; B1–B4, B7 — регрессия; B2p → T13; B5 → T08;
-// B6 → T11; B8 → T42; C1–C4 → T09; D1, D2, E1 → T14; F1–F4 → T05; F5 → T39; F6 → T41; G1–G3 → T10; G4–G6 → T12; G7 → T11.
+// B6 → T11; B8 → T42; C1–C4 → T09; D1, D2, E1 → T14; F1–F4 → T05; F5 → T39; F6 → T41 (href = панель с ?text= → T45); G1–G3 → T10; G4–G6 → T12; G7 → T11.
 // Контракт разметки: окно — #modalForm form / #modalSuccess, нижняя форма — #contacts form / #formSuccess,
 // блок ошибки — #contacts [role=alert][data-code=invalid|rate|server|offline], панель — nav[aria-label="Связаться"],
 // три пути — [data-paths], цели — window.goal + ym(ID,'reachGoal',цель,параметры), чип — radio «Завтра», строка прайса — #fleet dl button.
@@ -685,18 +685,18 @@ const add = (m, k, where) => m.set(k, [...(m.get(k) || []), where]);
       });
 
       // F6 (T41): 1024/1440/1920, прокрутка 50%: в липкой шапке tel: и WhatsApp (иконка + подпись) в кадре, рядом (зазор ≤48 px), цель ≥24×24;
-      // клик → click_whatsapp where=header; 1025–1280: WhatsApp виден, шапка без переполнения, тексты в одну строку; whatsapp пуст → ссылки в шапке нет
+      // href = href WhatsApp липкой панели, с ?text= (T45); клик → click_whatsapp where=header; 1025–1280: WhatsApp виден, шапка без переполнения, тексты в одну строку; whatsapp пуст → ссылки в шапке нет
       await run('F6', async () => {
         const bad = new Map(), seen = [];
         const hdr = (page) => page.evaluate(() => {
           const h = document.querySelector('header'), W = innerWidth, H = innerHeight;
           const box = (a) => { const r = a.getBoundingClientRect(); return { l: r.left, r: r.right, t: r.top, b: r.bottom, w: r.width, h: r.height, in: r.left >= 0 && r.right <= W && r.top >= 0 && r.bottom <= H }; };
           const vis = (sel) => [...h.querySelectorAll(sel)].filter((a) => a.getClientRects().length && getComputedStyle(a).visibility !== 'hidden');
-          const tel = vis('a[href^="tel:"]')[0], wa = vis('a[href*="wa.me"]')[0];
+          const tel = vis('a[href^="tel:"]')[0], wa = vis('a[href*="wa.me"]')[0], pw = document.querySelector('nav[aria-label="Связаться"] a[href*="wa.me"]');
           // переносы — у текста ссылок и кнопок (по текстовым узлам: значок рядом с текстом — не перенос), кроме лок-апа с логотипом (многострочный по замыслу, его стережёт brand.js)
           const rows = (a) => { const t = document.createTreeWalker(a, NodeFilter.SHOW_TEXT); let n, k = 1; while ((n = t.nextNode())) { if (!n.textContent.trim()) continue; const g = document.createRange(); g.selectNodeContents(n); k = Math.max(k, new Set([...g.getClientRects()].filter((q) => q.width > 0).map((q) => Math.round(q.top))).size); } return k; };
           const wrap = vis('a, button').filter((a) => !a.querySelector('img') && rows(a) > 1).map((a) => a.textContent.trim().slice(0, 20));
-          return { sw: h.scrollWidth, cw: h.clientWidth, wrap, tel: tel && box(tel), wa: wa && { ...box(wa), txt: wa.textContent.trim(), svg: !!wa.querySelector('svg') } };
+          return { sw: h.scrollWidth, cw: h.clientWidth, wrap, tel: tel && box(tel), wa: wa && { ...box(wa), txt: wa.textContent.trim(), svg: !!wa.querySelector('svg'), href: wa.getAttribute('href') }, panel: pw && pw.getAttribute('href') };
         });
         for (const [w, h] of [[1024, 768], [1440, 900], [1920, 1080]]) {
           const page = await open(w, h);
@@ -711,6 +711,7 @@ const add = (m, k, where) => m.set(k, [...(m.get(k) || []), where]);
             if (!m.wa.in) add(bad, 'WhatsApp в шапке не в кадре', at);
             if (m.wa.txt !== 'WhatsApp' || !m.wa.svg) add(bad, `WhatsApp: подпись «${m.wa.txt}», иконка ${m.wa.svg ? 'есть' : 'нет'}`, at);
             if (m.wa.w < 24 || m.wa.h < 24) add(bad, `WhatsApp ${Math.round(m.wa.w)}×${Math.round(m.wa.h)} < 24`, at);
+            if (!/\?text=./.test(m.wa.href) || m.wa.href !== m.panel) add(bad, `WhatsApp шапки без приветствия панели: ${m.wa.href} ≠ ${m.panel}`, at); // T45
             const gap = m.tel ? Math.round(Math.max(m.wa.l - m.tel.r, m.tel.l - m.wa.r, m.wa.t - m.tel.b, m.tel.t - m.wa.b)) : null; // зазор между рамками по любой оси
             if (!(gap <= 48)) add(bad, `WhatsApp дальше 48 px от номера (${gap})`, at);
             if (m.sw > m.cw) add(bad, `шапка: переполнение ${m.sw}>${m.cw}`, at);
@@ -742,7 +743,7 @@ const add = (m, k, where) => m.set(k, [...(m.get(k) || []), where]);
           if ((await hdr(page)).wa) add(bad, 'whatsapp пуст, а ссылка в шапке есть', '/@1440');
           await page.close();
         } finally { setSetting('whatsapp', wa0); }
-        return [!bad.size, group(bad) || `шапка на 50%: tel: + WhatsApp в кадре, клик → click_whatsapp/header (${seen.join('; ')}); 1025–1280 без переполнения и переносов; пустой whatsapp — ссылки нет`];
+        return [!bad.size, group(bad) || `шапка на 50%: tel: + WhatsApp в кадре, href = панель с ?text=, клик → click_whatsapp/header (${seen.join('; ')}); 1025–1280 без переполнения и переносов; пустой whatsapp — ссылки нет`];
       });
     }
 
