@@ -406,8 +406,8 @@
   "db_keys": [
    "settings.hero_h1"
   ],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "§3 Р3.2; §4 V6; утверждение (б)",
   "note": "M3 порядок: R9, отдельно — риск сгиба (H1 в 4 строки + полоса T07 + пути T06 + скрытая при видимом CTA панель T39)."
  },

@@ -136,6 +136,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
   body{font-family:'Manrope',sans-serif;color:#111;background:#fff;-webkit-font-smoothing:antialiased}
   ::selection{background:#FFC700;color:#111}
   a{text-decoration:none;color:inherit}
+  h1{overflow-wrap:anywhere} /* страховка: слово длиннее строки (правка владельца) переносится, а не вылезает за поля; кегли ниже подобраны так, что сид не рвётся */
   /* фокус: жёлтое кольцо + тёмная подложка 2px — видно и на светлом (#f4f4f2, жёлтый там 1.4:1), и на тёмном (#161616) */
   a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible,[data-when] input:focus-visible+span{outline:3px solid #FFC700;outline-offset:2px;box-shadow:0 0 0 2px #0d0d0d}
   /* формы: видимые подписи над полями (13px), чипы «Когда нужно» — радио поверх всего чипа (тап-цель = чип, стрелки — нативные) */
@@ -236,7 +237,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
     [data-pd]{display:block;font-size:14px} [data-psep]{display:none} /* путь — две строки: название / уточнение → (без висячей стрелки на 320–360) */
     #why img+div>div:first-child{font-size:18.5px!important}
     [data-r="g3"],[data-r="g4"],[data-r="g5"],[data-r="g2"],[data-r="foot"]{grid-template-columns:1fr!important}
-    h1{font-size:33px!important}
+    h1{font-size:clamp(28px,9.2vw,44px)!important} /* «БЛАГОУСТРАИВАЕМ» в строку 256px на 320; посадочные — свои 28px ([data-lp-head] h1) */
     h2{font-size:32px!important}
     div[style*="padding:0 32px"]{padding-left:18px!important;padding-right:18px!important}
     div[style*="80px 32px 90px"]{padding-left:18px!important;padding-right:18px!important}
@@ -246,6 +247,12 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
     [data-topbar]>div>div:last-child{margin-left:auto}
     [data-topbar] a:not([data-tbtel]){display:none!important}
     [data-tbtel]{display:inline-flex!important}
+  }
+  /* H1 главной в 4 строки на ≤400: отступы hero ужаты, подводка 17px — «Оставить заявку» в первом экране и на 320×640, 375×667 */
+  @media (max-width:400px){
+    [data-hero-content]{padding-top:64px!important}
+    [data-hero-content]>div:first-child{margin-bottom:18px!important}
+    [data-hero-content]>p{margin-bottom:24px!important;font-size:17px!important}
   }
   /* шапка <360: лок-ап ужат, чтобы рядом влезали иконка звонка и бургер; подпись = .525 кегля названия (ширины строк равны) */
   @media (max-width:359px){
