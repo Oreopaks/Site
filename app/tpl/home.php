@@ -201,7 +201,16 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
   [data-imgzoom]{overflow:hidden}
   [data-imgzoom] img{transition:transform .8s cubic-bezier(.22,.61,.36,1);display:block}
   [data-imgzoom]:hover img{transform:scale(1.08)}
-  @media (prefers-reduced-motion:reduce){[data-kenburns],[data-marquee],[data-marquee-fast]{animation:none!important}html{scroll-behavior:auto}[data-lift]{transition:none}}
+  /* окно заявки появляется, а не возникает: фон проявляется, карточка поднимается (анимация перезапускается при каждом display:none → block) */
+  #modalOverlay>div{animation:mfade .2s ease-out}
+  #modalOverlay [role=dialog]{animation:mrise .32s cubic-bezier(.22,.61,.36,1)}
+  @keyframes mfade{from{opacity:0}}
+  @keyframes mrise{from{opacity:0;transform:translateY(32px)}}
+  /* переход к форме по «Оставить заявку»: форма под шапкой, по прибытии — короткая жёлтая вспышка рамки */
+  [data-formwrap]{scroll-margin-top:96px}
+  [data-formwrap][data-flash]{animation:fflash 1.5s .5s ease-out}
+  @keyframes fflash{0%,100%{box-shadow:0 0 0 0 rgba(255,199,0,0)}25%{box-shadow:0 0 0 6px #FFC700}}
+  @media (prefers-reduced-motion:reduce){[data-kenburns],[data-marquee],[data-marquee-fast],#modalOverlay>div,#modalOverlay [role=dialog],[data-formwrap][data-flash]{animation:none!important}html{scroll-behavior:auto}[data-lift]{transition:none}}
   @media (max-width:1024px){
     [data-r="g4"]{grid-template-columns:repeat(2,1fr)!important}
     [data-r="g5"]{grid-template-columns:repeat(3,1fr)!important}
@@ -717,7 +726,7 @@ if (($note = trim($s['fleet_photo_note'] ?? 'Фото для примера. М�
           </div>
         </div>
 
-        <div data-anim="slide-right" style="background:#0d0d0d;padding:40px;color:#fff">
+        <div data-anim="slide-right" data-formwrap style="background:#0d0d0d;padding:40px;color:#fff">
           <div id="formSuccess" style="display:none">
             <div style="height:100%;min-height:360px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px">
               <div style="width:64px;height:64px;background:#FFC700;color:#0d0d0d;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px">✓</div>
@@ -1007,6 +1016,21 @@ if (($note = trim($s['fleet_photo_note'] ?? 'Фото для примера. М�
     var box=overlay.querySelector('[role=dialog]'), a=document.activeElement,
         q=[].filter.call(box.querySelectorAll('a[href],button,input,select,textarea'), function(x){ return x.tabIndex>=0 && !x.disabled && x.getClientRects().length; });
     if(q.length && (!box.contains(a) || a===q[e.shiftKey?0:q.length-1])){ e.preventDefault(); q[e.shiftKey?q.length-1:0].focus(); }
+  });
+
+  // переход к форме (#contacts на этой же странице): родной smooth на 10 000 px — мелькание за секунду, человек теряется.
+  // Длинный путь: мгновенно на экран выше формы, дальше плавно до формы под шапкой, рамка вспыхивает.
+  // Фокус — на блок формы без клавиатуры на телефоне; hash ставим, как родной якорь. Без JS и с Ctrl/⌘ — обычная ссылка.
+  document.addEventListener('click', function(e){
+    var a=e.target.closest&&e.target.closest('a[href*="#contacts"]'), f=document.querySelector('[data-formwrap]');
+    if(!a||!f||e.defaultPrevented||a.pathname!==location.pathname||e.ctrlKey||e.metaKey||e.shiftKey||e.altKey) return;
+    e.preventDefault();
+    if(location.hash!=='#contacts') history.pushState(null,'','#contacts');
+    var still=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches, d=f.getBoundingClientRect().top, h=document.documentElement.style;
+    if(!still&&Math.abs(d)>innerHeight*1.5){ h.scrollBehavior='auto'; scrollBy(0, d-(d>0?1:-1)*innerHeight*.9); h.scrollBehavior=''; }
+    f.scrollIntoView({behavior:still?'auto':'smooth', block:'start'});
+    f.setAttribute('tabindex','-1'); f.focus({preventScroll:true});
+    f.removeAttribute('data-flash'); void f.offsetWidth; f.setAttribute('data-flash','');
   });
 
   // count-up + scroll-progress. ponytail: scroll-reveal убран (2026-10-28) — [data-anim] никогда не прячется,
