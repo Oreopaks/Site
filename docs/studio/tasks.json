@@ -983,8 +983,8 @@
   "size": "S",
   "kind": "seo",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "§3 Р3.8 (P2, в конце); ST #3"
  },
  {
@@ -1005,8 +1005,8 @@
   "size": "S",
   "kind": "test",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "task.md шаг 9 (production-validator)"
  },
  {
@@ -1049,8 +1049,8 @@
   "size": "M",
   "kind": "content-migration",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "task.md шаг 14; §1 Р1.7"
  },
  {

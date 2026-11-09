@@ -28,4 +28,16 @@ header('Content-Type: text/html; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header("Content-Security-Policy: frame-ancestors 'self'"); // чужой сайт не встроит страницу в iframe (кликджекинг формы); карте кликов Метрики понадобится её домен здесь
+ob_start();
 require dirname(__DIR__) . '/app/tpl/home.php';
+$html = ob_get_clean();
+// T33: страница — функция БД без поштучных токенов → ETag по телу; no-cache = кэшировать, но сверяться. Last-Modified нет: честной даты нет (ADR-0009)
+$etag = md5($html);
+header('Cache-Control: no-cache');
+header("ETag: \"$etag\"");
+// If-None-Match сравнивается слабо (RFC 9110 §13.1.2): W/ от gzip nginx и суффикс -gzip от mod_deflate — тот же тег
+if (in_array($_SERVER['REQUEST_METHOD'] ?? 'GET', ['GET', 'HEAD'], true) && preg_match_all('~"([0-9a-f]{32})(?:-[a-z]+)?"~', $_SERVER['HTTP_IF_NONE_MATCH'] ?? '', $m) && in_array($etag, $m[1], true)) {
+    http_response_code(304);
+    exit;
+}
+echo $html;

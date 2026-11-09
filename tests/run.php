@@ -109,6 +109,30 @@ $hi = $hm ? @getimagesize("$root/public/$hm[1]") : false;
 check('T32: hero ≤480 — <source> ≤80 КБ, width/height = натуральный размер, preload по media (мобильный и полный кадр)', $hm && $hi && $hi[0] == $hm[2] && $hi[1] == $hm[3]
     && filesize("$root/public/$hm[1]") <= 80 * 1024 && str_contains($h, "<link rel=\"preload\" as=\"image\" href=\"$hm[1]\" media=\"(max-width:480px)\" fetchpriority=\"high\">")
     && str_contains($h, '<link rel="preload" as="image" href="assets/hero-paving.webp" media="(min-width:481px)" fetchpriority="high">'), $hm ? "$hm[1] " . @filesize("$root/public/$hm[1]") . ' B' : 'нет <picture><source>');
+// --- studio T33: HTML / и посадочных — Cache-Control: no-cache и ETag по телу, без Last-Modified; If-None-Match → 304 без тела,
+// в т.ч. W/ (nginx gzip ослабляет ETag) и суффикс -gzip (mod_deflate); правка настройки → новый ETag и 200; admin, send.php, privacy, consent — как были
+$hv = fn(array $r, string $n): ?string => ($x = preg_grep("~^$n:~i", $r[2])) ? trim(substr(reset($x), strlen($n) + 1)) : null;
+$bad = [];
+foreach (['/', '/arenda-spetstekhniki/', '/shcheben-pesok-grunt/', '/asfaltirovanie/', '/blagoustroystvo/'] as $u) {
+    $r = req("$base$u");
+    $tag = (string)$hv($r, 'ETag');
+    if ($r[0] !== 200 || $hv($r, 'Cache-Control') !== 'no-cache' || !preg_match('~^"[0-9a-f]{32}"$~D', $tag) || $hv($r, 'Last-Modified') !== null) { $bad[] = "$u {$r[0]} ETag=$tag"; continue; }
+    foreach ([$tag, "W/$tag", substr($tag, 0, -1) . '-gzip"', "\"x\", $tag"] as $inm) {
+        $r2 = req("$base$u", null, '', ["If-None-Match: $inm"]);
+        if ($r2[0] !== 304 || $r2[1] !== '' || $hv($r2, 'ETag') !== $tag) $bad[] = "$u If-None-Match: $inm → {$r2[0]}";
+    }
+    if (req("$base$u", null, '', ['If-None-Match: "x"'])[0] !== 200) $bad[] = "$u чужой ETag → не 200";
+}
+$tag0 = $hv(req("$base/"), 'ETag');
+$set('hero_p', "$hp T33");
+$r = req("$base/", null, '', ["If-None-Match: $tag0"]);
+$set('hero_p', $hp);
+if ($r[0] !== 200 || $r[1] === '' || in_array($hv($r, 'ETag'), [null, $tag0], true) || $hv(req("$base/"), 'ETag') !== $tag0) $bad[] = "правка hero_p: {$r[0]} " . $hv($r, 'ETag') . " (было $tag0)";
+foreach (['/privacy.php' => null, '/consent.php' => null, '/admin/' => 'no-store, no-cache, must-revalidate', '/send.php' => 'no-store'] as $u => $cc) {
+    $r = req("$base$u");
+    if ($hv($r, 'ETag') !== null || $hv($r, 'Cache-Control') !== $cc) $bad[] = "$u ETag=" . $hv($r, 'ETag') . ' Cache-Control=' . $hv($r, 'Cache-Control');
+}
+check('T33: /, rent, mat, asf, blago — no-cache + ETag, If-None-Match (W/, -gzip, список) → 304 без тела; правка hero_p → новый ETag; privacy, consent, admin, send.php — без ETag', !$bad, implode('; ', $bad));
 $set('fact_asphalt_works', $f0[0]);
 $set('fact_blago_works', $f0[1]);
 
@@ -1249,4 +1273,5 @@ check('вход с устаревшим токеном → 403 с формой �
 [$code] = req("$base/admin/?p=login", ['_csrf' => $m[1] ?? '', 'login' => 'boss', 'password' => $pw], $c1);
 check('повтор с формы-подсказки → 302, вошёл', $code === 302, (string)$code);
 
+require __DIR__ . '/studio-content.php'; // шаг 14: bin/studio-content.php (перенос текстов по манифесту)
 exit($fail ? 1 : 0);
