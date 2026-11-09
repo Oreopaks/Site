@@ -1097,7 +1097,7 @@
   "size": "M",
   "kind": "test",
   "db_keys": [],
-  "status": "todo",
+  "status": "stalled",
   "rounds": 0,
   "strategy_ref": "task.md «Готово, когда», шаг 13; strategy §10"
  }
