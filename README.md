@@ -12,11 +12,17 @@
 - `app/` — код и шаблоны (`app/tpl/home.php` — PHP-копия прежнего `index.html`).
 - `db/schema.sql`, `db/seed.sql` — схема и стартовые данные (тексты и цены сайта).
 - `var/` — БД `site.sqlite` и журнал `app.log`; создаётся сам, в git не попадает.
-- `bin/create-user.php`, `bin/unlock.php` — пользователи админки.
-- `tests/` — `run.php` (assert), `oracle.php` (DOM главной против тега `static-final`),
-  `pw/*.js` (Playwright).
-- `docs/` — `SEO-OWNER-GUIDE.md` (Вебмастер, Бизнес, Search Console, отзывы, чек-лист после деплоя),
-  `owner-questionnaire.md` (анкета владельцу, ключи `fact_*`).
+- `bin/create-user.php`, `bin/unlock.php` — пользователи админки; `bin/studio-content.php` — перенос текстов
+  сида в БД прода по манифесту (см. «Перенос текстов сида в БД прода»).
+- `tests/` — `run.php` (assert; в конце подключает `studio-content.php`), `oracle.php` (DOM главной против тега
+  `static-final`; снят как гейт, см. «Тесты»), `pw/*.js` (Playwright).
+- `docs/` — `OWNER-ACTIONS.md` (что может сделать только владелец), `SEO-OWNER-GUIDE.md` (Вебмастер, Бизнес,
+  Search Console, отзывы, чек-лист после деплоя), `owner-questionnaire.md` (анкета владельцу, ключи `fact_*`).
+- `docs/studio/` — журнал студийной доводки (ветка `studio`): `task.md` (постановка), `plan.md` и `tasks.json`
+  (задачи), `notes.md` (решения и грабли по кругам), `scores.md` (баллы панелей), `facts.md` (факты с источниками),
+  `strategy.md`, `competitors.md`, `wordstat.md`, `content-manifest.json` (манифест для `bin/studio-content.php`),
+  `copy/` (черновики с `[ПРОВЕРИТЬ: …]`, на сайт не попадают), `audit/`, `seo/`, `critic/`.
+  Скрины, замеры и стенды кругов лежат в `var/studio/` (вне git).
 
 Рантайму нужны расширения `pdo_sqlite`, `json`, `session`, `gd` с WebP (загрузка фото; `exif` желательно —
 поворот снимков с телефона). Проверка: `php -m`.
@@ -71,17 +77,30 @@ php bin/unlock.php owner                 # снять блокировку по�
 ## Тесты
 
 ```sh
-RDS_DB=/tmp/x.sqlite php tests/run.php          # файл не должен существовать; свой стенд на :8081
+RDS_DB=/tmp/x.sqlite php tests/run.php          # файл не должен существовать; свой стенд на :8081 — один run.php за раз
 RDS_DB=/tmp/o.sqlite php -d upload_max_filesize=12M -d post_max_size=13M -S 127.0.0.1:8080 -t public public/router.php &
-php tests/oracle.php                             # на свежей БД → OK 0 diffs
-RDS_DB=/tmp/o.sqlite NODE_PATH=<каталог с playwright-core> node tests/pw/lead.js
-#   то же для price, metrika, overflow, grid, draft, upload — каждый на своей свежей БД
+RDS_DB=/tmp/o.sqlite NODE_PATH=<каталог с playwright-core> node tests/pw/funnel.js
+RDS_DB=/tmp/o.sqlite NODE_PATH=<каталог с playwright-core> ONLY=F node tests/pw/funnel.js   # одна секция воронки (A–H)
+#   то же для a11y, brand, call, draft, fold, grid, launch, lead, metrika, overflow, price, reveal, rent, seo, tails, upload —
+#   каждый на своей свежей БД и своём стенде (тесты пишут в БД стенда)
 ```
+
+- `run.php` проверяет и маркер-гейт: в HTML `/`, посадочных, `privacy.php`, `consent.php` и 404 нет
+  `[ПРОВЕРИТЬ`, `[УКАЗАТЬ`, `[NEED`, `TODO`, `lorem`, `XXX`. В конце он гоняет `tests/studio-content.php`: перенос
+  по манифесту на свежей БД и конфликт на БД, где ключ правили вручную.
+- `funnel.js` — воронка заявки на 360/390/768/1440 с главной и посадочных: CTA → форма, `tel:` или WhatsApp,
+  отправка форм → «Спасибо» и строка в `leads`, цели Метрики; `ONLY=<буква>` запускает одну секцию.
+- Chromium для Playwright: `PW_CHROME=<путь к chrome>` (по умолчанию — путь из `executablePath` в каждом тесте).
+- Стенд для тестов — без `php -d zlib.output_compression=On`: с этим флагом `php -S` ломает статику
+  (Chromium: `net::ERR_INVALID_HTTP_RESPONSE` на картинках и шрифтах).
+- `tests/oracle.php` снят как гейт: на ветке `studio` главная сознательно ушла от тега `static-final`, пары
+  не обновлялись. Для решений не запускать; удалить его или перетеговать `static-final` — решение человека.
 
 ## Настройки, которые заполняет заказчик (админка)
 
-- **Реквизиты** (ИНН, ОГРН, юр. адрес) и **срок хранения заявок** — пока пусты: на сайте
-  стоят заглушки `[УКАЗАТЬ …]`, в админке висит предупреждение.
+- **Реквизиты** (ИНН, ОГРН, юр. адрес) и **срок хранения заявок** — в сиде стоят значения с прода
+  (подтвердить может только владелец, `docs/OWNER-ACTIONS.md` §1). Пустое поле → на сайте заглушка `[УКАЗАТЬ …]`,
+  в админке предупреждение.
 - **`notify_email`** — почта для уведомлений о заявках. **Только почтовый ящик на хостинге
   в РФ (B3/B7).** Иностранные ящики (gmail и т.п.) запрещены — ПДн заявок уйдут за рубеж.
   Пусто — письма не отправляются, заявки видны только в админке. Проверить страну ящика
@@ -90,7 +109,8 @@ RDS_DB=/tmp/o.sqlite NODE_PATH=<каталог с playwright-core> node tests/pw
   ни скрипта Метрики. С ID — cookie-баннер «Принять / Отклонить»; Метрика грузится только
   после «Принять», в политике появляется раздел о Метрике. Перед включением нужна
   отдельная юридическая проверка (см. `LEGAL-HOSTING-RESEARCH.md`).
-- `base_url` — после появления домена; в `public/robots.txt` адрес sitemap правится вручную.
+- `base_url` — в сиде `https://regiondorstroy.com/`; при смене домена адрес sitemap в `public/robots.txt`
+  правится вручную.
 
 ## Блокеры запуска (вне кода)
 
@@ -196,6 +216,8 @@ curl -sI https://regiondorstroy.com/arenda-spetstekhniki/     # 200
 curl -sI https://regiondorstroy.com/asfaltirovanie/           # 404 (до ответа в анкете)
 curl -sI https://regiondorstroy.com/admin                     # 301 → /admin/
 curl -s  https://regiondorstroy.com/sitemap.xml | grep -c '<loc>'   # 3
+E=$(curl -sI https://regiondorstroy.com/ | tr -d '\r' | sed -n 's/^[Ee][Tt][Aa][Gg]: //p')   # ETag главной
+curl -sI -H "If-None-Match: $E" https://regiondorstroy.com/ | head -1                      # HTTP/… 304
 ```
 
 Дальше — `docs/SEO-OWNER-GUIDE.md` (Вебмастер, Search Console, sitemap).
@@ -228,4 +250,4 @@ cd regiondorstroy
 
 Дизайн ведётся в **Claude Design**, проект `РегионДорСтрой — дизайн сайта`
 (id `de7e6e79-40b1-439a-ad97-b17122492ed1`). Разметка и стили главной перенесены 1:1 в
-`app/tpl/home.php`; эталон — тег `static-final` (`tests/oracle.php` сверяет DOM).
+`app/tpl/home.php`; эталон — тег `static-final` (`tests/oracle.php` сверяет DOM; снят как гейт, см. «Тесты»).
