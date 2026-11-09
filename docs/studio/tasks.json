@@ -1027,9 +1027,10 @@
   "size": "M",
   "kind": "test",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
-  "strategy_ref": "§5; task.md «Готово, когда» п. 2"
+  "status": "done",
+  "rounds": 1,
+  "strategy_ref": "§5; task.md «Готово, когда» п. 2",
+  "note": "var/studio/m7/critic.md: победа над Э1 и Э2 на 390 и 1440"
  },
  {
   "id": "T36",
