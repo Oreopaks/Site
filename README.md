@@ -200,6 +200,30 @@ curl -s  https://regiondorstroy.com/sitemap.xml | grep -c '<loc>'   # 3
 
 Дальше — `docs/SEO-OWNER-GUIDE.md` (Вебмастер, Search Console, sitemap).
 
+### Перенос текстов сида в БД прода (`bin/studio-content.php`)
+
+rsync тексты в БД прода не меняет: они живут в `settings` и списках, заказчик правит их в админке.
+Скрипт берёт `docs/studio/content-manifest.json` (old = прежний сид, new = новый) и пишет значение, только
+если на проде сейчас old. Если заказчик значение уже правил, скрипт отмечает конфликт и показывает оба
+текста, а значение не трогает. Отсутствующие ключи добавляет. Без `--apply` ничего не пишет; вся запись идёт
+одной транзакцией. Код выхода: 0 — конфликтов нет, 2 — есть конфликты, 1 — ошибка.
+Перед запуском сделать бэкап БД (`VACUUM INTO`) и опубликовать или отменить черновик в админке: скрипт
+предупредит, если черновик есть (его публикация затрёт правки списков).
+
+Манифест rsync из §Timeweb не везёт (`docs/` не выкладывается) — скопировать отдельно, вне webroot:
+
+```sh
+K='ssh -i ~/.ssh/id_ed25519_timeweb'; H=co511959@vh460.timeweb.ru
+rsync -azR --chmod=D755,F644 -e "$K" docs/studio/content-manifest.json $H:regiondorstroy/
+ssh -i ~/.ssh/id_ed25519_timeweb $H
+cd regiondorstroy
+/opt/php83/bin/php bin/studio-content.php            # сухой прогон: применено / уже новое / конфликт / добавлено
+/opt/php83/bin/php bin/studio-content.php --apply    # запись
+```
+
+`--db=<путь>` — другая БД (по умолчанию как в `app/db.php`: `RDS_DB` или `var/site.sqlite`),
+`--manifest=<путь>` — другой манифест. Конфликты решаются вручную в админке.
+
 ## Источник дизайна
 
 Дизайн ведётся в **Claude Design**, проект `РегионДорСтрой — дизайн сайта`

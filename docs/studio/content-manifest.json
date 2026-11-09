@@ -154,6 +154,30 @@
    "old": "https://oreopaks.github.io/Site/",
    "new": "https://regiondorstroy.com/",
    "task": "T44"
+  },
+  {
+   "key": "org_inn",
+   "old": "",
+   "new": "5754023520",
+   "task": "T40"
+  },
+  {
+   "key": "org_ogrn",
+   "old": "",
+   "new": "1165749053689",
+   "task": "T40"
+  },
+  {
+   "key": "org_address",
+   "old": "",
+   "new": "Россия, 302023, г. Орёл, Силикатный пер., д. 1",
+   "task": "T40"
+  },
+  {
+   "key": "retention",
+   "old": "",
+   "new": "1 год",
+   "task": "T40"
   }
  ],
  "rows": [
