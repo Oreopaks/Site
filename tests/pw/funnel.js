@@ -1,6 +1,7 @@
 // Playwright: воронка заявки (studio M2, strategy §2 Р2.2–Р2.7, §8). Тест написан до правок: метки задач, которые ещё
 // не закрыты, красные. Метка → задача: A1, A2 → T06; A3 → T13 (и T06); A4 → T07; B1–B4, B7 — регрессия; B2p → T13; B5 → T08;
-// B6 → T11; B8 → T42; C1–C4 → T09; D1, D2, E1 → T14; F1–F4 → T05; F5 → T39; F6 → T41 (href = панель с ?text= → T45); G1–G3 → T10; G4–G6 → T12; G7 → T11.
+// B6 → T11; B8 → T42; C1–C4 → T09; D1, D2, E1 → T14; F1–F4 → T05; F5 → T39; F6 → T41 (href = панель с ?text= → T45); G1–G3 → T10; G4–G6 → T12; G7 → T11;
+// H1–H3 → T28; H4, H5 → T29; H6 → T30 (регресс R7 + проверка); H7 → T46.
 // Контракт разметки: окно — #modalForm form / #modalSuccess, нижняя форма — #contacts form / #formSuccess,
 // блок ошибки — #contacts [role=alert][data-code=invalid|rate|server|offline], панель — nav[aria-label="Связаться"],
 // три пути — [data-paths], цели — window.goal + ym(ID,'reachGoal',цель,параметры), чип — radio «Завтра», строка прайса — #fleet dl button.
@@ -995,6 +996,215 @@ const add = (m, k, where) => m.set(k, [...(m.get(k) || []), where]);
           if (rch.top < 0 || rch.bottom > rch.vh) bad.push(`360×640: кнопка отправки ${rch.top}..${rch.bottom} при ${rch.vh}`);
           return [!bad.length, bad.join('; ') || `легенда «${g.legend}», чипы ${JSON.stringify(g.boxes)}, Tab → ${r1}, → ${r2.on}, кольцо ${JSON.stringify(r2.ring)}; 360×640 кнопка ${rch.top}..${rch.bottom}`];
         } finally { await page.close(); }
+      });
+    }
+
+    // ================= H: доступность M6 (T28, T29, T30, T46) =================
+    if (!ONLY || ONLY === 'H') {
+      const TOUCH = [['iphone', devices['iPhone 13'], { width: 390, height: 844 }], ['android', devices['Pixel 5'], { width: 360, height: 800 }]];
+      const touch = async ([, dev, vp]) => {
+        const ctx = await browser.newContext({ ...dev, viewport: vp, deviceScaleFactor: 3, isMobile: true, hasTouch: true, reducedMotion: 'reduce' });
+        const page = await ctx.newPage();
+        page.setDefaultTimeout(5000);
+        return page;
+      };
+      // bbox видимых (есть рамка, не inert) элементов по селектору: [подпись, ширина, высота]
+      const boxes = (page, sel) => page.evaluate((sel) => [...document.querySelectorAll(sel)]
+        .filter((e) => e.getClientRects().length && !e.closest('[inert]'))
+        .map((e) => { const b = e.getBoundingClientRect(); return [(e.innerText || e.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim().slice(0, 28), +b.width.toFixed(1), +b.height.toFixed(1)]; }), sel);
+
+      // H1 (T28): первая остановка Tab — «Перейти к содержимому» (до фокуса вне экрана, при фокусе — в экране, ≥44 по высоте);
+      // Enter → фокус на main#main, страница та же (посадочные с <base href="/">); после Enter ссылка снова вне экрана; при открытом окне — в inert-фоне
+      await run('H1', async () => {
+        const bad = new Map();
+        for (const w of [390, 1440]) {
+          const page = await open(w, 900);
+          for (const u of PAGES) {
+            const at = `/${u}@${w}`;
+            await page.goto(BASE + u);
+            const off = () => page.evaluate(() => { const a = document.querySelector('a[href$="#main"]'); if (!a) return null; const b = a.getBoundingClientRect(); return b.bottom <= 0 || b.right <= 0 || b.top >= innerHeight || b.left >= innerWidth; });
+            const before = await off();
+            if (before === null) { add(bad, 'нет a[href$="#main"]', at); continue; }
+            if (!before) add(bad, 'ссылка видна до фокуса', at);
+            await page.keyboard.press('Tab');
+            const f = await page.evaluate(() => { const a = document.activeElement, b = a.getBoundingClientRect();
+              return { tag: a.tagName, href: a.getAttribute('href') || '', txt: a.textContent.trim(), h: Math.round(b.height),
+                inView: b.width > 0 && b.top >= 0 && b.left >= 0 && b.bottom <= innerHeight && b.right <= innerWidth }; });
+            if (f.tag !== 'A' || !f.href.endsWith('#main') || f.txt !== 'Перейти к содержимому') { add(bad, `первый Tab → ${f.tag} «${f.txt.slice(0, 30)}» ${f.href}`, at); continue; }
+            if (!f.inView || f.h < 44) add(bad, `при фокусе: в экране ${f.inView}, высота ${f.h}`, at);
+            const path = await page.evaluate(() => location.pathname);
+            await page.keyboard.press('Enter');
+            await until(page, 300);
+            const g = await page.evaluate(() => ({ path: location.pathname, on: document.activeElement.tagName + '#' + document.activeElement.id }));
+            if (g.path !== path) add(bad, `Enter увёл на ${g.path}`, at);
+            if (g.on !== 'MAIN#main') add(bad, `Enter → фокус на ${g.on}`, at);
+            if (!(await off())) add(bad, 'после Enter ссылка осталась в экране', at);
+            if (w === 390) {
+              await page.evaluate(() => openModal());
+              if (!(await page.evaluate(() => !!document.querySelector('a[href$="#main"]').closest('[inert]')))) add(bad, 'при открытом окне ссылка не в inert', at);
+              await page.evaluate(() => closeModal());
+            }
+          }
+          await page.close();
+        }
+        return [!bad.size, group(bad) || '/ и посадочные × 390/1440: первый Tab — «Перейти к содержимому» (в экране, ≥44), Enter → main#main на той же странице; при окне — inert'];
+      });
+
+      // H2 (T28): бургер — aria-controls на меню, aria-expanded false → true → false (повторный тап), «Заказать звонок» из меню → false;
+      // имя постоянное «Меню» — состояние передаёт aria-expanded («Открыть меню» при expanded=true читалось бы противоречиво)
+      await run('H2', async () => {
+        const bad = new Map(), seen = [];
+        for (const w of [390, 1024]) {
+          const page = await open(w, 900);
+          for (const u of PAGES) {
+            const at = `/${u}@${w}`;
+            await page.goto(BASE + u);
+            const st = () => page.evaluate(() => { const b = document.querySelector('[data-burger]'), m = document.getElementById(b.getAttribute('aria-controls') || '');
+              return { ex: b.getAttribute('aria-expanded'), lb: b.getAttribute('aria-label'), ctl: !!(m && m.querySelector('a[href]')), vis: !!(m && m.getClientRects().length) }; });
+            const s = [await st()];
+            await page.click('[data-burger]'); s.push(await st());
+            await page.click('[data-burger]'); s.push(await st());
+            await page.click('[data-burger]'); await page.locator('#mobileMenu button').click(); s.push(await st());
+            await page.evaluate(() => closeModal());
+            const want = [['false', false], ['true', true], ['false', false], ['false', false]];
+            if (!s[0].ctl) add(bad, 'aria-controls не ведёт к меню со ссылками', at);
+            s.forEach((x, i) => { if (x.ex !== want[i][0] || x.vis !== want[i][1]) add(bad, `шаг ${i}: aria-expanded=${x.ex}, меню ${x.vis ? 'видно' : 'скрыто'}`, at);
+              if (x.lb !== 'Меню') add(bad, `шаг ${i}: aria-label «${x.lb}»`, at); });
+            seen.push(s.map((x) => x.ex).join('→'));
+          }
+          await page.close();
+        }
+        return [!bad.size, group(bad) || `390/1024 × 3 страницы: aria-expanded ${[...new Set(seen)].join(', ')} (открыть, закрыть, «Заказать звонок» из меню), aria-controls → #mobileMenu, имя «Меню»`];
+      });
+
+      // H3 (T28): prefers-reduced-motion: reduce — scroll-behavior auto, у [data-lift] нет transition; без reduce — smooth и transition есть (регресс)
+      await run('H3', async () => {
+        const bad = new Map(), seen = new Set();
+        for (const rm of ['reduce', 'no-preference']) {
+          const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: rm });
+          for (const u of PAGES) {
+            await page.goto(BASE + u);
+            const m = await page.evaluate(() => { const l = [...document.querySelectorAll('[data-lift]')];
+              return { sb: getComputedStyle(document.documentElement).scrollBehavior, n: l.length,
+                moving: l.filter((e) => { const c = getComputedStyle(e); return c.transitionProperty !== 'none' && c.transitionDuration.split(',').some((d) => parseFloat(d) > 0); }).length }; });
+            const at = `/${u} ${rm}`;
+            seen.add(`${rm}: ${m.sb}, [data-lift] с transition ${m.moving}/${m.n}`);
+            if (!m.n) add(bad, 'нет [data-lift]', at);
+            if (rm === 'reduce' && (m.sb !== 'auto' || m.moving)) add(bad, `scroll-behavior ${m.sb}, с transition ${m.moving}/${m.n}`, at);
+            if (rm !== 'reduce' && (m.sb !== 'smooth' || m.moving !== m.n)) add(bad, `без reduce: scroll-behavior ${m.sb}, с transition ${m.moving}/${m.n}`, at);
+          }
+          await page.close();
+        }
+        return [!bad.size, group(bad) || [...seen].join('; ')];
+      });
+
+      // H4 (T29): 320–430 — CTA, каналы связи, ссылки услуг ≥44×44: страница, открытое меню, окно «Спасибо» и блоки ошибки (каналы в них)
+      const CTA44 = 'a[href^="tel:"], a[href^="mailto:"], a[href*="wa.me"], a[href*="t.me"], [data-cbar] a, header button, #mobileMenu a, main button, [role=dialog] button,'
+        + ' main a[href$="#contacts"], [data-hero-cta] a, [data-lp-cta] a, [data-paths] a, [data-svc] a, #services a, [data-more] a, footer a';
+      await run('H4', async () => {
+        const bad = new Map(); let n = 0;
+        for (const w of [320, 360, 390, 430]) {
+          const page = await open(w, 900);
+          for (const u of PAGES) {
+            const at = `/${u}@${w}`;
+            await page.goto(BASE + u);
+            const all = [...await boxes(page, CTA44)];
+            await page.click('[data-burger]');
+            all.push(...await boxes(page, '#mobileMenu a, #mobileMenu button'));
+            await page.evaluate(() => { closeMenu(); for (const b of document.querySelectorAll('[data-err]')) { b.hidden = false; b.querySelector('[data-conn]').hidden = false; } });
+            all.push(...await boxes(page, '#contacts [data-err] a'));
+            await page.evaluate(() => { openModal(); document.getElementById('modalForm').style.display = 'none'; document.getElementById('modalSuccess').style.display = ''; });
+            all.push(...await boxes(page, '#modalSuccess a, #modalSuccess button'));
+            await page.evaluate(() => { document.getElementById('modalForm').style.display = ''; document.getElementById('modalSuccess').style.display = 'none'; });
+            all.push(...await boxes(page, '#modalForm [data-err] a, [role=dialog] button[aria-label]'));
+            n += all.length;
+            all.filter(([, bw, bh]) => bw < 44 || bh < 44).forEach(([t, bw, bh]) => add(bad, `«${t}» ${bw}×${bh}`, at));
+          }
+          await page.close();
+        }
+        return [!bad.size && n > 0, group(bad) || `320/360/390/430 × 3 страницы: ${n} целей (CTA, каналы, услуги; меню, «Спасибо», ошибки) — все ≥44×44`];
+      });
+
+      // H5 (T29): ≥1024 — меню (шапка, полоса контактов, открытое меню на 1024), подвал, крошки ≥24×24 (WCAG 2.5.8)
+      await run('H5', async () => {
+        const bad = new Map(); let n = 0;
+        for (const w of [1024, 1440, 1920]) {
+          const page = await open(w, 900);
+          for (const u of PAGES) {
+            const at = `/${u}@${w}`;
+            await page.goto(BASE + u);
+            const all = await boxes(page, 'header a[href], header button, aside a, footer a, nav[aria-label="Хлебные крошки"] a');
+            if (await page.locator('[data-burger]').isVisible()) { await page.click('[data-burger]'); all.push(...await boxes(page, '#mobileMenu a, #mobileMenu button')); await page.click('[data-burger]'); }
+            n += all.length;
+            all.filter(([, bw, bh]) => bw < 24 || bh < 24).forEach(([t, bw, bh]) => add(bad, `«${t}» ${bw}×${bh}`, at));
+          }
+          await page.close();
+        }
+        return [!bad.size && n > 0, group(bad) || `1024/1440/1920 × 3 страницы: ${n} целей меню, полосы, подвала, крошек — все ≥24×24`];
+      });
+
+      // H6 (T30): privacy и consent на 8 ширинах — без горизонтального скролла, h1 не шире блока и без разрыва слов;
+      // iPhone/Android: тап по ссылке согласия и политики в нижней форме → новая вкладка без горизонтального скролла; на ≤430 «← Вернуться на сайт» ≥44×44
+      const legal = () => { const h = document.querySelector('h1'), broken = [], tw = document.createTreeWalker(h, NodeFilter.SHOW_TEXT);
+        for (let t; (t = tw.nextNode());) for (const m of t.data.matchAll(/\S+/g)) {
+          const r = document.createRange(); r.setStart(t, m.index); r.setEnd(t, m.index + m[0].length);
+          if (new Set([...r.getClientRects()].map((x) => Math.round(x.top))).size > 1) broken.push(m[0]);
+        }
+        const d = document.documentElement;
+        return { doc: [d.scrollWidth, d.clientWidth], h1: [h.scrollWidth, h.clientWidth], fs: getComputedStyle(h).fontSize, broken }; };
+      const legalBad = (m) => [m.doc[0] > m.doc[1] && `страница ${m.doc.join('>')}`, m.h1[0] > m.h1[1] && `h1 ${m.h1.join('>')}`, m.broken.length && `разрыв ${m.broken.join(',')}`].filter(Boolean);
+      await run('H6', async () => {
+        const bad = new Map(), fs = new Set();
+        for (const w of [320, 360, 390, 430, 768, 1024, 1440, 1920]) {
+          const page = await open(w, 900);
+          for (const u of ['privacy.php', 'consent.php']) {
+            await page.goto(BASE + u);
+            await page.evaluate(() => document.fonts.ready);
+            const m = await page.evaluate(legal);
+            fs.add(`${w}:${m.fs}`);
+            legalBad(m).forEach((x) => add(bad, x, `/${u}@${w}`));
+            if (w <= 430) (await boxes(page, 'a.back')).forEach(([t, bw, bh]) => { if (bw < 44 || bh < 44) add(bad, `«${t}» ${bw}×${bh}`, `/${u}@${w}`); });
+          }
+          await page.close();
+        }
+        for (const t of TOUCH) {
+          const page = await touch(t);
+          await page.goto(BASE);
+          for (const href of ['consent.php', 'privacy.php']) {
+            const [tab] = await Promise.all([page.context().waitForEvent('page'), page.locator(`#contacts form a[href="${href}"]`).tap()]);
+            await tab.waitForLoadState();
+            await tab.evaluate(() => document.fonts.ready);
+            const m = await tab.evaluate(legal);
+            if (!tab.url().endsWith(href)) add(bad, `тап открыл ${tab.url()}`, `${href} ${t[0]}`);
+            legalBad(m).forEach((x) => add(bad, x, `${href} ${t[0]}`));
+            await tab.close();
+          }
+          await page.context().close();
+        }
+        return [!bad.size, group(bad) || `8 ширин × privacy/consent и тап из формы на iPhone/Android: без горизонтального скролла, h1 целиком, «Вернуться на сайт» ≥44 на ≤430 (${[...fs].filter((x) => /^(320|430|768):/.test(x)).join(', ')})`];
+      });
+
+      // H7 (T46): клик/тап по видимой подписи чипа «Когда нужно» выбирает его без force (подпись не перекрыта скрытым input);
+      // check() по роли radio — тоже (сборка comment в F5); 390, iPhone, Android
+      await run('H7', async () => {
+        const bad = new Map(), seen = [];
+        const pages = [['390', async () => open(390, 844)], ...TOUCH.map((t) => [t[0], () => touch(t)])];
+        for (const [dn, mk] of pages) {
+          const page = await mk(), tap = dn !== '390';
+          try {
+            await page.goto(BASE);
+            const opener = page.locator('#fleet [data-lift] button').first();
+            if (tap) await opener.tap(); else await opener.click();
+            await until(page, 150);
+            const on = () => page.evaluate(() => (document.querySelector('#modalForm [name=when]:checked') || {}).value || null);
+            const step = async (k, fn, want) => { try { await fn(); const v = await on(); if (v !== want) add(bad, `${k}: выбрано ${v}`, dn); else seen.push(`${dn} ${k}`); }
+              catch (e) { add(bad, `${k}: ${String(e.message).split('\n').find((l) => /intercepts|Timeout/.test(l)) || String(e.message).split('\n')[0]}`.slice(0, 160), dn); } };
+            await step("click('text=Завтра')", () => page.click('text=Завтра', { timeout: 2500 }), 'завтра');
+            if (tap) await step("tap('text=Позже')", () => page.tap('text=Позже', { timeout: 2500 }), 'позже');
+            await step("check(radio «Сегодня»)", () => modal(page).getByRole('radio', { name: 'Сегодня' }).check({ timeout: 2500 }), 'сегодня');
+          } finally { await page.context().close(); }
+        }
+        return [!bad.size, group(bad) || seen.join(', ')];
       });
     }
   } finally {

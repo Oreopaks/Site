@@ -599,8 +599,8 @@
   "size": "S",
   "kind": "code",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "новичок M3: автоклик по тексту «Завтра» перехватывается радио"
  },
  {
@@ -875,8 +875,8 @@
   "size": "S",
   "kind": "code",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "§4 V4; design D11, D12",
   "note": "Сделано попутно, повторно не делать: кольцо фокуса на всех фокусируемых (R4, home.php:140), axe region (R1, aside из T07), reduced-motion для kenburns/marquee/cookie-бара (home.php:175, 252). Осталось: skip-link и id=\"main\" у существующего <main> (home.php:343), aria-expanded и aria-controls у бургера, при reduce — scroll-behavior:auto (сейчас smooth, home.php:135) и transition:none у [data-lift] (home.php:170)."
  },
@@ -898,8 +898,8 @@
   "size": "S",
   "kind": "code",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "§4 V4 (размеры); design D10"
  },
  {
@@ -920,8 +920,8 @@
   "size": "S",
   "kind": "code",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "§4 V6; design D7"
  },
  {

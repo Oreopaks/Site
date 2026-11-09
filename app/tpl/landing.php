@@ -21,7 +21,10 @@ foreach (['rent' => $prices, 'mat' => $materials][$pg['id']] ?? [] as $r) {
     [data-other] svg{flex-shrink:0}
     @media (hover:hover){[data-other] a:hover,[data-other] button:hover{border-color:#0d0d0d}}
     [data-other] a:active,[data-other] button:active{border-color:#0d0d0d}
+    /* крошки (T29): поле ссылки «Главная» — у строчного элемента строку не сдвигает; ≥24 на ПК, ≥44 на ≤640 */
+    [aria-label="Хлебные крошки"] a{padding:4px 0}
     @media (max-width:640px){
+      [aria-label="Хлебные крошки"] a{padding:13px 0}
       #services{padding:48px 0!important}
       [data-other] li{flex:1 1 100%}
       [data-other] a,[data-other] button{width:100%;justify-content:space-between}

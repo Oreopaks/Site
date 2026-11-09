@@ -150,16 +150,22 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
   ::selection{background:#FFC700;color:#111}
   a{text-decoration:none;color:inherit}
   h1{overflow-wrap:anywhere} /* страховка: слово длиннее строки (правка владельца) переносится, а не вылезает за поля; кегли ниже подобраны так, что сид не рвётся */
+  /* skip-link (T28): первая остановка Tab, видна только при фокусе — жёлтая плашка поверх полосы контактов; цель — <main id="main"> под липкой шапкой (78 + 3 px) */
+  [data-skip]{position:absolute;top:8px;left:8px;z-index:300;display:flex;align-items:center;min-height:44px;padding:0 18px;background:#FFC700;color:#0d0d0d;font-weight:800;font-size:14px;letter-spacing:.3px;text-transform:uppercase;transform:translateY(-200%)}
+  [data-skip]:focus{transform:none}
+  #main{scroll-margin-top:81px}
+  #main:focus{outline:none;box-shadow:none}
   /* фокус: жёлтое кольцо + тёмная подложка 2px — видно и на светлом (#f4f4f2, жёлтый там 1.4:1), и на тёмном (#161616) */
   a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible,[data-when] input:focus-visible+span{outline:3px solid #FFC700;outline-offset:2px;box-shadow:0 0 0 2px #0d0d0d}
-  /* формы: видимые подписи над полями (13px), чипы «Когда нужно» — радио поверх всего чипа (тап-цель = чип, стрелки — нативные) */
+  /* формы: видимые подписи над полями (13px), чипы «Когда нужно» — тап-цель = <label> чипа; радио 1×1 в углу, невидимо и вне потока:
+     клик/тап по подписи доходит до неё и выбирает чип (T46), стрелки — нативные, кольцо фокуса — на подписи */
   #modalForm label[for],#contacts label[for],[data-when] legend{display:block;margin-bottom:6px;padding:0;font-size:13px;font-weight:700;line-height:1.4;color:#3a3a3a}
   #contacts label[for]{color:#cfcfcf}
   #contacts ::placeholder{color:#8f8f8f;opacity:1} /* серый браузера #757575 на #161616 — 3.9:1, ниже AA */
   [data-when]{border:0;margin:0 0 14px;padding:0;min-width:0}
   [data-when] div{display:flex;gap:8px}
-  [data-when] label{position:relative;flex:1;min-width:0}
-  [data-when] input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+  [data-when] label{position:relative;flex:1;min-width:0;cursor:pointer}
+  [data-when] input{position:absolute;top:0;left:0;width:1px;height:1px;margin:0;opacity:0}
   [data-when] span{display:flex;align-items:center;justify-content:center;min-height:44px;padding:0 6px;background:#f4f4f2;border:1px solid #e2e2de;color:#111;font-size:15px;font-weight:700}
   [data-when] input:checked+span{background:#FFC700;border-color:#0d0d0d}
   /* окно на узком экране: меньше полей вокруг — поля и чипы шире (на 320 контент 256px вместо 200px) */
@@ -194,7 +200,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
   [data-imgzoom]{overflow:hidden}
   [data-imgzoom] img{transition:transform .8s cubic-bezier(.22,.61,.36,1);display:block}
   [data-imgzoom]:hover img{transform:scale(1.08)}
-  @media (prefers-reduced-motion:reduce){[data-kenburns],[data-marquee],[data-marquee-fast]{animation:none!important}}
+  @media (prefers-reduced-motion:reduce){[data-kenburns],[data-marquee],[data-marquee-fast]{animation:none!important}html{scroll-behavior:auto}[data-lift]{transition:none}}
   @media (max-width:1024px){
     [data-r="g4"]{grid-template-columns:repeat(2,1fr)!important}
     [data-r="g5"]{grid-template-columns:repeat(3,1fr)!important}
@@ -314,6 +320,14 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
     #why [data-csep]{display:none}
     #why [data-cmail]{display:block}
   }
+  /* тап-цели ≥24 на ПК и планшете (T29, WCAG 2.5.8): поля ссылок полосы контактов, меню и подвала компенсированы отрицательными — ничего не сдвигается;
+     ≤640 полоса — своя строка 44, подвал на ≤640 и тач — ≥44 ниже */
+  @media (min-width:641px){
+    [data-topbar] a{padding:4px 0;margin:-4px 0}
+    nav[data-desknav] a{padding:8px 0;margin:-8px 0}
+    footer span>a{padding:4px 0}
+  }
+  @media (min-width:641px) and (pointer:fine){footer [style*="flex-direction:column"]>a{padding:4px 0;margin:-4px 0}}
   /* подвал на телефоне и тач-планшете: ссылки 17–19px по высоте → тап-зона ≥44px, ПК (мышь) без изменений */
   @media (max-width:640px),(pointer:coarse){
     footer [style*="flex-direction:column"]{gap:0!important}
@@ -328,6 +342,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
 
 <div style="overflow-x:hidden;overflow-x:clip">
 
+  <a href="<?= e($here) ?>#main" data-skip>Перейти к содержимому</a>
   <div data-progress aria-hidden="true"></div>
 
   <!-- ================= TOP BAR ================= -->
@@ -378,7 +393,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
         </div>
         <button onclick="openModal()" data-desknav style="background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope';font-weight:800;font-size:13.5px;padding:13px 22px;cursor:pointer;letter-spacing:.3px;text-transform:uppercase" style-hover="background:#ffd633">Заказать звонок</button>
         <a href="tel:<?= e($s['phone_mobile']) ?>" data-hcall aria-label="Позвонить <?= e($s['phone_mobile_fmt']) ?>"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h3l2 5-2.2 1.3a12 12 0 0 0 5.7 5.7L16 15l5 2v3a2 2 0 0 1-2 2A17 17 0 0 1 4 5a2 2 0 0 1 2-2Z"/></svg></a>
-        <button onclick="toggleMenu()" data-burger aria-label="Открыть меню" style="background:none;border:1.5px solid #3a3a3a;color:#fff;width:48px;height:44px;cursor:pointer;align-items:center;justify-content:center;flex-direction:column;gap:5px" style-hover="border-color:#FFC700">
+        <button onclick="toggleMenu()" data-burger aria-label="Меню" aria-expanded="false" aria-controls="mobileMenu" style="background:none;border:1.5px solid #3a3a3a;color:#fff;width:48px;height:44px;cursor:pointer;align-items:center;justify-content:center;flex-direction:column;gap:5px" style-hover="border-color:#FFC700">
           <span aria-hidden="true" style="display:block;width:20px;height:2px;background:#FFC700"></span>
           <span aria-hidden="true" style="display:block;width:20px;height:2px;background:#FFC700"></span>
           <span aria-hidden="true" style="display:block;width:20px;height:2px;background:#FFC700"></span>
@@ -402,7 +417,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
       </div>
   </header>
 
-  <main>
+  <main id="main" tabindex="-1">
 <?php if ($pg): require __DIR__ . '/landing.php'; else: ?>
   <!-- ================= HERO (cinematic full-bleed) ================= -->
   <section id="top" data-herowrap style="background:#0d0d0d;position:relative;color:#fff;overflow:hidden;min-height:90vh;display:flex;align-items:flex-end">
@@ -871,8 +886,10 @@ if (($note = trim($s['fleet_photo_note'] ?? 'Фото для примера. М�
       mForm=document.getElementById('modalForm'),
       mOk=document.getElementById('modalSuccess'),
       mMat=document.getElementById('modalMat');
-  window.toggleMenu=function(){ if(menu) menu.style.display=(menu.style.display==='none'?'block':'none'); cbarSync(); };
-  window.closeMenu=function(){ if(menu) menu.style.display='none'; cbarSync(); };
+  var burger=document.querySelector('[data-burger]');
+  function mset(on){ if(menu) menu.style.display=on?'block':'none'; if(burger) burger.setAttribute('aria-expanded', on); cbarSync(); }
+  window.toggleMenu=function(){ mset(!!menu && menu.style.display==='none'); };
+  window.closeMenu=function(){ mset(false); };
   // липкая панель: прячется, пока CTA первого экрана не пройден, пока на экране #contacts и пока открыто окно или меню; без IO — видна всегда
   var cbar=document.querySelector('[data-cbar]'), cin={};
   function cbarSync(){ if(cbar) cbar.toggleAttribute('data-off', !!(cin.cta || cin.ct || (overlay&&overlay.style.display==='block') || (menu&&menu.style.display==='block'))); }

@@ -20,7 +20,7 @@
   ul{padding-left:22px}
   .muted{color:#6e6e6e;font-size:13px;margin-bottom:28px}
   .req{background:#fff;border-left:3px solid #FFC700;padding:14px 18px;margin:18px 0;font-size:14px;overflow-wrap:anywhere}
-  .back{display:inline-block;margin-top:32px;font-weight:700;color:#0d0d0d}
+  .back{display:inline-block;margin:22px 0 -10px;padding:10px 0;font-weight:700;color:#0d0d0d} /* цель ≥44 px: поля 10 px компенсированы отступами — строка на месте */
 </style>
 </head>
 <body>
