@@ -14,8 +14,7 @@
 - `var/` — БД `site.sqlite` и журнал `app.log`; создаётся сам, в git не попадает.
 - `bin/create-user.php`, `bin/unlock.php` — пользователи админки; `bin/studio-content.php` — перенос текстов
   сида в БД прода по манифесту (см. «Перенос текстов сида в БД прода»).
-- `tests/` — `run.php` (assert; в конце подключает `studio-content.php`), `oracle.php` (DOM главной против тега
-  `static-final`; снят как гейт, см. «Тесты»), `pw/*.js` (Playwright).
+- `tests/` — `run.php` (assert; в конце подключает `studio-content.php`), `pw/*.js` (Playwright).
 - `docs/` — `OWNER-ACTIONS.md` (что может сделать только владелец), `SEO-OWNER-GUIDE.md` (Вебмастер, Бизнес,
   Search Console, отзывы, чек-лист после деплоя), `owner-questionnaire.md` (анкета владельцу, ключи `fact_*`).
 - `docs/studio/` — журнал студийной доводки (ветка `studio`): `task.md` (постановка), `plan.md` и `tasks.json`
@@ -93,8 +92,8 @@ RDS_DB=/tmp/o.sqlite NODE_PATH=<каталог с playwright-core> ONLY=F node t
 - Chromium для Playwright: `PW_CHROME=<путь к chrome>` (по умолчанию — путь из `executablePath` в каждом тесте).
 - Стенд для тестов — без `php -d zlib.output_compression=On`: с этим флагом `php -S` ломает статику
   (Chromium: `net::ERR_INVALID_HTTP_RESPONSE` на картинках и шрифтах).
-- `tests/oracle.php` снят как гейт: на ветке `studio` главная сознательно ушла от тега `static-final`, пары
-  не обновлялись. Для решений не запускать; удалить его или перетеговать `static-final` — решение человека.
+- `tests/oracle.php` (сверка DOM главной с тегом `static-final`) удалён 2026-11-09: на ветке `studio` главная
+  сознательно ушла от того эталона. Тег `static-final` оставлен как точка истории.
 
 ## Настройки, которые заполняет заказчик (админка)
 
@@ -250,4 +249,4 @@ cd regiondorstroy
 
 Дизайн ведётся в **Claude Design**, проект `РегионДорСтрой — дизайн сайта`
 (id `de7e6e79-40b1-439a-ad97-b17122492ed1`). Разметка и стили главной перенесены 1:1 в
-`app/tpl/home.php`; эталон — тег `static-final` (`tests/oracle.php` сверяет DOM; снят как гейт, см. «Тесты»).
+`app/tpl/home.php`; исходный перенос — тег `static-final` (с тех пор главная доработана, см. `docs/studio/`).

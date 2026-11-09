@@ -53,7 +53,7 @@ function reqFile(string $url, array $fields, string $bytes, string $mime, string
 $leads = fn() => (int)db()->query('SELECT COUNT(*) FROM leads')->fetchColumn();
 $lead = ['source' => 'calc', 'name' => 'Тест', 'phone' => '+7 980 000-00-00', 'service' => 'Благоустройство', 'comment' => 'x', 'website' => ''];
 
-// --- M2: снимок / до любых правок settings; посещение посадочных не меняет главную (эталон «до M2» — oracle.php)
+// --- M2: снимок / до любых правок settings; посещение посадочных не меняет главную (эталон «до M2» — тег static-final)
 [, $home0] = req("$base/");
 [, $rent0] = req("$base/arenda-spetstekhniki/");
 [, $mat0] = req("$base/shcheben-pesok-grunt/");
