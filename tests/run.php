@@ -83,6 +83,24 @@ $set('hero_p', "$hp [ПРОВЕРИТЬ: тест]");
 $caught = $marks(req("$base/")[1]);
 $set('hero_p', $hp);
 check('маркер-гейт: самопроверка — детектор поймал [ПРОВЕРИТЬ в hero_p, значение возвращено', $caught === ['[ПРОВЕРИТЬ'] && $get('hero_p') === $hp && !$marks(req("$base/")[1]), json_encode($caught, JSON_UNESCAPED_UNICODE));
+// --- studio T25: каждый <img> публичных страниц (asf/blago — с фактами) — width и height = натуральный размер файла (против CLS)
+$imgBad = function (string $h) use ($root): array {
+    $bad = [];
+    preg_match_all('~<img\b[^>]*>~', $h, $m);
+    foreach ($m[0] as $t) {
+        $src = preg_match('~ src="([^"]*)"~', $t, $x) ? $x[1] : '?';
+        $i = @getimagesize("$root/public/$src");
+        if (!$i || !str_contains($t, " width=\"$i[0]\"") || !str_contains($t, " height=\"$i[1]\"")) $bad[] = $src;
+    }
+    return $bad;
+};
+$bad = [];
+foreach (['/', '/arenda-spetstekhniki/', '/shcheben-pesok-grunt/', '/asfaltirovanie/', '/blagoustroystvo/'] as $u) {
+    [$code, $h] = req("$base$u");
+    $x = $imgBad($h);
+    if ($code !== 200 || !preg_match('~<img\b~', $h) || $x) $bad[] = "$u $code: " . implode(', ', $x);
+}
+check('T25: /, rent, mat, asf, blago — у каждого <img> width и height = натуральный размер файла', !$bad, implode('; ', $bad));
 $set('fact_asphalt_works', $f0[0]);
 $set('fact_blago_works', $f0[1]);
 
@@ -733,6 +751,22 @@ $fc = $first('fleet_cards');
 [$code] = $content('fleet_cards', 'save', ['id' => $fc, 'img' => $j['img'] ?? ''] + $newRow('fleet_cards', 'М4 фото'), $ed);
 check('путь из ответа upload проходит проверку img при сохранении → 302', $code === 302, (string)$code);
 req("$base/admin/?p=draft&a=discard", ['_csrf' => $csrfOf($boss)], $boss);
+// T25: загруженное фото в живой карточке → width/height по файлу; файла нет → 200, <img> без размеров, в логе нет Warning
+$fc0 = db()->query('SELECT id, img FROM fleet_cards ORDER BY sort, id LIMIT 1')->fetch();
+$setImg = fn(string $v) => db()->prepare('UPDATE fleet_cards SET img = ? WHERE id = ?')->execute([$v, $fc0['id']]);
+$setImg($j['img'] ?? '-');
+[$code, $html] = req("$base/");
+$upOk = $code === 200 && preg_match('~<img src="' . preg_quote($j['img'] ?? '-', '~') . '" width="1200" height="750" ~', $html);
+$log = "$root/var/app.log";
+clearstatcache();
+$log0 = is_file($log) ? filesize($log) : 0;
+$setImg('assets/t25-gone.webp');
+[$code2, $html] = req("$base/");
+clearstatcache();
+$logNew = is_file($log) ? (string)file_get_contents($log, false, null, $log0) : '';
+$setImg($fc0['img']);
+check('T25: загруженное фото в карточке → width="1200" height="750"; несуществующий файл → 200, <img> без width/height, новых записей в var/app.log нет',
+    $upOk && $code2 === 200 && preg_match('~<img src="assets/t25-gone\.webp" alt~', $html) && $logNew === '', "$code $code2 log: " . substr($logNew, 0, 200));
 [$code, $j] = $up('просто текст', 'text/plain');
 check('upload text/plain → 422 «Это не картинка. Подойдут JPG, PNG или WebP»', $code === 422 && ($j['error'] ?? '') === 'Это не картинка. Подойдут JPG, PNG или WebP', "$code " . json_encode($j));
 [$code, $j] = $up($gd(400, 300, 'jpeg') . '<?php echo 1; ?>', 'image/jpeg');
@@ -977,6 +1011,37 @@ check('T23: org_inn пуст → taxID нет; org_inn и phone_city = «</scrip
     $noTax && ($b['taxID'] ?? null) === '</script><script>x' && ($b['telephone'][1] ?? null) === '</script><b>', json_encode($b, JSON_UNESCAPED_UNICODE));
 $set('org_inn', $inn0);
 $set('phone_city', $s3['phone_city']);
+// T24: favicon.ico (PNG-кадры 16/32/48) через router.php; og.jpg 1200×630 ≤150 КБ; og:image и twitter — большая карточка; logo организации
+[$code, $ico] = req("$base/favicon.ico");
+$hd = strlen($ico) >= 6 ? unpack('vr/vt/vn', $ico) : ['t' => 0, 'n' => 0];
+$fr = [];
+for ($i = 0; $hd['t'] === 1 && $i < $hd['n'] && strlen($ico) >= 22 + 16 * $i; $i++) {
+    $x = unpack('Cw/Ch/x6/Vlen/Voff', $ico, 6 + 16 * $i);
+    $g = @getimagesizefromstring(substr($ico, $x['off'], $x['len'])) ?: [0, 0, 0];
+    $fr[] = "$x[w]x$x[h]:$g[0]x$g[1]:" . ($g[2] === IMAGETYPE_PNG ? 'png' : '?');
+}
+check('T24: /favicon.ico → 200, ICO из PNG-кадров 16, 32, 48', $code === 200 && $hd['t'] === 1 && $fr === ['16x16:16x16:png', '32x32:32x32:png', '48x48:48x48:png'], "$code " . implode(' ', $fr));
+$og = "$root/public/assets/og.jpg";
+$gi = is_file($og) ? getimagesize($og) : [0, 0, 0];
+[$code] = req("$base/assets/og.jpg");
+check('T24: /assets/og.jpg → 200, JPEG 1200×630, ≤150 КБ', $code === 200 && $gi[2] === IMAGETYPE_JPEG && $gi[0] === 1200 && $gi[1] === 630 && filesize($og) <= 150 * 1024, "$code $gi[0]×$gi[1] " . (is_file($og) ? filesize($og) : '-'));
+$meta = fn(string $h): array => preg_match_all('~<meta (?:property|name)="([^"]+)" content="([^"]*)">~', $h, $m) ? array_combine($m[1], $m[2]) : [];
+$ogUrl = $s3['base_url'] . 'assets/og.jpg';
+$want = ['og:image' => $ogUrl, 'og:image:width' => '1200', 'og:image:height' => '630', 'twitter:card' => 'summary_large_image', 'twitter:image' => $ogUrl];
+$errs = [];
+foreach (['/', '/arenda-spetstekhniki/', '/shcheben-pesok-grunt/'] as $u) {
+    [, $html] = req("$base$u");
+    $mt = $meta($html);
+    if (array_intersect_assoc($want, $mt) !== $want) $errs[] = "$u: " . json_encode(array_intersect_key($mt, $want), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $alt = $mt['og:image:alt'] ?? '';
+    if (!str_contains($alt, 'РегионДорСтрой') || !str_contains($alt, 'Орловск') || str_starts_with($alt, 'Логотип')) $errs[] = "$u: og:image:alt «{$alt}»";
+    if (!str_contains($html, '<link rel="icon" href="/favicon.ico" sizes="32x32">')) $errs[] = "$u: нет <link rel=icon /favicon.ico>";
+}
+check('T24: /, rent, mat — og:image = base_url + assets/og.jpg (абсолютный), 1200×630, og:image:alt по делу, twitter:card summary_large_image, <link rel=icon /favicon.ico 32x32>',
+    !$errs && str_starts_with($ogUrl, 'https://'), implode('; ', $errs));
+$b = $graph(req("$base/")[1])['HomeAndConstructionBusiness'] ?? [];
+check('T24: организация — logo = image = base_url + assets/logo-rds.webp', ($b['logo'] ?? null) === $s3['base_url'] . 'assets/logo-rds.webp' && ($b['image'] ?? null) === $b['logo'],
+    json_encode([$b['logo'] ?? null, $b['image'] ?? null], JSON_UNESCAPED_SLASHES));
 $loc0 = $sitemap();
 $want = fn() => array_merge([$s3['base_url']], array_map(fn($id) => $s3['base_url'] . PAGES[$id]['slug'] . '/', $pub()));
 check('M3: sitemap — валидный XML, <loc> = главная + rent + mat, без /asfaltirovanie/', $loc0 === $want() && count($loc0) === 3 && !in_array($s3['base_url'] . 'asfaltirovanie/', $loc0, true), json_encode($loc0));

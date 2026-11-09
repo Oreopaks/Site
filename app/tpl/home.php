@@ -13,6 +13,7 @@ $biz = [
     '@id' => $s['base_url'] . '#org',
     'name' => $s['ld_name'],
     'image' => $s['base_url'] . 'assets/logo-rds.webp',
+    'logo' => $s['base_url'] . 'assets/logo-rds.webp',
     'url' => $s['base_url'],
     'telephone' => array_values(array_filter([$s['phone_mobile'], $s['phone_city']])),
     'email' => $s['email'],
@@ -78,21 +79,22 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
 <meta name="description" content="<?= e($pd ?? $s['seo_description']) ?>">
 <meta name="theme-color" content="#0d0d0d">
 <link rel="canonical" href="<?= e($url) ?>">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="РегионДорСтрой">
 <meta property="og:title" content="<?= e($pt ?? $s['seo_og_title']) ?>">
 <meta property="og:description" content="<?= e($pd ?? $s['seo_og_description']) ?>">
-<meta property="og:image" content="<?= e($s['base_url']) ?>assets/logo-rds.webp">
-<meta property="og:image:width" content="256">
-<meta property="og:image:height" content="256">
-<meta property="og:image:alt" content="Логотип ООО РегионДорСтрой">
+<meta property="og:image" content="<?= e($s['base_url']) ?>assets/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="РегионДорСтрой: дороги, благоустройство, аренда спецтехники, щебень, песок, грунт. Орёл и Орловская область">
 <meta property="og:url" content="<?= e($url) ?>">
 <meta property="og:locale" content="ru_RU">
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="<?= e($pt ?? $s['seo_tw_title']) ?>">
 <meta name="twitter:description" content="<?= e($pd ?? $s['seo_tw_description']) ?>">
-<meta name="twitter:image" content="<?= e($s['base_url']) ?>assets/logo-rds.webp">
+<meta name="twitter:image" content="<?= e($s['base_url']) ?>assets/og.jpg">
 <?php if (!$pg && $s['yandex_verification'] !== ''): ?>
 <meta name="yandex-verification" content="<?= e($s['yandex_verification']) ?>">
 <?php endif ?>
@@ -339,7 +341,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
   <header style="position:sticky;top:0;z-index:50;background:#0d0d0d;border-bottom:3px solid #FFC700">
     <div style="max-width:1240px;margin:0 auto;padding:0 32px;height:78px;display:flex;align-items:center;justify-content:space-between;gap:24px">
       <a href="#top" style="display:flex;align-items:center;gap:13px;flex-shrink:0">
-        <img src="assets/logo-rds.webp" alt="Логотип ООО «РегионДорСтрой»" style="width:48px;height:48px;object-fit:contain;flex-shrink:0">
+        <img src="assets/logo-rds.webp"<?= imgwh('assets/logo-rds.webp') ?> alt="Логотип ООО «РегионДорСтрой»" style="width:48px;height:48px;object-fit:contain;flex-shrink:0">
 
         <div style="line-height:1.35">
           <div style="font-family:'Oswald';font-weight:700;font-size:20px;letter-spacing:.06em;color:#fff;line-height:1;margin-bottom:.2em">РЕГИОНДОРСТРОЙ</div>
@@ -393,7 +395,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
   <section id="top" data-herowrap style="background:#0d0d0d;position:relative;color:#fff;overflow:hidden;min-height:90vh;display:flex;align-items:flex-end">
     <!-- image layer with slow ken-burns drift -->
     <div data-kenburns style="position:absolute;inset:0;z-index:0">
-      <img src="assets/hero-paving.webp" alt="Асфальтоукладчики и катки на укладке асфальта" loading="eager" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 42%">
+      <img src="assets/hero-paving.webp"<?= imgwh('assets/hero-paving.webp') ?> alt="Асфальтоукладчики и катки на укладке асфальта" loading="eager" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 42%">
     </div>
     <!-- cinematic scrims -->
     <div style="position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(13,13,13,.72) 0%,rgba(13,13,13,.28) 34%,rgba(13,13,13,.5) 62%,rgba(13,13,13,.95) 100%)"></div>
@@ -474,7 +476,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
       <div data-r="g3" style="display:grid;grid-template-columns:repeat(<?= $cols(count($fleet), 3) ?>,1fr);gap:18px">
 <?php foreach ($fleet as $r): ?>
           <div data-anim="tilt" data-lift data-imgzoom style="background:#161616;border:1px solid #262626" style-hover="border-color:#FFC700">
-            <img src="<?= e($r['img']) ?>" alt="<?= e($r['alt']) ?>" loading="lazy" style="display:block;width:100%;height:150px;object-fit:cover;object-position:<?= e($r['img_pos']) ?>">
+            <img src="<?= e($r['img']) ?>"<?= imgwh($r['img']) ?> alt="<?= e($r['alt']) ?>" loading="lazy" style="display:block;width:100%;height:150px;object-fit:cover;object-position:<?= e($r['img_pos']) ?>">
             <div style="padding:18px 18px 20px">
               <h3 style="font-family:'Oswald';font-weight:600;font-size:18px;text-transform:uppercase;letter-spacing:.3px"><?= e($r['title']) ?></h3>
               <div style="display:flex;align-items:baseline;flex-wrap:wrap;gap:5px;margin-top:10px;margin-bottom:4px;min-height:32px">
@@ -543,7 +545,7 @@ if (($note = trim($s['fleet_photo_note'] ?? 'Фото для примера. М�
 <?php foreach ($materials as $r): ?>
           <div data-anim="rotate-rise" data-lift style="border:1px solid #e6e6e2;display:flex;flex-direction:column;background:#fff" style-hover="border-color:#FFC700">
             <div data-imgzoom style="position:relative">
-              <img src="<?= e($r['img']) ?>" alt="<?= e($r['alt']) ?>" loading="lazy" style="display:block;width:100%;height:160px;object-fit:cover;object-position:50% 50%">
+              <img src="<?= e($r['img']) ?>"<?= imgwh($r['img']) ?> alt="<?= e($r['alt']) ?>" loading="lazy" style="display:block;width:100%;height:160px;object-fit:cover;object-position:50% 50%">
 <?php if ($r['badge'] !== ''): ?>
                 <span style="position:absolute;top:12px;left:12px;background:#FFC700;color:#0d0d0d;font-family:'Oswald';font-weight:700;font-size:11.5px;letter-spacing:1px;text-transform:uppercase;padding:6px 11px"><?= e($r['badge']) ?></span>
 <?php endif ?>
@@ -593,7 +595,7 @@ if (($note = trim($s['fleet_photo_note'] ?? 'Фото для примера. М�
           <h2 style="font-family:'Oswald';font-weight:700;font-size:44px;text-transform:uppercase;line-height:1.06;letter-spacing:.5px;margin-bottom:20px"><?= $s['why_h2'] /* trusted_html, правит только owner */ ?></h2>
           <p style="color:#5a5a5a;font-size:16px;line-height:1.65;margin-bottom:28px"><?= e($s['why_p']) ?></p>
           <div style="background:#fff;border:1px solid #e6e6e2;padding:22px 24px;display:flex;align-items:center;gap:23px">
-            <img src="assets/logo-rds.webp" alt="ООО РегионДорСтрой" style="width:84px;height:84px;object-fit:contain;flex-shrink:0">
+            <img src="assets/logo-rds.webp"<?= imgwh('assets/logo-rds.webp') ?> alt="ООО РегионДорСтрой" style="width:84px;height:84px;object-fit:contain;flex-shrink:0">
             <div style="flex:1;min-width:0;container-type:inline-size">
               <div style="font-family:'Oswald';font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:.06em;line-height:1;padding-top:.1em"><?= e($s['org_name']) ?></div>
               <div style="color:#6a6a6a;font-size:14px;margin-top:6px"><span style="white-space:nowrap">г. Орёл · <?= e($s['phone_mobile_fmt']) ?></span><span data-csep> · </span><span data-cmail><?= e($s['email']) ?></span></div>
@@ -722,7 +724,7 @@ if (($note = trim($s['fleet_photo_note'] ?? 'Фото для примера. М�
       <div data-r="foot" style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px;padding-bottom:36px;border-bottom:1px solid #1c1c1c">
         <div>
           <div style="display:flex;align-items:center;gap:15px;margin-bottom:16px">
-            <img src="assets/logo-rds.webp" alt="" style="width:54px;height:54px;object-fit:contain">
+            <img src="assets/logo-rds.webp"<?= imgwh('assets/logo-rds.webp') ?> alt="" style="width:54px;height:54px;object-fit:contain">
             <div style="font-family:'Oswald';font-weight:700;font-size:20px;color:#fff;letter-spacing:.06em">РЕГИОНДОРСТРОЙ</div>
           </div>
           <p style="font-size:14px;line-height:1.65;max-width:340px"><?= e($s['footer_about']) ?></p>

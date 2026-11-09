@@ -782,8 +782,8 @@
   "size": "S",
   "kind": "seo",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "§3 Р3.8; ST #7, #10"
  },
  {
@@ -805,8 +805,8 @@
   "size": "M",
   "kind": "seo",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "§3 Р3.8 (ST #5)"
  },
  {

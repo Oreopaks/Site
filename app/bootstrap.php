@@ -50,6 +50,14 @@ function ids(array $s, string $sep): string
     ]));
 }
 
+// T25: ' width="…" height="…"' по натуральному размеру картинки сайта (src от webroot, assets/…); нет файла или не растр (svg) — ''
+function imgwh(string $src): string
+{
+    static $c = []; // ponytail: кэш на запрос — логотип трижды на странице; между запросами getimagesize читает только заголовок файла
+    return $c[$src] ??= preg_match('~^assets/[a-z0-9_/-]+\.[a-z]+$~D', $src) && is_file($f = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/' . $src)
+        && ($i = @getimagesize($f)) ? ' width="' . $i[0] . '" height="' . $i[1] . '"' : '';
+}
+
 // Строки списка по порядку
 function rows(string $sql, array $args = []): array
 {
