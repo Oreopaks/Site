@@ -77,33 +77,20 @@ foreach (['rent' => $prices, 'mat' => $materials][$pg['id']] ?? [] as $r) {
     </div>
   </section>
 <?php endif ?>
-<?php if ($faq): ?>
-
-  <!-- ================= FAQ (вопросы в коде, ответы — анкета) ================= -->
-  <section data-cine style="background:#fff;padding:90px 0">
-    <div style="max-width:1240px;margin:0 auto;padding:0 32px">
-      <h2 data-anim="fade-up" style="font-family:'Oswald';font-weight:700;font-size:46px;text-transform:uppercase;line-height:1.05;letter-spacing:.5px;margin-bottom:28px">Вопросы и ответы</h2>
-<?php foreach ($faq as $q => $a): ?>
-      <div data-anim="fade-up" style="max-width:860px;border-top:1px solid #e3e3e3;padding:22px 0">
-        <h3 style="font-family:'Oswald';font-weight:600;font-size:21px;text-transform:uppercase;margin-bottom:10px;line-height:1.15"><?= e($q) ?></h3>
-        <p style="font-size:17px;line-height:1.7;color:#333;white-space:pre-line"><?= e($a) ?></p>
-      </div>
-<?php endforeach ?>
-    </div>
-  </section>
-<?php endif ?>
+<?php if ($faq) require __DIR__ . '/faq.php' ?>
 <?php if ($show('services')): ob_start(); // «Другие услуги» (strategy Р3.4) — печатает home.php после fleet/materials; опубликованная посадочная — ссылка, остальное — окно «Заявка» с этой услугой (asf/blago до публикации — 404) ?>
 
   <!-- ================= OTHER SERVICES ================= -->
   <section id="services" data-cine style="background:#f5f5f3;padding:64px 0">
     <div style="max-width:1240px;margin:0 auto;padding:0 32px">
-      <h2 data-anim="fade-up" style="font-family:'Oswald';font-weight:700;font-size:32px;text-transform:uppercase;line-height:1.05;letter-spacing:.5px;margin-bottom:24px">Другие услуги</h2>
+      <h2 data-anim="fade-up" style="font-family:'Oswald';font-weight:700;font-size:32px;text-transform:uppercase;line-height:1.05;letter-spacing:.5px;margin-bottom:12px">Другие услуги</h2>
+      <p data-anim="fade-up" style="max-width:640px;margin-bottom:24px;color:#5a5a5a;font-size:16px;line-height:1.6;text-wrap:pretty">Работы, технику и материалы на один объект можно заказать одной заявкой.</p>
       <ul data-other data-anim="fade-up">
-<?php foreach ($services as $r): if ($r['href'] === $here) continue ?>
-<?php if ($live($r['href'])): ?>
-        <li><a href="<?= e($r['href']) ?>"><?= e($r['title']) ?><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a6d00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></li>
+<?php $seen = []; foreach ($services as $r): $lp = $live($r['href']); if ($r['href'] === $here || $lp && isset($seen[$lp['id']])) continue ?>
+<?php if ($lp): $seen[$lp['id']] = 1 // T26: анкор — имя страницы, как в её крошках («Щебень, песок, грунт», а не «Поставка материалов»); на страницу — одна ссылка ?>
+        <li><a href="<?= e($r['href']) ?>"><?= e($lp['name']) ?><?= $svgGo ?></a></li>
 <?php else: ?>
-        <li><button type="button" aria-haspopup="dialog" onclick="openSvc('<?= jsattr($r['title']) ?>')"><?= e($r['title']) ?><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a6d00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6v3H9z"/><path d="M15 4.5h2a2 2 0 0 1 2 2V19a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2h2M9 11h6M9 15h4"/></svg></button></li>
+        <li><button type="button" aria-haspopup="dialog" onclick="openSvc('<?= jsattr($r['title']) ?>')"><?= e($r['title']) ?><?= $svgReq ?></button></li>
 <?php endif ?>
 <?php endforeach ?>
       </ul>

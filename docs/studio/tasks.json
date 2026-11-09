@@ -831,8 +831,8 @@
   "db_keys": [
    "services[title=Грузоперевозки].href"
   ],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "§3 Р3.6"
  },
  {
@@ -855,8 +855,8 @@
   "size": "M",
   "kind": "code",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "§3 Р3.5, Р3.1"
  },
  {

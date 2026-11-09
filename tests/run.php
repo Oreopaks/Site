@@ -1118,6 +1118,68 @@ check('T22: аренда и материалы — #services = «Другие у
     && !preg_match('~/(asfaltirovanie|blagoustroystvo)/~', $sv . $sm) && $btn($sv, $t1) && $btn($sv, $t2) && $btn($sm, $t1) && $btn($sm, $t2)
     && str_contains($sm, '<a href="/arenda-spetstekhniki/">') && !str_contains($sm, '/shcheben-pesok-grunt/')
     && !str_contains($hr, '<!-- ================= PROCESS') && !str_contains($hr, '>' . e($get('steps_h2')) . '</h2>'));
+// T26 (strategy Р3.6): все карточки услуг на / — ссылка (опубликованная посадочная) или кнопка окна «Заявка» с услугой; «Грузоперевозки» → аренда;
+// под прайсом и под материалами — ссылки на посадочные, на щебне — «Аренда по прайсу»; на посадочных у «Другие услуги» подводка, ссылка названа
+// именем страницы и ведёт на страницу один раз; снятая с публикации аренда — ни одной новой ссылки на 404
+$cards = function (string $h) use ($pub): array {
+    $hs = explode('</section>', explode('id="services"', $h, 2)[1] ?? '', 2)[0];
+    $live = array_map(fn($id) => '/' . PAGES[$id]['slug'] . '/', $pub()); // landing() здесь не годится: settings() процесса теста закэшированы
+    $bad = [];
+    foreach (rows('SELECT title, href FROM services ORDER BY sort, id') as $r) {
+        $t = e($r['title']);
+        $want = in_array($r['href'], $live, true) ? "<a href=\"{$r['href']}\">$t</a>"
+            : '<button type="button" aria-haspopup="dialog" onclick="openSvc(\'' . jsattr($r['title']) . "')\">$t</button>";
+        if (!str_contains($hs, $want)) $bad[] = "нет $want";
+    }
+    if (preg_match_all('~<h3[^>]*>~', $hs) !== count(rows('SELECT 1 FROM services'))) $bad[] = 'h3 ≠ числу услуг';
+    return $bad;
+};
+[, $h] = req("$base/");
+[, $hr] = req("$base/arenda-spetstekhniki/");
+[, $hm] = req("$base/shcheben-pesok-grunt/");
+$t4 = db()->query('SELECT title, href FROM services WHERE id = 4')->fetch();
+$lead26 = '>Работы, технику и материалы на один объект можно заказать одной заявкой.</p>';
+[$sv, $sm] = [$cut($hr, 'id="services"', '</section>'), $cut($hm, 'id="services"', '</section>')];
+$errs = $cards($h);
+if ($t4['href'] !== '/arenda-spetstekhniki/' || !str_contains($cut($h, 'id="services"', '</section>'), '<a href="/arenda-spetstekhniki/">' . e($t4['title']) . '</a>')) $errs[] = 'Грузоперевозки ' . $t4['href'];
+if (!preg_match('~<a href="/arenda-spetstekhniki/"[^>]*>Условия и цены аренды по моделям~u', $cut($h, 'id="fleet"', '</section>'))) $errs[] = '/: под прайсом';
+if (!preg_match('~<a href="/shcheben-pesok-grunt/"[^>]*>Цены и доставка щебня, песка, грунта~u', $cut($h, 'id="materials"', '</section>'))) $errs[] = '/: под материалами';
+if (str_contains($cut($hr, 'id="fleet"', '</section>'), '/arenda-spetstekhniki/')) $errs[] = 'rent: ссылка на себя под прайсом';
+$hmm = $cut($hm, 'id="materials"', '</section>');
+if (!preg_match('~Нужен каток или погрузчик на объект\? <a href="/arenda-spetstekhniki/"[^>]*>Аренда по прайсу~u', $hmm) || str_contains($hmm, '/shcheben-pesok-grunt/')) $errs[] = 'mat: «Аренда по прайсу»';
+if (!str_contains($sv, $lead26) || !str_contains($sm, $lead26)) $errs[] = '«Другие услуги»: подводка';
+if (!str_contains($sv, '<a href="/shcheben-pesok-grunt/">Щебень, песок, грунт<svg') || !str_contains($sm, '<a href="/arenda-spetstekhniki/">Аренда спецтехники<svg')
+    || substr_count($sm, 'href="/arenda-spetstekhniki/"') !== 1) $errs[] = '«Другие услуги»: анкоры ' . substr_count($sm, 'href="/arenda-spetstekhniki/"');
+$set('pg_rent_h1', '');
+[, $h] = req("$base/");
+[, $hm] = req("$base/shcheben-pesok-grunt/");
+$errs = array_merge($errs, array_map(fn($x) => "rent снята: $x", $cards($h)));
+if (str_contains($cut($h, 'id="fleet"', '</section>') . $cut($h, 'id="services"', '</section>') . $cut($hm, '<main>', '</main>'), 'href="/arenda-spetstekhniki/"')) $errs[] = 'rent снята: ссылка на 404';
+$set('pg_rent_h1', $s3['pg_rent_h1']);
+check('T26: / — карточки услуг ссылка или окно «Заявка» с услугой, «Грузоперевозки» → аренда, ссылки под прайсом и материалами; mat — «Аренда по прайсу»; «Другие услуги» с подводкой и анкором-названием страницы; снятая аренда — без ссылок на 404',
+    !$errs, implode('; ', $errs));
+// T27 (strategy Р3.5): FAQ на / между этапами и контактами из FAQ_SITE + FAQ_ZONE — только вопросы с ответом; без ответов блока нет;
+// FAQPage на / нет, на посадочных — как раньше; ответ экранирован; маркеров нет
+$fk = ['fact_measure', 'fact_warranty', 'fact_zone'];
+$fv = array_map($get, $fk);
+foreach ($fk as $k) $set($k, '');
+[, $h0] = req("$base/");
+$set('fact_measure', 'x <b>');
+[, $h] = req("$base/");
+$set('fact_zone', 'Вся область');
+[, $h2] = req("$base/");
+[, $hr] = req("$base/arenda-spetstekhniki/");
+$qa = fn(string $q, string $a) => '~<h3[^>]*>' . preg_quote(e($q), '~') . '</h3>\s*<p[^>]*>' . preg_quote(e($a), '~') . '</p>~u';
+$rq = $graph($hr)['FAQPage']['mainEntity'] ?? [];
+$p0 = strpos($h, '<!-- ================= PROCESS');
+$pf = strpos($h, '>Вопросы и ответы</h2>');
+check('T27: / без ответов — блока «Вопросы и ответы» нет; fact_measure → блок между этапами и контактами, только этот вопрос, ответ экранирован; + fact_zone → вопрос зоны; FAQPage на / нет, на аренде — один Question зоны; без маркеров',
+    !str_contains($h0, 'Вопросы и ответы') && substr_count($h, '>Вопросы и ответы</h2>') === 1 && $p0 !== false && $p0 < $pf && $pf < strpos($h, 'id="contacts"')
+    && preg_match($qa('Выезд на замер и смета — бесплатно?', 'x <b>'), $h) && !str_contains($h, 'Какая гарантия') && !str_contains($h, 'Куда вы выезжаете')
+    && preg_match($qa('Куда вы выезжаете и есть ли доплата за расстояние?', 'Вся область'), $h2) && !str_contains($h . $h2, 'FAQPage')
+    && count($rq) === 1 && ($rq[0]['name'] ?? '') === 'Куда вы выезжаете и есть ли доплата за расстояние?' && ($rq[0]['acceptedAnswer']['text'] ?? '') === 'Вся область'
+    && !$marks($h2));
+foreach ($fk as $i => $k) $set($k, $fv[$i]);
 $o = new PDO("sqlite:$oldDb");
 $o->exec(file_get_contents("$root/db/schema.sql") . file_get_contents("$root/db/seed.sql")); // прод до M1: сид есть, pg_* нет
 $o->exec("UPDATE items SET href = '#why' WHERE kind = 'nav' AND title = 'Материалы'"); // правка владельца
@@ -1127,8 +1189,8 @@ $p = proc_open([PHP_BINARY, '-r', 'require "app/bootstrap.php"; echo implode(","
 $out = stream_get_contents($pp[1]);
 proc_close($p);
 array_map('unlink', glob("$oldDb*"));
-check('M4: старая БД после миграции: nav #fleet → /arenda-spetstekhniki/, nav, изменённый вручную (#why), не тронут; services 1,2,3,5 → посадочные',
-    $out === '#services,/arenda-spetstekhniki/,#why,#why,#contacts,/asfaltirovanie/,/blagoustroystvo/,/arenda-spetstekhniki/,#services,/shcheben-pesok-grunt/,#services', $out);
+check('M4: старая БД после миграции: nav #fleet → /arenda-spetstekhniki/, nav, изменённый вручную (#why), не тронут; services 1,2,3,5 → посадочные (4 — аренда уже в сиде, T26)',
+    $out === '#services,/arenda-spetstekhniki/,#why,#why,#contacts,/asfaltirovanie/,/blagoustroystvo/,/arenda-spetstekhniki/,/arenda-spetstekhniki/,/shcheben-pesok-grunt/,#services', $out);
 
 $ht = file_get_contents("$root/public/.htaccess");
 $dirRule = strpos($ht, "RewriteCond %{REQUEST_FILENAME} -d\nRewriteCond %{HTTP_HOST} ^(?:www\\.)?(.+)$ [NC]\nRewriteRule [^/]$ https://%1%{REQUEST_URI}/ [R=301,L]");

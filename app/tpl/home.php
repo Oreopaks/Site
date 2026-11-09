@@ -6,7 +6,8 @@ $pt = $pg ? $s["pg_{$pg['id']}_title"] : null; // на посадочной titl
 $pd = $pg ? $s["pg_{$pg['id']}_desc"] : null;
 $show = fn(string $b): bool => !$pg || in_array($b, $pg['blocks'], true); // секция главной на этой странице
 $here = $pg ? '/' . $pg['slug'] . '/' : null;
-$live = fn(string $h): bool => preg_match('~^/([a-z0-9-]+)/$~D', $h, $m) && landing($m[1]); // href ведёт на опубликованную посадочную
+$own = $here ? array_search($here, array_column($services, 'href'), true) : false; // услуга страницы для «Услуга» в формах — первая с её href (у аренды их две, с T26 и «Грузоперевозки»)
+$live = fn(string $h): ?array => preg_match('~^/([a-z0-9-]+)/$~D', $h, $m) ? landing($m[1]) : null; // href ведёт на опубликованную посадочную → она (PAGES[id] + id), иначе null
 // организация одна на сайт: на главной целиком, на посадочных — ссылка по @id; geo (центр города, не офис) и priceRange не выводим — ключи ld_* в БД остаются
 $biz = [
     '@type' => 'HomeAndConstructionBusiness',
@@ -32,9 +33,9 @@ $biz = [
     ],
 ] + (trim($s['org_inn']) !== '' ? ['taxID' => trim($s['org_inn'])] : [])
   + ($s['telegram'] !== '' ? ['sameAs' => [$s['telegram']]] : []); // sameAs — только профили; wa.me — чат, не профиль
-// FAQ посадочной: только вопросы с ответом владельца; тот же список — в видимом блоке (landing.php) и в FAQPage
+// FAQ: только вопросы с ответом владельца; посадочная — свой список, он же в FAQPage; главная — FAQ_SITE + FAQ_ZONE, без FAQPage (strategy Р3.5)
 $faq = [];
-foreach ($pg['faq'] ?? [] as $q => $k) if (($a = trim($s[$k] ?? '')) !== '') $faq[$q] = $a;
+foreach ($pg['faq'] ?? FAQ_SITE + FAQ_ZONE as $q => $k) if (($a = trim($s[$k] ?? '')) !== '') $faq[$q] = $a;
 $ld = !$pg ? ['@context' => 'https://schema.org', '@graph' => [
     ['@type' => 'WebSite', '@id' => $s['base_url'] . '#website', 'url' => $s['base_url'], 'name' => 'РегионДорСтрой', 'inLanguage' => 'ru'],
     $biz,
@@ -61,6 +62,13 @@ $reach = fn(bool $dark): string => '<div style="display:flex;flex-wrap:wrap;gap:
 $waHi = $s['whatsapp'] . (str_contains($s['whatsapp'], '?') ? '&' : '?') . 'text=' . rawurlencode('Здравствуйте! Пишу с сайта regiondorstroy.com.');
 // знак «заявка» в строке прайса — планшет кнопки «Заявка» липкой панели; nowrap — значок не уходит на строку один
 $req = '<span style="white-space:nowrap">&nbsp;<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px"><path d="M9 3h6v3H9z"/><path d="M15 4.5h2a2 2 0 0 1 2 2V19a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2h2M9 11h6M9 15h4"/></svg></span>';
+// значки ссылки-цели: стрелка — страница, планшет — окно «Заявка» (карточки услуг на /, «Другие услуги» посадочных)
+$svgGo = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a6d00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+$svgReq = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a6d00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6v3H9z"/><path d="M15 4.5h2a2 2 0 0 1 2 2V19a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2h2M9 11h6M9 15h4"/></svg>';
+// T26: строка-ссылка под блоком на посадочную (≥44 px, жёлтое подчёркивание, стрелка — inline-block, без подчёркивания); не опубликована — строки нет
+$more = fn(string $h, string $t, bool $dark, string $pre = ''): string => !$live($h) ? '' : '<p data-more style="margin-top:16px;font-size:15px;line-height:20px;color:' . ($dark ? '#bfbfbf' : '#5a5a5a') . '">' . ($pre !== '' ? e($pre) . ' ' : '')
+    . '<a href="' . e($h) . '" style="display:inline-block;padding:12px 0;font-weight:700;color:' . ($dark ? '#fff' : '#0d0d0d') . ';text-decoration:underline;text-decoration-color:#FFC700;text-decoration-thickness:2px;text-underline-offset:5px" style-hover="color:' . ($dark ? '#FFC700' : '#8a6d00') . '">'
+    . e($t) . '<span aria-hidden="true" style="display:inline-block;margin-left:6px;color:' . ($dark ? '#FFC700' : '#8a6d00') . '">→</span></a></p>';
 $urgent = 'Срочно? Позвоните' . ($s['whatsapp'] !== '' ? ' или напишите' : '') . ':';
 // блок ошибки отправки над кнопкой: тексты печатает сервер, JS берёт текст по коду и вставляет через textContent; tel/WhatsApp — при ошибке связи
 $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-invalid="В номере меньше 10 цифр. Проверьте, например: 8&nbsp;900&nbsp;123-45-67" data-fail="' . e($s['alert_fail']) . '" data-offline="' . e($s['alert_offline']) . '"'
@@ -168,7 +176,12 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
   /* строка читается как одна цель: фон под курсором (где есть hover) и под пальцем; фон выходит за текст на 12px — поля блока прайса ≥16 */
   @media (hover:hover){#fleet dl>div:has(button:hover){background:#1f1f1f;box-shadow:-12px 0 0 #1f1f1f,12px 0 0 #1f1f1f}}
   #fleet dl>div:has(button:active){background:#1f1f1f;box-shadow:-12px 0 0 #1f1f1f,12px 0 0 #1f1f1f}
-  [data-svc] h3 a{text-decoration:underline;text-decoration-color:#FFC700;text-decoration-thickness:2px;text-underline-offset:5px}
+  /* карточка услуги — одна цель (T26): ссылка или кнопка заголовка растянута на всю карточку, сама ≥44 px по высоте (поля компенсированы);
+     значок справа в строке номера — стрелка (страница) или планшет (окно «Заявка») */
+  [data-svc] h3 a,[data-svc] h3 button{display:block;margin:-9px 0;padding:9px 0;color:inherit;text-decoration:underline;text-decoration-color:#FFC700;text-decoration-thickness:2px;text-underline-offset:5px}
+  [data-svc] h3 button{width:100%;background:none;border:0;font:inherit;letter-spacing:inherit;text-transform:inherit;text-align:left;cursor:pointer}
+  [data-svc] h3 a::after,[data-svc] h3 button::after{content:'';position:absolute;inset:0}
+  [data-svc]>svg{position:absolute;top:40px;right:32px}
   [data-burger]{display:none}
   @keyframes kenburns{0%{transform:scale(1.03) translate(0,0)}100%{transform:scale(1.13) translate(-2%,-1.5%)}}
   [data-kenburns]{animation:kenburns 24s ease-in-out infinite alternate;transform-origin:center}
@@ -449,10 +462,13 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
       </div>
 
       <div data-r="g3" style="display:grid;grid-template-columns:repeat(<?= $cols(count($services), 3) ?>,1fr);gap:2px;background:#e2e2de;border:1px solid #e2e2de">
-<?php foreach ($services as $i => $r): ?>
-          <div data-anim="rise" data-svc style="background:#fff;padding:38px 32px">
+<?php foreach ($services as $i => $r): $go = $live($r['href']); // T26: опубликованная посадочная — ссылка, остальное — окно «Заявка» с этой услугой (asf/blago до публикации — 404) ?>
+          <div data-anim="rise" data-svc style="background:#fff;padding:38px 32px;position:relative" style-hover="background:#fffcf0">
             <div data-svc-num style="font-family:'Oswald';font-weight:700;font-size:15px;color:#8a6d00;letter-spacing:1px;margin-bottom:18px;transition:color .3s ease"><?= sprintf('%02d', $i + 1) ?> /</div>
-            <h3 style="font-family:'Oswald';font-weight:600;font-size:23px;text-transform:uppercase;margin-bottom:12px;line-height:1.15;color:inherit"><?= $r['href'] !== $here && $live($r['href']) ? '<a href="' . e($r['href']) . '">' . e($r['title']) . '</a>' : e($r['title']) ?></h3>
+            <?= $go ? $svgGo : $svgReq ?>
+
+            <h3 style="font-family:'Oswald';font-weight:600;font-size:23px;text-transform:uppercase;margin-bottom:12px;line-height:1.15;color:inherit"><?= $go ? '<a href="' . e($r['href']) . '">' . e($r['title']) . '</a>'
+                : '<button type="button" aria-haspopup="dialog" onclick="openSvc(\'' . jsattr($r['title']) . '\')">' . e($r['title']) . '</button>' ?></h3>
             <p style="color:#6a6a6a;font-size:14.5px;line-height:1.6"><?= e($r['text']) ?></p>
           </div>
 <?php endforeach ?>
@@ -520,6 +536,10 @@ if (($note = trim($s['fleet_photo_note'] ?? 'Фото для примера. М�
 <?php endforeach ?>
         </dl>
       </div>
+<?php if (!$pg): ?>
+      <?= $more('/arenda-spetstekhniki/', 'Условия и цены аренды по моделям', true) ?>
+
+<?php endif ?>
 
       <div style="margin-top:36px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap">
         <span style="color:#bfbfbf;font-size:15px"><?= e($s['fleet_cta_text']) ?></span>
@@ -567,6 +587,8 @@ if (($note = trim($s['fleet_photo_note'] ?? 'Фото для примера. М�
           </div>
 <?php endforeach ?>
       </div>
+      <?= $pg ? $more('/arenda-spetstekhniki/', 'Аренда по прайсу', false, 'Нужен каток или погрузчик на объект?') : $more('/shcheben-pesok-grunt/', 'Цены и доставка щебня, песка, грунта', false) ?>
+
     </div>
   </section>
 <?php endif; if ($pg) echo $svc ?? '' ?>
@@ -635,7 +657,7 @@ if (($note = trim($s['fleet_photo_note'] ?? 'Фото для примера. М�
       </div>
     </div>
   </section>
-<?php endif ?>
+<?php endif; if (!$pg && $faq) require __DIR__ . '/faq.php' ?>
 
   <!-- ================= CONTACTS ================= -->
   <section id="contacts" data-cine style="background:#fff;padding:90px 0">
@@ -695,8 +717,8 @@ if (($note = trim($s['fleet_photo_note'] ?? 'Фото для примера. М�
               <input id="fTel" required type="tel" autocomplete="tel" inputmode="tel" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#fff;padding:14px 16px;font-size:16px;font-family:'Manrope';margin-bottom:14px" style-focus="border-color:#FFC700">
               <label for="fSvc">Услуга</label>
               <select id="fSvc" style="width:100%;background:#161616;border:1px solid #2c2c2c;color:#cfcfcf;padding:14px 16px;font-size:16px;font-family:'Manrope';margin-bottom:14px" style-focus="border-color:#FFC700">
-<?php foreach ($services as $r): if ($r['in_form']): ?>
-                <option<?= $r['href'] === $here ? ' selected' : '' ?>><?= e($r['title']) ?></option>
+<?php foreach ($services as $i => $r): if ($r['in_form']): ?>
+                <option<?= $i === $own ? ' selected' : '' ?>><?= e($r['title']) ?></option>
 <?php endif; endforeach ?>
               </select>
               <label for="fMsg">Комментарий</label>
@@ -797,8 +819,8 @@ if (($note = trim($s['fleet_photo_note'] ?? 'Фото для примера. М�
               <div id="modalSvc" style="display:none">
                 <label for="mSvc">Услуга</label>
                 <select id="mSvc" style="width:100%;background:#f4f4f2;border:1px solid #e2e2de;color:#111;padding:14px 16px;font-size:16px;font-family:'Manrope';margin-bottom:14px" style-focus="border-color:#FFC700">
-<?php foreach ($services as $r): if ($r['in_form']): ?>
-                  <option<?= $r['href'] === $here ? ' selected' : '' ?>><?= e($r['title']) ?></option>
+<?php foreach ($services as $i => $r): if ($r['in_form']): ?>
+                  <option<?= $i === $own ? ' selected' : '' ?>><?= e($r['title']) ?></option>
 <?php endif; endforeach ?>
                 </select>
               </div>
@@ -885,10 +907,8 @@ if (($note = trim($s['fleet_photo_note'] ?? 'Фото для примера. М�
       m===1?'<?= jsstr(stub($s, 'modal_rent_btn', 'Отправить заявку')) ?>':'<?= jsstr($s['modal_calc_btn']) ?>',name,svc,unit); show(); };
   // карточка техники: та же форма расчёта, услуга «Аренда спецтехники» + название из заголовка карточки
   window.openRent=function(btn){ var h=btn.closest('[data-lift]').querySelector('h3'); window.openCalc(h?h.textContent:'','Аренда спецтехники'); };
-<?php if ($pg): ?>
-  // «Другие услуги» посадочной: окно «Заявка» с этой услугой в поле; услуги нет в списке формы (in_form=0) — остаётся услуга страницы
+  // карточка услуги на / и «Другие услуги» посадочной: окно «Заявка» с этой услугой в поле; услуги нет в списке формы (in_form=0) — остаётся прежняя
   window.openSvc=function(t){ window.openCalc(); var S=document.getElementById('mSvc'); if(S&&[].some.call(S.options,function(o){ return o.text===t; }))S.value=t; };
-<?php endif ?>
   window.closeModal=function(){ if(!overlay||overlay.style.display!=='block')return; overlay.style.display='none'; bg(false); document.body.style.overflow=''; cbarSync();
     var o=opener; opener=null; if(o&&!o.getClientRects().length)o=document.querySelector('[data-burger]'); // открывашка из мобильного меню скрыта — фокус на бургер
     if(o&&o.focus)o.focus(); };
