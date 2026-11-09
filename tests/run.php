@@ -101,6 +101,14 @@ foreach (['/', '/arenda-spetstekhniki/', '/shcheben-pesok-grunt/', '/asfaltirova
     if ($code !== 200 || !preg_match('~<img\b~', $h) || $x) $bad[] = "$u $code: " . implode(', ', $x);
 }
 check('T25: /, rent, mat, asf, blago — у каждого <img> width и height = натуральный размер файла', !$bad, implode('; ', $bad));
+// --- studio T32: hero на ≤480 — свой файл (<picture><source media>) ≤80 КБ, width/height = натуральный размер; preload по тому же media,
+// полный кадр — preload только шире 480 (иначе телефон качает оба)
+[, $h] = req("$base/");
+$hm = preg_match('~<picture><source media="\(max-width:480px\)" srcset="(assets/[a-z0-9-]+\.webp)" width="(\d+)" height="(\d+)"><img src="assets/hero-paving\.webp"~', $h, $x) ? $x : null;
+$hi = $hm ? @getimagesize("$root/public/$hm[1]") : false;
+check('T32: hero ≤480 — <source> ≤80 КБ, width/height = натуральный размер, preload по media (мобильный и полный кадр)', $hm && $hi && $hi[0] == $hm[2] && $hi[1] == $hm[3]
+    && filesize("$root/public/$hm[1]") <= 80 * 1024 && str_contains($h, "<link rel=\"preload\" as=\"image\" href=\"$hm[1]\" media=\"(max-width:480px)\" fetchpriority=\"high\">")
+    && str_contains($h, '<link rel="preload" as="image" href="assets/hero-paving.webp" media="(min-width:481px)" fetchpriority="high">'), $hm ? "$hm[1] " . @filesize("$root/public/$hm[1]") . ' B' : 'нет <picture><source>');
 $set('fact_asphalt_works', $f0[0]);
 $set('fact_blago_works', $f0[1]);
 

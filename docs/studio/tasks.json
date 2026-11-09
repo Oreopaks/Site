@@ -941,8 +941,8 @@
   "size": "M",
   "kind": "test",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "§4; task.md ось «доступность»"
  },
  {
@@ -962,8 +962,8 @@
   "size": "M",
   "kind": "code",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "§3 Р3.8 (srcset условно); ST #6"
  },
  {

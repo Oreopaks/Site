@@ -113,8 +113,9 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
 <?= json_encode($ld, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_PRETTY_PRINT) ?>
 
 </script>
-<?php if (!$pg): ?>
-<link rel="preload" as="image" href="assets/hero-paving.webp" fetchpriority="high">
+<?php if (!$pg): // hero: на ≤480 — центральная полоса кадра (T32), preload по тому же media, иначе телефон качает оба ?>
+<link rel="preload" as="image" href="assets/hero-paving-440.webp" media="(max-width:480px)" fetchpriority="high">
+<link rel="preload" as="image" href="assets/hero-paving.webp" media="(min-width:481px)" fetchpriority="high">
 <?php endif ?>
 <link rel="preload" as="font" type="font/woff2" href="assets/fonts/oswald-700-cyrillic.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="assets/fonts/manrope-400-cyrillic.woff2" crossorigin>
@@ -423,7 +424,10 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
   <section id="top" data-herowrap style="background:#0d0d0d;position:relative;color:#fff;overflow:hidden;min-height:90vh;display:flex;align-items:flex-end">
     <!-- image layer with slow ken-burns drift -->
     <div data-kenburns style="position:absolute;inset:0;z-index:0">
-      <img src="assets/hero-paving.webp"<?= imgwh('assets/hero-paving.webp') ?> alt="Асфальтоукладчики и катки на укладке асфальта" loading="eager" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 42%">
+<?php /* ≤480: hero выше, чем шире (W/H ≤ 0.5), кадр вписан по высоте и виден только центр шириной ≤376 из 1000 px —
+           hero-paving-440 = эта полоса 440×750 из того же файла: кадр и масштаб те же, 76 КБ вместо 174 (T32).
+           ponytail: держит до W/H = 440/750 ≈ 0.59; станет hero ниже — полосу шире (GD-вырезка из hero-paving.webp) */ ?>
+      <picture><source media="(max-width:480px)" srcset="assets/hero-paving-440.webp"<?= imgwh('assets/hero-paving-440.webp') ?>><img src="assets/hero-paving.webp"<?= imgwh('assets/hero-paving.webp') ?> alt="Асфальтоукладчики и катки на укладке асфальта" loading="eager" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 42%"></picture>
     </div>
     <!-- cinematic scrims -->
     <div style="position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(13,13,13,.72) 0%,rgba(13,13,13,.28) 34%,rgba(13,13,13,.5) 62%,rgba(13,13,13,.95) 100%)"></div>
