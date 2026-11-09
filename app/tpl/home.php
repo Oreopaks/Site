@@ -52,14 +52,14 @@ $stat = fn(array $r): string => $r['num'] === null ? e($r['text'])
 // колонок сетки: n ≤ max → n, иначе минимум рядов и ряды поровну (5 при max 4 → 3+2, а не 4+1)
 $cols = fn(int $n, int $max): int => $n <= $max ? $n : (int)ceil($n / ceil($n / $max));
 $badge = '<span style="display:inline-block;font-family:\'Oswald\';font-weight:600;font-size:13px;line-height:1.2;letter-spacing:1px;text-transform:uppercase;color:#FFC700;border:1px solid #FFC700;padding:5px 10px">договорная</span>';
+// WhatsApp с приветствием — одна ссылка для всех кнопок WhatsApp (новая вкладка: на ПК — веб-версия)
+$waHi = $s['whatsapp'] . (str_contains($s['whatsapp'], '?') ? '&' : '?') . 'text=' . rawurlencode('Здравствуйте! Пишу с сайта regiondorstroy.com.');
 // «Позвонить + WhatsApp» на экранах «Спасибо» и в блоке ошибки связи; WhatsApp — только если ссылка задана; ≥44 px, на узком — столбиком
 $rb = 'flex:1 1 auto;padding:12px 18px;line-height:20px;text-align:center;font-family:\'Manrope\';font-weight:800;font-size:14px;letter-spacing:.3px;text-transform:uppercase;';
 $reach = fn(bool $dark): string => '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">'
     . '<a href="tel:' . e($s['phone_mobile']) . '" style="' . $rb . 'background:#FFC700;color:#0d0d0d">Позвонить <span style="white-space:nowrap">' . e($s['phone_mobile_fmt']) . '</span></a>'
-    . ($s['whatsapp'] !== '' ? '<a href="' . e($s['whatsapp']) . '" style="' . $rb . ($dark ? 'border:1.5px solid rgba(255,255,255,.35);color:#fff' : 'background:#1f1f1f;color:#fff') . '">WhatsApp</a>' : '')
+    . ($s['whatsapp'] !== '' ? '<a href="' . e($waHi) . '" target="_blank" rel="noopener" style="' . $rb . ($dark ? 'border:1.5px solid rgba(255,255,255,.35);color:#fff' : 'background:#1f1f1f;color:#fff') . '">WhatsApp</a>' : '')
     . '</div>';
-// WhatsApp с приветствием — одна ссылка для липкой панели и шапки (≥1024)
-$waHi = $s['whatsapp'] . (str_contains($s['whatsapp'], '?') ? '&' : '?') . 'text=' . rawurlencode('Здравствуйте! Пишу с сайта regiondorstroy.com.');
 // знак «заявка» в строке прайса — планшет кнопки «Заявка» липкой панели; nowrap — значок не уходит на строку один
 $req = '<span style="white-space:nowrap">&nbsp;<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px"><path d="M9 3h6v3H9z"/><path d="M15 4.5h2a2 2 0 0 1 2 2V19a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2h2M9 11h6M9 15h4"/></svg></span>';
 // значки ссылки-цели: стрелка — страница, планшет — окно «Заявка» (карточки услуг на /, «Другие услуги» посадочных)
@@ -357,7 +357,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
         <a href="tel:<?= e($s['phone_mobile']) ?>" data-tbtel style="display:none;align-items:center;min-height:44px;font-family:'Oswald';font-weight:600;font-size:17px;letter-spacing:.3px;color:#FFC700;white-space:nowrap"><?= e($s['phone_mobile_fmt']) ?></a>
         <a href="mailto:<?= e($s['email']) ?>" style="color:#cfcfcf"><?= e($s['email']) ?></a>
 <?php if ($s['whatsapp'] !== ''): ?>
-        <a href="<?= e($s['whatsapp']) ?>" style="color:#FFC700;font-weight:600">WhatsApp</a>
+        <a href="<?= e($waHi) ?>" target="_blank" rel="noopener" style="color:#FFC700;font-weight:600">WhatsApp</a>
 <?php endif ?>
 <?php if ($s['telegram'] !== ''): ?>
         <a href="<?= e($s['telegram']) ?>" style="color:#FFC700;font-weight:600">Telegram</a>
@@ -389,7 +389,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
         <div data-hcontact>
           <a href="tel:<?= e($s['phone_mobile']) ?>" data-hphone style="font-family:'Oswald';font-weight:600;font-size:18px;color:#fff;letter-spacing:.3px"><?= e($s['phone_mobile_fmt']) ?></a>
 <?php if ($s['whatsapp'] !== ''): ?>
-          <a href="<?= e($waHi) ?>" data-hwa aria-label="Написать в WhatsApp" style-hover="color:#fff"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.4-4.1A8 8 0 1 1 8.3 18.7Z"/></svg><span>WhatsApp</span></a>
+          <a href="<?= e($waHi) ?>" target="_blank" rel="noopener" data-hwa aria-label="Написать в WhatsApp" style-hover="color:#fff"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.4-4.1A8 8 0 1 1 8.3 18.7Z"/></svg><span>WhatsApp</span></a>
 <?php endif ?>
         </div>
         <button onclick="openModal()" data-desknav style="background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope';font-weight:800;font-size:13.5px;padding:13px 22px;cursor:pointer;letter-spacing:.3px;text-transform:uppercase" style-hover="background:#ffd633">Заказать звонок</button>
@@ -410,7 +410,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
           <div style="display:flex;flex-wrap:wrap;column-gap:24px">
             <a href="mailto:<?= e($s['email']) ?>" style="display:inline-flex;align-items:center;min-height:44px;padding:0 4px;color:#cfcfcf;font-size:15px"><?= e($s['email']) ?></a>
 <?php if ($s['whatsapp'] !== ''): ?>
-            <a href="<?= e($s['whatsapp']) ?>" style="display:inline-flex;align-items:center;min-height:44px;padding:0 4px;color:#FFC700;font-weight:700;font-size:15px">WhatsApp</a>
+            <a href="<?= e($waHi) ?>" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;min-height:44px;padding:0 4px;color:#FFC700;font-weight:700;font-size:15px">WhatsApp</a>
 <?php endif ?>
           </div>
           <button onclick="openModalMobile()" style="margin-top:10px;background:#FFC700;color:#0d0d0d;border:none;font-family:'Manrope';font-weight:800;font-size:15px;padding:15px;cursor:pointer;text-transform:uppercase;letter-spacing:.3px">Заказать звонок</button>
@@ -556,7 +556,7 @@ if (($note = trim($s['fleet_photo_note'] ?? 'Фото для примера. М�
         </dl>
       </div>
 <?php if (!$pg): ?>
-      <?= $more('/arenda-spetstekhniki/', 'Условия и цены аренды по моделям', true) ?>
+      <?= $more('/arenda-spetstekhniki/', 'Цены аренды по моделям', true) ?>
 
 <?php endif ?>
 
@@ -709,7 +709,7 @@ if (($note = trim($s['fleet_photo_note'] ?? 'Фото для примера. М�
 
           <div style="display:flex;gap:12px;flex-wrap:wrap">
 <?php if ($s['whatsapp'] !== ''): ?>
-            <a href="<?= e($s['whatsapp']) ?>" style="display:inline-flex;align-items:center;gap:8px;background:#1f1f1f;color:#fff;padding:13px 20px;font-weight:700;font-size:14px" style-hover="background:#FFC700;color:#0d0d0d">WhatsApp</a>
+            <a href="<?= e($waHi) ?>" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#1f1f1f;color:#fff;padding:13px 20px;font-weight:700;font-size:14px" style-hover="background:#FFC700;color:#0d0d0d">WhatsApp</a>
 <?php endif ?>
 <?php if ($s['telegram'] !== ''): ?>
             <a href="<?= e($s['telegram']) ?>" style="display:inline-flex;align-items:center;gap:8px;background:#1f1f1f;color:#fff;padding:13px 20px;font-weight:700;font-size:14px" style-hover="background:#FFC700;color:#0d0d0d">Telegram</a>
@@ -801,7 +801,7 @@ if (($note = trim($s['fleet_photo_note'] ?? 'Фото для примера. М�
   <nav aria-label="Связаться" data-cbar>
     <a href="tel:<?= e($s['phone_mobile']) ?>" style="background:#FFC700;color:#0d0d0d"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0d0d0d" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h3l2 5-2.2 1.3a12 12 0 0 0 5.7 5.7L16 15l5 2v3a2 2 0 0 1-2 2A17 17 0 0 1 4 5a2 2 0 0 1 2-2Z"/></svg>Позвонить</a>
 <?php if ($s['whatsapp'] !== ''): ?>
-    <a href="<?= e($waHi) ?>" style="background:#1f1f1f;color:#fff"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.4-4.1A8 8 0 1 1 8.3 18.7Z"/></svg>WhatsApp</a>
+    <a href="<?= e($waHi) ?>" target="_blank" rel="noopener" style="background:#1f1f1f;color:#fff"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.4-4.1A8 8 0 1 1 8.3 18.7Z"/></svg>WhatsApp</a>
 <?php endif ?>
     <a href="<?= e($here) ?>#contacts" role="button" aria-haspopup="dialog" onclick="openCalc();return false" onkeydown="if(event.key===' '){event.preventDefault();openCalc()}" style="background:#1f1f1f;color:#fff"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6v3H9z"/><path d="M15 4.5h2a2 2 0 0 1 2 2V19a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2h2M9 11h6M9 15h4"/></svg>Заявка</a>
   </nav>

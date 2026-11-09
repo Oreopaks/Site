@@ -1174,7 +1174,7 @@ $lead26 = '>Работы, технику и материалы на один о�
 [$sv, $sm] = [$cut($hr, 'id="services"', '</section>'), $cut($hm, 'id="services"', '</section>')];
 $errs = $cards($h);
 if ($t4['href'] !== '/arenda-spetstekhniki/' || !str_contains($cut($h, 'id="services"', '</section>'), '<a href="/arenda-spetstekhniki/">' . e($t4['title']) . '</a>')) $errs[] = 'Грузоперевозки ' . $t4['href'];
-if (!preg_match('~<a href="/arenda-spetstekhniki/"[^>]*>Условия и цены аренды по моделям~u', $cut($h, 'id="fleet"', '</section>'))) $errs[] = '/: под прайсом';
+if (!preg_match('~<a href="/arenda-spetstekhniki/"[^>]*>Цены аренды по моделям~u', $cut($h, 'id="fleet"', '</section>'))) $errs[] = '/: под прайсом';
 if (!preg_match('~<a href="/shcheben-pesok-grunt/"[^>]*>Цены и доставка щебня, песка, грунта~u', $cut($h, 'id="materials"', '</section>'))) $errs[] = '/: под материалами';
 if (str_contains($cut($hr, 'id="fleet"', '</section>'), '/arenda-spetstekhniki/')) $errs[] = 'rent: ссылка на себя под прайсом';
 $hmm = $cut($hm, 'id="materials"', '</section>');
