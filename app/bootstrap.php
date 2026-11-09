@@ -65,14 +65,15 @@ function price(string $kind, $price): string
 }
 
 // Посадочные (ADR-0009): id → slug, короткое имя (крошка и serviceType), секции главной на странице,
-// поля анкеты, без которых страница не публикуется, и FAQ: вопрос → fact_* (ответ — только текст владельца, пустой — вопрос скрыт)
+// поля анкеты, без которых страница не публикуется, и FAQ: вопрос → fact_* (ответ — только текст владельца, пустой — вопрос скрыт).
+// У rent нет 'steps': этапы описывают стройку, не аренду (strategy Р3.4)
 const FAQ_ZONE = ['Куда вы выезжаете и есть ли доплата за расстояние?' => 'fact_zone'];
 const FAQ_SITE = [
     'Выезд на замер и смета — бесплатно?' => 'fact_measure',
     'Какая гарантия на работы?' => 'fact_warranty',
 ];
 const PAGES = [
-    'rent' => ['slug' => 'arenda-spetstekhniki', 'name' => 'Аренда спецтехники', 'blocks' => ['fleet', 'steps', 'services'], 'need' => [],
+    'rent' => ['slug' => 'arenda-spetstekhniki', 'name' => 'Аренда спецтехники', 'blocks' => ['fleet', 'services'], 'need' => [],
         'faq' => ['Сколько часов в смене и что входит в аренду?' => 'fact_rent_shift', 'Как доставляется техника на объект и сколько это стоит?' => 'fact_rent_delivery'] + FAQ_ZONE],
     'mat' => ['slug' => 'shcheben-pesok-grunt', 'name' => 'Щебень, песок, грунт', 'blocks' => ['materials', 'services'], 'need' => [],
         'faq' => ['Цены на материалы указаны с НДС?' => 'fact_mat_vat', 'Сколько стоит доставка материалов?' => 'fact_mat_delivery', 'Какой минимальный заказ материалов?' => 'fact_mat_min'] + FAQ_ZONE],

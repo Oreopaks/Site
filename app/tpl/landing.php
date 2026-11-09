@@ -15,7 +15,16 @@ foreach (['rent' => $prices, 'mat' => $materials][$pg['id']] ?? [] as $r) {
 }
 ?>
   <style>
+    /* «Другие услуги»: строка названий-целей ≥48 px, значок справа — стрелка (страница) или планшет (окно «Заявка»); на ≤640 — список во всю ширину */
+    [data-other]{list-style:none;display:flex;flex-wrap:wrap;gap:8px}
+    [data-other] a,[data-other] button{display:flex;align-items:center;gap:12px;min-height:48px;padding:10px 16px 10px 18px;background:#fff;border:1px solid #d6d6d0;color:#111;font-family:'Oswald';font-weight:600;font-size:17px;line-height:1.2;letter-spacing:.3px;text-transform:uppercase;text-align:left;cursor:pointer;overflow-wrap:anywhere}
+    [data-other] svg{flex-shrink:0}
+    @media (hover:hover){[data-other] a:hover,[data-other] button:hover{border-color:#0d0d0d}}
+    [data-other] a:active,[data-other] button:active{border-color:#0d0d0d}
     @media (max-width:640px){
+      #services{padding:48px 0!important}
+      [data-other] li{flex:1 1 100%}
+      [data-other] a,[data-other] button{width:100%;justify-content:space-between}
       [data-lp-lead]{font-size:16px!important;line-height:1.45!important;margin-bottom:18px!important}
       [data-lp-head]{padding-top:28px!important;padding-bottom:36px!important}
       [data-lp-head] nav{margin-bottom:12px!important}
@@ -83,3 +92,21 @@ foreach (['rent' => $prices, 'mat' => $materials][$pg['id']] ?? [] as $r) {
     </div>
   </section>
 <?php endif ?>
+<?php if ($show('services')): ob_start(); // «Другие услуги» (strategy Р3.4) — печатает home.php после fleet/materials; опубликованная посадочная — ссылка, остальное — окно «Заявка» с этой услугой (asf/blago до публикации — 404) ?>
+
+  <!-- ================= OTHER SERVICES ================= -->
+  <section id="services" data-cine style="background:#f5f5f3;padding:64px 0">
+    <div style="max-width:1240px;margin:0 auto;padding:0 32px">
+      <h2 data-anim="fade-up" style="font-family:'Oswald';font-weight:700;font-size:32px;text-transform:uppercase;line-height:1.05;letter-spacing:.5px;margin-bottom:24px">Другие услуги</h2>
+      <ul data-other data-anim="fade-up">
+<?php foreach ($services as $r): if ($r['href'] === $here) continue ?>
+<?php if ($live($r['href'])): ?>
+        <li><a href="<?= e($r['href']) ?>"><?= e($r['title']) ?><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a6d00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></li>
+<?php else: ?>
+        <li><button type="button" aria-haspopup="dialog" onclick="openSvc('<?= jsattr($r['title']) ?>')"><?= e($r['title']) ?><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a6d00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6v3H9z"/><path d="M15 4.5h2a2 2 0 0 1 2 2V19a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2h2M9 11h6M9 15h4"/></svg></button></li>
+<?php endif ?>
+<?php endforeach ?>
+      </ul>
+    </div>
+  </section>
+<?php $svc = ob_get_clean(); endif ?>

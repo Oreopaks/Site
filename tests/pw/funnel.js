@@ -602,7 +602,8 @@ const add = (m, k, where) => m.set(k, [...(m.get(k) || []), where]);
         });
       } finally { setSetting('whatsapp', wa0); }
 
-      // F5 (T39): заявка в один тап с любой точки. 320/360/390/768, прокрутка 50%: в панели три кнопки (tel:, wa.me, «Заявка») ≥44
+      // F5 (T39): заявка в один тап с любой точки. 320/360/390/768, прокрутка в середину между первым экраном и #contacts (T22: посадочные
+      // короче, «50% документа» на материалах попадает в #contacts — там панель скрыта по замыслу): в панели три кнопки (tel:, wa.me, «Заявка») ≥44
       // без переполнения; тап «Заявка» → окно расчёта, фокус в имени, галочка не отмечена, Tab не выходит из окна;
       // на / отправка → leads source=calc, service = услуга из поля окна, цель lead_calc; на посадочных услуга выбрана по странице
       await run('F5', async () => {
@@ -616,7 +617,8 @@ const add = (m, k, where) => m.set(k, [...(m.get(k) || []), where]);
             const at = `/${u}@${w}`;
             await page.goto(BASE + u);
             await page.evaluate(() => { window.__g = []; window.goal = (g) => window.__g.push(g); }); // metrika_id пуст — цели ловит стаб
-            await page.evaluate(() => scrollTo({ top: (document.documentElement.scrollHeight - innerHeight) / 2, behavior: 'instant' }));
+            await page.evaluate(() => { const a = document.querySelector('[data-herowrap]'), c = document.getElementById('contacts');
+              scrollTo({ top: (a.offsetTop + a.offsetHeight + c.offsetTop - innerHeight) / 2, behavior: 'instant' }); });
             await until(page);
             const p = await state(page);
             if (!p) { add(bad, none, at); continue; }
@@ -681,7 +683,7 @@ const add = (m, k, where) => m.set(k, [...(m.get(k) || []), where]);
         }
         await ctx.close();
         seen.push(`без JS → ${nj.join(', ')}`);
-        return [!bad.size, group(bad) || `${seen[seen.length - 1]}; 50% прокрутки → «Заявка» в панели → окно (${seen.length - 1}): ${seen.slice(0, 2).join('; ')} …; отправка с / на 4 ширинах → calc + lead_calc`];
+        return [!bad.size, group(bad) || `${seen[seen.length - 1]}; середина между первым экраном и #contacts → «Заявка» в панели → окно (${seen.length - 1}): ${seen.slice(0, 2).join('; ')} …; отправка с / на 4 ширинах → calc + lead_calc`];
       });
 
       // F6 (T41): 1024/1440/1920, прокрутка 50%: в липкой шапке tel: и WhatsApp (иконка + подпись) в кадре, рядом (зазор ≤48 px), цель ≥24×24;

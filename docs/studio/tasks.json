@@ -670,8 +670,8 @@
   "size": "M",
   "kind": "code",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "§3 Р3.4"
  },
  {
@@ -691,8 +691,8 @@
   "size": "S",
   "kind": "code",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "strategy §4 (фото), критик R12: «CASE» на стреле экскаватора читается на 1440"
  },
  {

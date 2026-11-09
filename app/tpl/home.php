@@ -435,7 +435,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
   </div>
 <?php endif ?>
 
-<?php if ($show('services')): ob_start(); // на посадочной services выводится после fleet/materials ?>
+<?php if (!$pg): // на посадочной вместо сетки — строка «Другие услуги» ($svc из landing.php, печатается после fleet/materials) ?>
   <!-- ================= SERVICES ================= -->
   <section id="services" data-cine style="background:#f5f5f3;padding:90px 0">
     <div style="max-width:1240px;margin:0 auto;padding:0 32px">
@@ -458,7 +458,7 @@ $errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-inva
       </div>
     </div>
   </section>
-<?php $svc = ob_get_clean(); if (!$pg) echo $svc; endif ?>
+<?php endif ?>
 
 <?php if ($show('fleet')): ?>
   <!-- ================= FLEET ================= -->
@@ -884,6 +884,10 @@ if (($note = trim($s['fleet_photo_note'] ?? 'Фото для примера. М�
       m===1?'<?= jsstr(stub($s, 'modal_rent_btn', 'Отправить заявку')) ?>':'<?= jsstr($s['modal_calc_btn']) ?>',name,svc,unit); show(); };
   // карточка техники: та же форма расчёта, услуга «Аренда спецтехники» + название из заголовка карточки
   window.openRent=function(btn){ var h=btn.closest('[data-lift]').querySelector('h3'); window.openCalc(h?h.textContent:'','Аренда спецтехники'); };
+<?php if ($pg): ?>
+  // «Другие услуги» посадочной: окно «Заявка» с этой услугой в поле; услуги нет в списке формы (in_form=0) — остаётся услуга страницы
+  window.openSvc=function(t){ window.openCalc(); var S=document.getElementById('mSvc'); if(S&&[].some.call(S.options,function(o){ return o.text===t; }))S.value=t; };
+<?php endif ?>
   window.closeModal=function(){ if(!overlay||overlay.style.display!=='block')return; overlay.style.display='none'; bg(false); document.body.style.overflow=''; cbarSync();
     var o=opener; opener=null; if(o&&!o.getClientRects().length)o=document.querySelector('[data-burger]'); // открывашка из мобильного меню скрыта — фокус на бургер
     if(o&&o.focus)o.focus(); };

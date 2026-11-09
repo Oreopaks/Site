@@ -1016,6 +1016,17 @@ $sv = $cut($hr, 'id="services"', '</section>');
 // T39: «Услуга» есть и в нижней форме, и в окне «Заявка» — в каждом <select> выбрана одна опция, и это «Аренда спецтехники»
 check('M4: на rent нет карточки со ссылкой на себя, есть на mat; в обоих <select> (форма, окно) выбрано «Аренда спецтехники» (по одной)', $sv !== '' && !str_contains($sv, '/arenda-spetstekhniki/')
     && str_contains($sv, '<a href="/shcheben-pesok-grunt/">') && substr_count($hr, '<select ') === 2 && substr_count($hr, ' selected>') === 2 && substr_count($hr, '<option selected>Аренда спецтехники</option>') === 2);
+// T22 (strategy Р3.4): на посадочных #services — H2 «Другие услуги» и строка названий без карточек и текстов: опубликованная посадочная —
+// ссылкой, неопубликованные asf/blago (404) — кнопкой окна расчёта, не битой ссылкой; у аренды нет «Этапов»
+[, $hm] = req("$base/shcheben-pesok-grunt/");
+$sm = $cut($hm, 'id="services"', '</section>');
+[$tx, $t2] = [db()->query('SELECT text FROM services WHERE id = 1')->fetchColumn(), e(db()->query('SELECT title FROM services WHERE id = 2')->fetchColumn())];
+$btn = fn(string $h, string $t) => (bool)preg_match('~<button type="button" aria-haspopup="dialog" onclick="openSvc\([^"]+\)">' . preg_quote($t, '~') . '<svg~u', $h);
+check('T22: аренда и материалы — #services = «Другие услуги»: без карточек и текста услуги, asf/blago — кнопки окна (ссылок на 404 нет), mat → ссылка на аренду; у аренды нет этапов',
+    str_contains($sv, '>Другие услуги</h2>') && str_contains($sm, '>Другие услуги</h2>') && !str_contains($sv . $sm, 'data-svc') && mb_strlen($tx) > 20 && !str_contains($hr . $hm, e($tx))
+    && !preg_match('~/(asfaltirovanie|blagoustroystvo)/~', $sv . $sm) && $btn($sv, $t1) && $btn($sv, $t2) && $btn($sm, $t1) && $btn($sm, $t2)
+    && str_contains($sm, '<a href="/arenda-spetstekhniki/">') && !str_contains($sm, '/shcheben-pesok-grunt/')
+    && !str_contains($hr, '<!-- ================= PROCESS') && !str_contains($hr, '>' . e($get('steps_h2')) . '</h2>'));
 $o = new PDO("sqlite:$oldDb");
 $o->exec(file_get_contents("$root/db/schema.sql") . file_get_contents("$root/db/seed.sql")); // прод до M1: сид есть, pg_* нет
 $o->exec("UPDATE items SET href = '#why' WHERE kind = 'nav' AND title = 'Материалы'"); // правка владельца
