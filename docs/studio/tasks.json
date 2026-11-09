@@ -736,8 +736,8 @@
   "db_keys": [
    "settings.base_url"
   ],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "scores.md, оговорка панели M2: canonical на github.io из сида",
   "note": "Батч с T23 допустим (@id = base_url#org). Дельту в панели эта задача не получает: на проде домен уже верный, а стенды панели выравниваются процедурой из plan.md."
  },
@@ -759,8 +759,8 @@
   "size": "M",
   "kind": "seo",
   "db_keys": [],
-  "status": "todo",
-  "rounds": 0,
+  "status": "done",
+  "rounds": 1,
   "strategy_ref": "§3 Р3.7"
  },
  {

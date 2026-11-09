@@ -148,6 +148,12 @@
    "old": "Цены на аренду (с НДС)",
    "new": "Цены на аренду (с НДС)",
    "task": "T45"
+  },
+  {
+   "key": "base_url",
+   "old": "https://oreopaks.github.io/Site/",
+   "new": "https://regiondorstroy.com/",
+   "task": "T44"
   }
  ],
  "rows": [

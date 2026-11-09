@@ -153,7 +153,7 @@ $a = strpos($html, '<script type="application/ld+json">');
 $ld = substr($html, $a, strpos($html, '<link rel="preload"', $a) - $a);
 $ldj = json_decode(substr($ld, strlen('<script type="application/ld+json">'), strrpos($ld, '</script>') - strlen('<script type="application/ld+json">')), true);
 check('ld_name="</script><script>x" → substr_count(ld+json block, \'</script\') === 1',
-    $a !== false && substr_count($ld, '</script') === 1 && ($ldj['name'] ?? null) === '</script><script>x', $ld);
+    $a !== false && substr_count($ld, '</script') === 1 && (array_column($ldj['@graph'] ?? [], 'name', '@type')['HomeAndConstructionBusiness'] ?? null) === '</script><script>x', $ld);
 
 $line = '';
 foreach (explode("\n", $html) as $l) if (str_contains($l, 'window.openModal=function')) $line = $l;
@@ -951,6 +951,32 @@ foreach (['' => null] + array_combine(array_column(PAGES, 'slug'), array_keys(PA
     if (isset($g['FAQPage']) || str_contains($html, 'Вопросы и ответы')) $errs[] = "$slug: FAQ без фактов";
 }
 check('M3: ld+json декодируется, @graph Service+BreadcrumbList (1 base_url, 2 canonical), nav «Хлебные крошки», без фактов нет FAQ, нет Review/AggregateRating', !$errs, implode('; ', $errs));
+// T23: организация одна на сайт (@id), WebSite на главной, посадочные ссылаются по @id; geo/priceRange не выводятся
+$org = $s3['base_url'] . '#org';
+$errs = [];
+foreach (['/', '/arenda-spetstekhniki/', '/shcheben-pesok-grunt/'] as $u) {
+    [, $html] = req("$base$u");
+    $d = $lds($html);
+    if (count($d) !== 1 || in_array(null, $d, true)) { $errs[] = "$u: ld+json не декодируется"; continue; }
+    if (preg_match('~"(geo|priceRange)"~', json_encode($d))) $errs[] = "$u: geo/priceRange";
+    $g = $graph($html);
+    if ($u !== '/') { if (($g['Service']['provider'] ?? null) !== ['@id' => $org]) $errs[] = "$u: provider " . json_encode($g['Service']['provider'] ?? null, JSON_UNESCAPED_UNICODE); continue; }
+    $w = $g['WebSite'] ?? [];
+    $b = $g['HomeAndConstructionBusiness'] ?? [];
+    if (($w['@id'] ?? '') !== $s3['base_url'] . '#website' || ($w['url'] ?? '') !== $s3['base_url'] || ($w['inLanguage'] ?? '') !== 'ru') $errs[] = '/: WebSite ' . json_encode($w, JSON_UNESCAPED_UNICODE);
+    if (($b['@id'] ?? '') !== $org || ($b['telephone'] ?? null) !== ['+79807691111', '+74862491111'] || $s3['org_inn'] === '' || ($b['taxID'] ?? null) !== $s3['org_inn']) $errs[] = '/: организация ' . json_encode($b, JSON_UNESCAPED_UNICODE);
+}
+check('T23: ld+json /, rent, mat декодируется; / = WebSite #website (ru) + организация #org, telephone оба номера, taxID = org_inn; provider посадочных = {@id #org}; нет geo и priceRange', !$errs, implode('; ', $errs));
+$inn0 = $s3['org_inn'];
+$set('org_inn', ' ');
+$noTax = !array_key_exists('taxID', $graph(req("$base/")[1])['HomeAndConstructionBusiness'] ?? ['taxID' => '?']);
+$set('org_inn', '</script><script>x');
+$set('phone_city', '</script><b>');
+$b = $graph(req("$base/")[1])['HomeAndConstructionBusiness'] ?? [];
+check('T23: org_inn пуст → taxID нет; org_inn и phone_city = «</script>…» → ld+json цел, значения в taxID и telephone как есть',
+    $noTax && ($b['taxID'] ?? null) === '</script><script>x' && ($b['telephone'][1] ?? null) === '</script><b>', json_encode($b, JSON_UNESCAPED_UNICODE));
+$set('org_inn', $inn0);
+$set('phone_city', $s3['phone_city']);
 $loc0 = $sitemap();
 $want = fn() => array_merge([$s3['base_url']], array_map(fn($id) => $s3['base_url'] . PAGES[$id]['slug'] . '/', $pub()));
 check('M3: sitemap — валидный XML, <loc> = главная + rent + mat, без /asfaltirovanie/', $loc0 === $want() && count($loc0) === 3 && !in_array($s3['base_url'] . 'asfaltirovanie/', $loc0, true), json_encode($loc0));
@@ -1058,15 +1084,15 @@ check('T5: docs/OWNER-ACTIONS.md есть и упоминает все fact_* и
 [$code, $body] = req("$base/send.php", ['comment' => str_repeat("ab\r\n", 300)] + $lead + ['consent' => '1']);
 check('send.php: перенос \\r\\n считается за 1 символ (как maxlength) → 200', $code === 200, "$code $body");
 
-// Telegram: ссылка пуста (сид) → ни кнопок, ни пустого sameAs; задана → обе кнопки и sameAs
-$tg = fn(string $h) => [substr_count($h, '>Telegram</a>'), preg_match('~<script type="application/ld\+json">(.*?)</script>~s', $h, $m) ? json_encode(json_decode($m[1], true)['sameAs'] ?? null) : '?'];
+// Telegram: ссылка пуста (сид) → ни кнопок, ни sameAs (wa.me — чат, не профиль); задана → обе кнопки и sameAs = только она
+$tg = fn(string $h) => [substr_count($h, '>Telegram</a>'), preg_match('~<script type="application/ld\+json">(.*?)</script>~s', $h, $m) ? json_encode(array_column(json_decode($m[1], true)['@graph'] ?? [], 'sameAs', '@type')['HomeAndConstructionBusiness'] ?? null) : '?'];
 [, $h] = req("$base/");
 [$n, $same] = $tg($h);
-check("Telegram пуст → кнопок 0 (есть $n), sameAs без пустых: [$same]", $n === 0 && !str_contains($same, '""') && str_contains($same, 'wa.me'));
+check("Telegram пуст → кнопок 0 (есть $n), sameAs нет (есть: $same)", $n === 0 && $same === 'null');
 $set('telegram', 'https://t.me/rds_test');
 [, $h] = req("$base/");
 [$n, $same] = $tg($h);
-check("Telegram задан → кнопок 2 (есть $n), в sameAs", $n === 2 && str_contains($same, 't.me\/rds_test'), $same);
+check("Telegram задан → кнопок 2 (есть $n), sameAs = [t.me], без wa.me", $n === 2 && $same === json_encode(['https://t.me/rds_test']), $same);
 $set('telegram', 'https://t.me/regiondorstroy');
 [$code] = req("$base/admin/?p=settings&g=contacts&a=save", ['_csrf' => $csrfOf($boss), 'telegram' => ''], $boss);
 $tv = db()->query("SELECT value FROM settings WHERE key = 'telegram'")->fetchColumn();

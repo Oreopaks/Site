@@ -7,39 +7,38 @@ $pd = $pg ? $s["pg_{$pg['id']}_desc"] : null;
 $show = fn(string $b): bool => !$pg || in_array($b, $pg['blocks'], true); // секция главной на этой странице
 $here = $pg ? '/' . $pg['slug'] . '/' : null;
 $live = fn(string $h): bool => preg_match('~^/([a-z0-9-]+)/$~D', $h, $m) && landing($m[1]); // href ведёт на опубликованную посадочную
+// организация одна на сайт: на главной целиком, на посадочных — ссылка по @id; geo (центр города, не офис) и priceRange не выводим — ключи ld_* в БД остаются
 $biz = [
     '@type' => 'HomeAndConstructionBusiness',
+    '@id' => $s['base_url'] . '#org',
     'name' => $s['ld_name'],
     'image' => $s['base_url'] . 'assets/logo-rds.webp',
     'url' => $s['base_url'],
-    'telephone' => $s['phone_mobile'],
+    'telephone' => array_values(array_filter([$s['phone_mobile'], $s['phone_city']])),
     'email' => $s['email'],
-    'priceRange' => $s['ld_price_range'],
     'address' => [
         '@type' => 'PostalAddress',
         'addressLocality' => $s['ld_locality'],
         'addressRegion' => $s['ld_region'],
         'addressCountry' => 'RU',
     ],
-    'geo' => [
-        '@type' => 'GeoCoordinates',
-        'latitude' => (float)$s['ld_geo_lat'],
-        'longitude' => (float)$s['ld_geo_lon'],
-    ],
     'areaServed' => $s['ld_area'],
-    'sameAs' => array_values(array_filter([$s['telegram'], $s['whatsapp']])),
     'openingHoursSpecification' => [
         '@type' => 'OpeningHoursSpecification',
         'dayOfWeek' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
         'opens' => $s['ld_opens'],
         'closes' => $s['ld_closes'],
     ],
-];
+] + (trim($s['org_inn']) !== '' ? ['taxID' => trim($s['org_inn'])] : [])
+  + ($s['telegram'] !== '' ? ['sameAs' => [$s['telegram']]] : []); // sameAs — только профили; wa.me — чат, не профиль
 // FAQ посадочной: только вопросы с ответом владельца; тот же список — в видимом блоке (landing.php) и в FAQPage
 $faq = [];
 foreach ($pg['faq'] ?? [] as $q => $k) if (($a = trim($s[$k] ?? '')) !== '') $faq[$q] = $a;
-$ld = !$pg ? ['@context' => 'https://schema.org'] + $biz : ['@context' => 'https://schema.org', '@graph' => array_merge([
-    ['@type' => 'Service', 'name' => $s["pg_{$pg['id']}_h1"], 'serviceType' => $pg['name'], 'description' => $pd, 'url' => $url, 'areaServed' => $s['ld_area'], 'provider' => $biz],
+$ld = !$pg ? ['@context' => 'https://schema.org', '@graph' => [
+    ['@type' => 'WebSite', '@id' => $s['base_url'] . '#website', 'url' => $s['base_url'], 'name' => 'РегионДорСтрой', 'inLanguage' => 'ru'],
+    $biz,
+]] : ['@context' => 'https://schema.org', '@graph' => array_merge([
+    ['@type' => 'Service', 'name' => $s["pg_{$pg['id']}_h1"], 'serviceType' => $pg['name'], 'description' => $pd, 'url' => $url, 'areaServed' => $s['ld_area'], 'provider' => ['@id' => $biz['@id']]],
     ['@type' => 'BreadcrumbList', 'itemListElement' => [
         ['@type' => 'ListItem', 'position' => 1, 'name' => 'Главная', 'item' => $s['base_url']],
         ['@type' => 'ListItem', 'position' => 2, 'name' => $pg['name'], 'item' => $url],
@@ -63,7 +62,7 @@ $waHi = $s['whatsapp'] . (str_contains($s['whatsapp'], '?') ? '&' : '?') . 'text
 $req = '<span style="white-space:nowrap">&nbsp;<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px"><path d="M9 3h6v3H9z"/><path d="M15 4.5h2a2 2 0 0 1 2 2V19a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2h2M9 11h6M9 15h4"/></svg></span>';
 $urgent = 'Срочно? Позвоните' . ($s['whatsapp'] !== '' ? ' или напишите' : '') . ':';
 // блок ошибки отправки над кнопкой: тексты печатает сервер, JS берёт текст по коду и вставляет через textContent; tel/WhatsApp — при ошибке связи
-$errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-invalid="В номере меньше 10 цифр. Проверьте, например: 8&nbsp;980&nbsp;000-00-00" data-fail="' . e($s['alert_fail']) . '" data-offline="' . e($s['alert_offline']) . '"'
+$errBox = fn(bool $dark): string => '<div role="alert" data-err hidden data-invalid="В номере меньше 10 цифр. Проверьте, например: 8&nbsp;900&nbsp;123-45-67" data-fail="' . e($s['alert_fail']) . '" data-offline="' . e($s['alert_offline']) . '"'
     . ' style="margin-bottom:16px;padding:14px 16px;font-size:14px;line-height:1.5;' . ($dark ? 'background:#1a1608;border:1px solid #FFC700;color:#fff' : 'background:#fdf1f2;border:1px solid #b00020;color:#111') . '">'
     . '<p data-msg></p><div data-conn>' . $reach($dark) . '</div></div>';
 ?>

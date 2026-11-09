@@ -7,7 +7,7 @@ INSERT INTO settings (key, value, grp, label, type, trusted_html, required, sort
 ('seo_og_description','Дорожное строительство, благоустройство, аренда спецтехники и поставка сыпучих материалов в Орле и области.','seo','og:description','textarea',0,0,40),
 ('seo_tw_title','РегионДорСтрой — дороги и благоустройство в Орле','seo','twitter:title','text',0,0,50),
 ('seo_tw_description','Дорожное строительство, благоустройство, аренда спецтехники и поставка материалов в Орле и области.','seo','twitter:description','textarea',0,0,60),
-('base_url','https://oreopaks.github.io/Site/','seo','Адрес сайта (с / на конце)','text',0,1,70),
+('base_url','https://regiondorstroy.com/','seo','Адрес сайта (с / на конце)','text',0,1,70),
 
 ('ld_name','ООО «РегионДорСтрой»','ld','JSON-LD: название','text',0,1,10),
 ('ld_price_range','₽₽','ld','JSON-LD: priceRange','text',0,0,20),
